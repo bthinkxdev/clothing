@@ -1,0 +1,47 @@
+{% load static %}
+<div class="quick-view-content">
+    <div class="quick-view-gallery">
+        {% if images %}
+            <img src="{{ images.0.image.url }}" alt="{{ product.name }}">
+        {% else %}
+            <img src="https://via.placeholder.com/400x500/FAF7F2/8B4513?text={{ product.name|slice:':12' }}" alt="{{ product.name }}">
+        {% endif %}
+    </div>
+    <div class="quick-view-info">
+        <div class="product-meta">
+            {% if product.brand %}<span>{{ product.brand }}</span>{% endif %}
+            {% if product.category %}<span>&middot; {{ product.category.name }}</span>{% endif %}
+        </div>
+        <h3 class="product-title">{{ product.name }}</h3>
+        <div class="rating-summary">
+            {% if avg_rating and avg_rating > 0 %}
+                {% include 'includes/rating_stars.html' with rating=avg_rating %}
+                <span>{{ avg_rating|floatformat:1 }} ({{ total_reviews }} reviews)</span>
+            {% else %}
+                <span>No reviews yet</span>
+            {% endif %}
+        </div>
+        <div class="price-row">
+            {% if default_variant %}
+                <span class="price-current">₹{{ default_variant.get_price }}</span>
+                {% if default_variant.discount_percent > 0 %}
+                    <span class="price-original">₹{{ default_variant.price }}</span>
+                    <span class="price-discount">{{ default_variant.discount_percent }}% OFF</span>
+                {% endif %}
+            {% endif %}
+        </div>
+        <div class="actions">
+            <a href="{{ product.get_absolute_url }}" class="btn btn-primary">View Details</a>
+            {% if default_variant %}
+            <form method="post" action="{% url 'cart_add' %}">
+                {% csrf_token %}
+                <input type="hidden" name="variant_id" value="{{ default_variant.id }}">
+                <input type="hidden" name="quantity" value="1">
+                <button type="submit" class="btn btn-secondary">Add to Cart</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+

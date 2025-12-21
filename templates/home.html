@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ultimate Fashion Destination - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container hero-content">
+        <div class="hero-text">
+            <h1>Step into Style: Your Ultimate Fashion Destination</h1>
+            <p>Discover the latest trends and timeless classics. Shop now and transform your wardrobe with confidence.</p>
+            <div class="hero-cta">
+                <a href="{% url 'product_list' %}" class="btn btn-primary">Shop Now</a>
+                <a href="{% url 'product_list' %}" class="btn btn-secondary">Explore Collections</a>
+            </div>
+        </div>
+    </div>
+    <div class="hero-image">
+        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80" alt="Fashion Model">
+    </div>
+</section>
+
+<!-- Features -->
+<section class="features-section">
+    <div class="container">
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                <h3>Free Shipping</h3>
+                <p>On all orders above ₹1000</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <h3>Flexible Payment</h3>
+                <p>Multiple payment options</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <h3>24/7 Support</h3>
+                <p>Dedicated customer service</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-undo"></i>
+                </div>
+                <h3>Easy Returns</h3>
+                <p>7 days return policy</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- New Arrivals -->
+{% if new_arrivals %}
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h2>New Arrivals</h2>
+            <p>Fresh styles just landed</p>
+        </div>
+        
+        <div class="products-grid">
+            {% for product in new_arrivals|slice:":8" %}
+                {% include 'includes/product_card.html' with product=product %}
+            {% endfor %}
+        </div>
+        
+        <div class="view-all-btn">
+            <a href="{% url 'product_list' %}" class="btn btn-secondary">View All Products</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Categories -->
+{% if featured_categories %}
+<section class="section" style="background: var(--bg-cream);">
+    <div class="container">
+        <div class="section-header">
+            <h2>Shop by Category</h2>
+            <p>Explore our diverse collection</p>
+        </div>
+        
+        <div class="categories-grid">
+            {% for category in featured_categories|slice:":4" %}
+            <a href="{% url 'product_list_category' category.slug %}" class="category-card">
+                {% if category.image %}
+                    <img src="{{ category.image.url }}" alt="{{ category.name }}">
+                {% else %}
+                    <img src="https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&q=80" alt="{{ category.name }}">
+                {% endif %}
+                <div class="category-overlay">
+                    <h3 class="category-name">{{ category.name }}</h3>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Best Sellers -->
+{% if best_sellers %}
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Best Sellers</h2>
+            <p>Our most popular picks</p>
+        </div>
+        
+        <div class="products-grid">
+            {% for product in best_sellers|slice:":8" %}
+                {% include 'includes/product_card.html' with product=product %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Promo Banner -->
+<section class="promo-banner">
+    <div class="container">
+        <h2>Summer Sale - Up to 60% OFF</h2>
+        <p>Limited time offer on selected items</p>
+        <a href="{% url 'product_list' %}?discount=20" class="btn btn-white">Shop Sale</a>
+    </div>
+</section>
+
+<!-- Sale Products -->
+{% if sale_products %}
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h2>On Sale Now</h2>
+            <p>Don't miss these amazing deals</p>
+        </div>
+        
+        <div class="products-grid">
+            {% for product in sale_products|slice:":8" %}
+                {% include 'includes/product_card.html' with product=product %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

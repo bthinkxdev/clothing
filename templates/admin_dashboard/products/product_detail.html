@@ -1,0 +1,155 @@
+<!-- templates/admin_dashboard/products/product_detail.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - Product Details{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/products.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="product-detail-page">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>{{ product.name }}</h1>
+            <p>SKU: {{ product.sku }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:product_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back
+            </a>
+            {% with slug_for_url=product.slug|default:request.resolver_match.kwargs.slug %}
+            {% if slug_for_url %}
+                <a href="{% url 'admin_dashboard:product_update' slug_for_url %}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Edit
+                </a>
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <div class="gallery-card">
+            <h3>Images</h3>
+            <div class="gallery-grid">
+                {% for img in product.images.all %}
+                <div class="gallery-item">
+                    <img src="{{ img.image.url }}" alt="{{ img.alt_text|default:product.name }}">
+                    <div class="thumb-meta">
+                        <span>{{ img.alt_text|default:"No alt" }}</span>
+                        {% if img.is_feature %}<span class="badge badge-info">Feature</span>{% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No images uploaded.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h3>Product Information</h3>
+            <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value">{{ product.name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Category:</span>
+                <span class="info-value">{{ product.category.name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Brand:</span>
+                <span class="info-value">{{ product.brand|default:"—" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Tags:</span>
+                <span class="info-value">{{ product.tags|default:"—" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status:</span>
+                {% if product.is_active %}
+                <span class="status-badge status-active">Active</span>
+                {% else %}
+                <span class="status-badge status-inactive">Inactive</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h3>SEO</h3>
+            <div class="info-row">
+                <span class="info-label">Meta Title:</span>
+                <span class="info-value">{{ product.meta_title|default:"—" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Meta Description:</span>
+                <span class="info-value">{{ product.meta_description|default:"—" }}</span>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <h3>Sales Statistics</h3>
+            <div class="stat-item">
+                <div class="stat-icon bg-blue">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Total Sold</span>
+                    <h3>{{ total_sold }}</h3>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon bg-green">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Revenue</span>
+                    <h3>₹{{ total_revenue|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <h3>Variants</h3>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>Size</th>
+                        <th>Color</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for variant in product.variants.all %}
+                    <tr>
+                        <td><code>{{ variant.sku }}</code></td>
+                        <td>{{ variant.size|default:"—" }}</td>
+                        <td>{{ variant.color|default:"—" }}</td>
+                        <td>₹{{ variant.price }}</td>
+                        <td>{{ variant.available_stock }}</td>
+                        <td>
+                            {% if variant.is_active %}
+                            <span class="status-badge status-active">Active</span>
+                            {% else %}
+                            <span class="status-badge status-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/products.js' %}"></script>
+{% endblock %}

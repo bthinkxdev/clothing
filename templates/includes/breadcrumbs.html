@@ -1,0 +1,17 @@
+{% if breadcrumbs %}
+<div class="breadcrumbs">
+    <div class="container">
+        <ul class="breadcrumb-list">
+            {% for crumb in breadcrumbs %}
+                <li>
+                    {% if crumb.url and not forloop.last %}
+                        <a href="{{ crumb.url }}">{{ crumb.name }}</a>
+                    {% else %}
+                        {{ crumb.name }}
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}

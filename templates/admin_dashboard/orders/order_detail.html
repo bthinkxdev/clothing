@@ -1,0 +1,187 @@
+<!-- templates/admin_dashboard/orders/order_detail.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Order Detail - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/orders.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-receipt"></i> Order #{{ order.id|stringformat:"s"|slice:":8" }}</h1>
+            <p>Placed on {{ order.placed_at|date:"M d, Y H:i" }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:order_update' order.id %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Update
+            </a>
+            <a href="{% url 'admin_dashboard:order_invoice' order.id %}" class="btn btn-secondary">
+                <i class="fas fa-file-invoice"></i> Invoice
+            </a>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-info-circle"></i> Order Summary</h3>
+            </div>
+            <div class="card-body info-grid">
+                <div class="info-item">
+                    <span class="label">Status</span>
+                    <span class="value"><span class="badge badge-pill">{{ order.status|capfirst }}</span></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Customer</span>
+                    <span class="value">{{ order.user.username|default:"Guest" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Email</span>
+                    <span class="value">{{ order.user.email|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Total</span>
+                    <span class="value">₹{{ order.total|default:"0.00" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Payment Method</span>
+                    <span class="value">{{ order.payment_method|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Total Items</span>
+                    <span class="value">{{ item_count }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Total Quantity</span>
+                    <span class="value">{{ total_quantity }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Shipping</span>
+                    <span class="value">
+                        {% if order.address %}
+                        {{ order.address.full_name }}<br>
+                        {{ order.address.line1 }}<br>
+                        {{ order.address.city }}, {{ order.address.state }} {{ order.address.postal_code }}<br>
+                        {{ order.address.country }}
+                        {% else %}
+                        Not provided
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-credit-card"></i> Payments</h3>
+            </div>
+            <div class="card-body">
+                <div class="payment-summary">
+                    <div class="summary-item">
+                        <span class="label">Order Total</span>
+                        <span class="value">₹{{ order.total|default:"0.00" }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Total Paid</span>
+                        <span class="value">₹{{ total_paid|default:"0.00" }}</span>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-compact">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.id }}</td>
+                                <td>{{ payment.method|default:payment.payment_method }}</td>
+                                <td><span class="badge badge-pill">{{ payment.status|capfirst }}</span></td>
+                                <td>₹{{ payment.amount|default:"0.00" }}</td>
+                                <td>{{ payment.created_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No payments recorded</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-box"></i> Items</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Variant</th>
+                            <th>Price</th>
+                            <th>Qty</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                        <tr>
+                            <td>{{ item.variant.product.name }}</td>
+                            <td>{{ item.variant.name|default:item.variant.sku }}</td>
+                            <td>₹{{ item.price }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>₹{% widthratio item.price 1 item.quantity %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No items found for this order</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-stream"></i> Timeline</h3>
+        </div>
+        <div class="card-body timeline">
+            {% for event in timeline %}
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <span class="timeline-date">{{ event.date|date:"M d, Y H:i" }}</span>
+                    <h4>{{ event.status }}</h4>
+                    <p>{{ event.description }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <p>No timeline events yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/orders.js' %}"></script>
+{% endblock %}
+

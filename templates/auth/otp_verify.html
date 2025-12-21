@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verify OTP - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container auth-page">
+    <div class="auth-card">
+        <h1>Enter OTP</h1>
+        <p>We have sent a code to your phone. Enter it below to continue.</p>
+
+        <input type="hidden" data-next-url value="{{ next|default:'/' }}">
+
+        <div class="form-group">
+            <label for="otp">OTP</label>
+            <input id="otp" type="text" class="form-control" placeholder="123456" data-otp-code>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn btn-secondary" data-otp-verify>Verify & Login</button>
+        </div>
+
+        <div class="otp-message" data-otp-status></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+<!-- DEMO SCRIPT - Remove in production -->
+<script src="{% static 'js/auth-demo.js' %}"></script>
+{% endblock %}

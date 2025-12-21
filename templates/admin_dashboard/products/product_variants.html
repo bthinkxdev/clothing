@@ -1,0 +1,82 @@
+<!-- templates/admin_dashboard/products/product_variants.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Manage Variants - {{ product.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/products.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="variant-management-page">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>Manage Variants</h1>
+            <p>{{ product.name }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:product_detail' product.slug %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Product
+            </a>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <form method="post">
+            {% csrf_token %}
+            {{ variant_formset.management_form }}
+
+            <div class="variants-container">
+                {% for form in variant_formset %}
+                <div class="variant-form">
+                    <h4>Variant {{ forloop.counter }}</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">SKU</label>
+                            {{ form.sku }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Size</label>
+                            {{ form.size }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Color</label>
+                            {{ form.color }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Price</label>
+                            {{ form.price }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">MRP</label>
+                            {{ form.mrp }}
+                        </div>
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                {{ form.is_active }}
+                                <label class="checkbox-label">Active</label>
+                            </div>
+                        </div>
+                    </div>
+                    {{ form.DELETE }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'admin_dashboard:product_detail' product.slug %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Save Variants
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/products.js' %}"></script>
+{% endblock %}

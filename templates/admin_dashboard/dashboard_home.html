@@ -1,0 +1,334 @@
+<!-- templates/admin_dashboard/dashboard_home.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Admin Panel{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-home">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+        <div class="welcome-text">
+            <h1><span class="wave">👋</span> Hi, {{ admin_user.first_name|default:admin_user.username }}!</h1>
+            <p>Here's what's happening with your store today</p>
+        </div>
+        
+        <div class="quick-actions">
+            <select class="period-selector" id="periodSelector">
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="last_7_days">Last 7 Days</option>
+                <option value="last_30_days" selected>Last 30 Days</option>
+                <option value="this_month">This Month</option>
+                <option value="this_year">This Year</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card gradient-blue">
+            <div class="stat-icon">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-content">
+                <span class="stat-label">Total Revenue</span>
+                <h2 class="stat-value">{{ stats.total_revenue|floatformat:2 }}</h2>
+                <div class="stat-change {% if stats.revenue_change >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="fas fa-arrow-{% if stats.revenue_change >= 0 %}up{% else %}down{% endif %}"></i>
+                    <span>{{ stats.revenue_change|floatformat:1 }}%</span>
+                    <span class="stat-period">vs last period</span>
+                </div>
+            </div>
+            <div class="stat-chart">
+                <canvas id="revenueSparkline"></canvas>
+            </div>
+        </div>
+        
+        <div class="stat-card gradient-purple">
+            <div class="stat-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-content">
+                <span class="stat-label">Total Orders</span>
+                <h2 class="stat-value">{{ stats.total_orders|floatformat:0 }}</h2>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>12.5%</span>
+                    <span class="stat-period">vs last period</span>
+                </div>
+            </div>
+            <div class="stat-chart">
+                <canvas id="ordersSparkline"></canvas>
+            </div>
+        </div>
+        
+        <div class="stat-card gradient-pink">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <span class="stat-label">New Customers</span>
+                <h2 class="stat-value">{{ stats.new_customers }}</h2>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>8.2%</span>
+                    <span class="stat-period">vs last period</span>
+                </div>
+            </div>
+            <div class="stat-chart">
+                <canvas id="customersSparkline"></canvas>
+            </div>
+        </div>
+        
+        <div class="stat-card gradient-orange">
+            <div class="stat-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-content">
+                <span class="stat-label">Avg Order Value</span>
+                <h2 class="stat-value">₹{{ stats.avg_order_value|floatformat:2 }}</h2>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>5.4%</span>
+                    <span class="stat-period">vs last period</span>
+                </div>
+            </div>
+            <div class="stat-chart">
+                <canvas id="avgOrderSparkline"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Charts Row -->
+    <div class="charts-grid">
+        <!-- Sales Overview Chart -->
+        <div class="chart-card large">
+            <div class="card-header">
+                <h3>Sales Overview</h3>
+                <div class="card-actions">
+                    <button class="btn-tab active" data-period="30">30D</button>
+                    <button class="btn-tab" data-period="7">7D</button>
+                    <button class="btn-tab" data-period="1">24H</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Order Status Chart -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h3>Order Status</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="orderStatusChart"></canvas>
+            </div>
+            <div class="chart-legend">
+                <div class="legend-item">
+                    <span class="legend-dot" style="background: #667eea;"></span>
+                    <span class="legend-label">Delivered</span>
+                    <span class="legend-value">52%</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot" style="background: #764ba2;"></span>
+                    <span class="legend-label">Shipped</span>
+                    <span class="legend-value">21%</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot" style="background: #f59e0b;"></span>
+                    <span class="legend-label">Processing</span>
+                    <span class="legend-value">14%</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot" style="background: #ef4444;"></span>
+                    <span class="legend-label">Cancelled</span>
+                    <span class="legend-value">13%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Second Row: Revenue & Products -->
+    <div class="charts-grid">
+        <!-- Revenue by Category -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h3>Revenue by Category</h3>
+                <button class="btn-icon"><i class="fas fa-ellipsis-v"></i></button>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueCategoryChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Top Products -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h3>Top Selling Products</h3>
+                <a href="{% url 'admin_dashboard:product_list' %}" class="btn-link">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="product-list">
+                    {% for product in stats.top_products %}
+                    <div class="product-item">
+                        <div class="product-info">
+                            <div class="product-rank">{{ forloop.counter }}</div>
+                            <div class="product-details">
+                                <h4>{{ product.variant__product__name }}</h4>
+                                <span class="product-sales">{{ product.total_sold }} sold</span>
+                            </div>
+                        </div>
+                        <div class="product-revenue">₹{{ product.revenue|floatformat:2 }}</div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No sales data available</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Third Row: Payments & Activity -->
+    <div class="charts-grid">
+        <!-- Payment Methods -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h3>Payment Methods</h3>
+            </div>
+            <div class="card-body">
+                <div class="payment-stats">
+                    {% for method in stats.payment_methods %}
+                    <div class="payment-item">
+                        <div class="payment-icon {% if method.method == 'cod' %}cod{% elif method.method == 'razorpay' %}online{% else %}card{% endif %}">
+                            <i class="fas fa-{% if method.method == 'cod' %}money-bill-wave{% elif method.method == 'wallet' %}wallet{% else %}credit-card{% endif %}"></i>
+                        </div>
+                        <div class="payment-info">
+                            <h4>{{ method.get_method_display }}</h4>
+                            <div class="payment-bar">
+                                <div class="payment-progress" style="width: {{ method.percentage }}%"></div>
+                            </div>
+                            <div class="payment-meta">
+                                <span>{{ method.count }} transactions</span>
+                                <span class="payment-amount">₹{{ method.total|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h3>Recent Activity</h3>
+            </div>
+            <div class="card-body">
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon bg-blue">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>New Order Placed</h4>
+                            <p>Order #3847 by John Doe</p>
+                            <span class="activity-time">2 minutes ago</span>
+                        </div>
+                        <span class="activity-amount">₹1,299</span>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon bg-green">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>New Customer</h4>
+                            <p>Jane Smith registered</p>
+                            <span class="activity-time">15 minutes ago</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon bg-orange">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>New Review</h4>
+                            <p>5-star review on Cotton T-Shirt</p>
+                            <span class="activity-time">1 hour ago</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon bg-purple">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>Order Shipped</h4>
+                            <p>Order #3840 shipped via BlueDart</p>
+                            <span class="activity-time">2 hours ago</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon bg-red">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>Low Stock Alert</h4>
+                            <p>Black Jeans - Only 3 left</p>
+                            <span class="activity-time">3 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alerts Section -->
+    {% if stats.low_stock_count > 0 or stats.pending_orders > 0 %}
+    <div class="alerts-section">
+        {% if stats.pending_orders > 0 %}
+        <div class="alert-card alert-info">
+            <i class="fas fa-info-circle"></i>
+            <div class="alert-content">
+                <h4>Pending Orders</h4>
+                <p>You have {{ stats.pending_orders }} order(s) waiting for processing</p>
+            </div>
+            <a href="{% url 'admin_dashboard:order_list' %}?status=pending" class="btn-alert">View Orders</a>
+        </div>
+        {% endif %}
+        
+        {% if stats.low_stock_count > 0 %}
+        <div class="alert-card alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div class="alert-content">
+                <h4>Low Stock Alert</h4>
+                <p>{{ stats.low_stock_count }} product(s) are running low on stock</p>
+            </div>
+            <a href="{% url 'admin_dashboard:low_stock_report' %}" class="btn-alert">Check Inventory</a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/dashboard.js' %}"></script>
+<script>
+    // Initialize dashboard with data
+    const dashboardData = {
+        stats: {{ stats|safe }},
+        period: '{{ period }}'
+    };
+    
+    initializeDashboard(dashboardData);
+</script>
+{% endblock %}

@@ -1,0 +1,250 @@
+<!-- templates/admin_dashboard/base.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %}</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'admin_dashboard/css/admin.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-store"></i>
+                    <span>ColorPixel</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="{% url 'admin_dashboard:home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <a href="{% url 'admin_dashboard:analytics' %}" class="nav-item {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </a>
+                
+                <a href="{% url 'admin_dashboard:order_list' %}" class="nav-item {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                    {% if pending_actions.pending_orders > 0 %}
+                    <span class="badge">{{ pending_actions.pending_orders }}</span>
+                    {% endif %}
+                </a>
+                
+                <a href="{% url 'admin_dashboard:product_list' %}" class="nav-item {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                
+                <a href="{% url 'admin_dashboard:customer_list' %}" class="nav-item {% if 'customer' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-users"></i>
+                    <span>Customers</span>
+                </a>
+                
+                <a href="{% url 'admin_dashboard:inventory_list' %}" class="nav-item {% if 'inventory' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-warehouse"></i>
+                    <span>Inventory</span>
+                    {% if pending_actions.low_stock > 0 %}
+                    <span class="badge badge-warning">{{ pending_actions.low_stock }}</span>
+                    {% endif %}
+                </a>
+                
+                <a href="{% url 'admin_dashboard:coupon_list' %}" class="nav-item {% if 'coupon' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Coupons</span>
+                </a>
+                
+                <a href="{% url 'admin_dashboard:sales_report' %}" class="nav-item {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Reports</span>
+                </a>
+                
+                <a href="{% url 'admin_dashboard:review_list' %}" class="nav-item {% if 'review' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                    {% if pending_actions.pending_reviews > 0 %}
+                    <span class="badge">{{ pending_actions.pending_reviews }}</span>
+                    {% endif %}
+                </a>
+                
+                <a href="{% url 'admin_dashboard:payment_list' %}" class="nav-item {% if 'payment' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payments</span>
+                </a>
+                
+                <div class="nav-divider"></div>
+                
+                <a href="{% url 'admin_dashboard:category_list' %}" class="nav-item">
+                    <i class="fas fa-folder"></i>
+                    <span>Categories</span>
+                </a>
+                
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="support-card">
+                    <i class="fas fa-headset"></i>
+                    <h4>Customer Support</h4>
+                    <p>We are online 24/7 to support you</p>
+                    <button class="btn-support">
+                        <i class="fas fa-comment"></i>
+                        Connect Now
+                    </button>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Top Header -->
+            <header class="admin-header">
+                <div class="header-left">
+                    <button class="btn-menu" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search...">
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <button class="header-icon" id="notificationBtn">
+                        <i class="fas fa-bell"></i>
+                        {% if pending_actions.total > 0 %}
+                        <span class="notification-dot"></span>
+                        {% endif %}
+                    </button>
+                    
+                    <button class="header-icon">
+                        <i class="fas fa-envelope"></i>
+                    </button>
+                    
+                    <div class="user-profile">
+                        <img src="{% static 'admin_dashboard/img/avatar.jpg' %}" alt="{{ admin_user.username }}" onerror="this.src='https://ui-avatars.com/api/?name={{ admin_user.username }}&background=667eea&color=fff'">
+                        <div class="user-info">
+                            <span class="user-name">{{ admin_user.get_full_name|default:admin_user.username }}</span>
+                            <span class="user-role">{{ admin_user.get_role_display }}</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Breadcrumbs -->
+            {% if breadcrumbs %}
+            <div class="breadcrumbs">
+                {% for crumb in breadcrumbs %}
+                    {% if crumb.url %}
+                        <a href="{{ crumb.url }}">{{ crumb.title }}</a>
+                        <i class="fas fa-chevron-right"></i>
+                    {% else %}
+                        <span>{{ crumb.title }}</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Page Content -->
+            <div class="admin-content">
+                {% if messages %}
+                <div class="messages-container">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}" role="alert">
+                        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button class="alert-close">&times;</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    <!-- Notification Panel -->
+    <div class="notification-panel" id="notificationPanel">
+        <div class="notification-header">
+            <h3>Notifications</h3>
+            <button class="btn-close" id="closeNotifications">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="notification-list">
+            {% if pending_actions.pending_orders > 0 %}
+            <div class="notification-item unread">
+                <div class="notification-icon bg-blue">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="notification-content">
+                    <h4>New Orders</h4>
+                    <p>You have {{ pending_actions.pending_orders }} pending order(s)</p>
+                    <span class="notification-time">Just now</span>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if pending_actions.low_stock > 0 %}
+            <div class="notification-item unread">
+                <div class="notification-icon bg-orange">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="notification-content">
+                    <h4>Low Stock Alert</h4>
+                    <p>{{ pending_actions.low_stock }} product(s) running low</p>
+                    <span class="notification-time">2 minutes ago</span>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if pending_actions.pending_reviews > 0 %}
+            <div class="notification-item">
+                <div class="notification-icon bg-purple">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="notification-content">
+                    <h4>Pending Reviews</h4>
+                    <p>{{ pending_actions.pending_reviews }} review(s) awaiting approval</p>
+                    <span class="notification-time">1 hour ago</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Scripts -->
+    <script src="{% static 'admin_dashboard/js/admin.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

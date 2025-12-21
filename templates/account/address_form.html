@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Address Form - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/checkout.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container checkout-page">
+    <div class="card address-form-card" style="max-width: 700px; margin: 0 auto;">
+        <h2>{{ form.instance.pk|yesno:"Edit Address,Add Address" }}</h2>
+        <form method="post" class="form-grid">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'address_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

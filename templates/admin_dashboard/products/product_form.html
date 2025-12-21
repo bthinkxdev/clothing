@@ -1,0 +1,259 @@
+﻿<!-- templates/admin_dashboard/products/product_form.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Product{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/products.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="product-form-page">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>{% if form.instance.pk %}Edit{% else %}Create{% endif %} Product</h1>
+            <p class="header-subtitle">Add clothing products with required details</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:product_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back
+            </a>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="error-message">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="section-header">
+                <h3>Basic Information</h3>
+            </div>
+            <div class="form-grid compact-grid">
+                <div class="form-group">
+                    <label for="{{ form.name.id_for_label }}" class="form-label required">
+                        <i class="fas fa-tag"></i> Product Name
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<div class="error-message">{{ form.name.errors }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.slug.id_for_label }}" class="form-label required">
+                        <i class="fas fa-link"></i> Slug
+                    </label>
+                    {{ form.slug }}
+                    {% if form.slug.errors %}<div class="error-message">{{ form.slug.errors }}</div>{% endif %}
+                    <div class="form-help">URL-friendly identifier (unique)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.sku.id_for_label }}" class="form-label required">
+                        <i class="fas fa-barcode"></i> SKU
+                    </label>
+                    {{ form.sku }}
+                    {% if form.sku.errors %}<div class="error-message">{{ form.sku.errors }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.category.id_for_label }}" class="form-label required">
+                        <i class="fas fa-folder"></i> Category
+                    </label>
+                    {{ form.category }}
+                    {% if form.category.errors %}<div class="error-message">{{ form.category.errors }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.brand.id_for_label }}" class="form-label">
+                        <i class="fas fa-copyright"></i> Brand
+                    </label>
+                    {{ form.brand }}
+                    {% if form.brand.errors %}<div class="error-message">{{ form.brand.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="section-header">
+                <h3>Descriptions</h3>
+            </div>
+            <div class="form-grid compact-grid">
+                <div class="form-group">
+                    <label for="{{ form.short_description.id_for_label }}" class="form-label">
+                        <i class="fas fa-align-left"></i> Short Description
+                    </label>
+                    {{ form.short_description }}
+                    {% if form.short_description.errors %}<div class="error-message">{{ form.short_description.errors }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.tags.id_for_label }}" class="form-label">
+                        <i class="fas fa-tags"></i> Tags
+                    </label>
+                    {{ form.tags }}
+                    {% if form.tags.errors %}<div class="error-message">{{ form.tags.errors }}</div>{% endif %}
+                    <div class="form-help">Comma-separated keywords for search</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}" class="form-label">
+                    <i class="fas fa-file-alt"></i> Description
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}<div class="error-message">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="section-header">
+                <h3>SEO</h3>
+            </div>
+            <div class="form-grid compact-grid">
+                <div class="form-group">
+                    <label for="{{ form.meta_title.id_for_label }}" class="form-label">
+                        <i class="fas fa-heading"></i> Meta Title
+                    </label>
+                    {{ form.meta_title }}
+                    {% if form.meta_title.errors %}<div class="error-message">{{ form.meta_title.errors }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.meta_description.id_for_label }}" class="form-label">
+                        <i class="fas fa-paragraph"></i> Meta Description
+                    </label>
+                    {{ form.meta_description }}
+                    {% if form.meta_description.errors %}<div class="error-message">{{ form.meta_description.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="section-header">
+                <h3>Status</h3>
+            </div>
+            <div class="form-group">
+                <div class="checkbox-group">
+                    {{ form.is_active }}
+                    <label for="{{ form.is_active.id_for_label }}" class="checkbox-label">
+                        <i class="fas fa-toggle-on"></i> Active
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'admin_dashboard:product_list' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    {% if form.instance.pk %}Update{% else %}Create{% endif %} Product
+                </button>
+            </div>
+
+            {% if variant_formset %}
+            <div class="section-header">
+                <h3>Variants</h3>
+            </div>
+            <div class="formset-card">
+                {{ variant_formset.management_form }}
+                {% for vform in variant_formset %}
+                    <div class="form-grid compact-grid">
+                        {% if vform.non_field_errors %}
+                        <div class="error-message full-width">{{ vform.non_field_errors }}</div>
+                        {% endif %}
+                        <div class="form-group">
+                            <label class="form-label" for="{{ vform.sku.id_for_label }}">Variant SKU</label>
+                            {{ vform.sku }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ vform.size.id_for_label }}">Size</label>
+                            {{ vform.size }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ vform.color.id_for_label }}">Color</label>
+                            {{ vform.color }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ vform.material.id_for_label }}">Material</label>
+                            {{ vform.material }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ vform.price.id_for_label }}">Price</label>
+                            {{ vform.price }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ vform.mrp.id_for_label }}">MRP</label>
+                            {{ vform.mrp }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ vform.discount_percent.id_for_label }}">Discount %</label>
+                            {{ vform.discount_percent }}
+                        </div>
+                        <div class="form-group checkbox-inline">
+                            <label class="form-label">Active</label>
+                            {{ vform.is_active }}
+                        </div>
+                        <div class="form-group checkbox-inline">
+                            <label class="form-label">Pre-order</label>
+                            {{ vform.is_preorder }}
+                        </div>
+                        {% if variant_formset.can_delete %}
+                        <div class="form-group checkbox-inline">
+                            <label class="form-label">Delete</label>
+                            {{ vform.DELETE }}
+                        </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if image_formset %}
+            <div class="section-header">
+                <h3>Images</h3>
+            </div>
+            <div class="formset-card">
+                {{ image_formset.management_form }}
+                {% for iform in image_formset %}
+                    <div class="form-grid compact-grid">
+                        {% if iform.non_field_errors %}
+                        <div class="error-message full-width">{{ iform.non_field_errors }}</div>
+                        {% endif %}
+                        <div class="form-group">
+                            <label class="form-label" for="{{ iform.image.id_for_label }}">Image</label>
+                            <label class="upload-dropzone">
+                                <span class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></span>
+                                <span class="upload-text">Click or drop to upload</span>
+                                {{ iform.image }}
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ iform.alt_text.id_for_label }}">Alt text</label>
+                            {{ iform.alt_text }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ iform.order.id_for_label }}">Order</label>
+                            {{ iform.order }}
+                        </div>
+                        <div class="form-group checkbox-inline">
+                            <label class="form-label">Feature</label>
+                            {{ iform.is_feature }}
+                        </div>
+                        {% if image_formset.can_delete %}
+                        <div class="form-group checkbox-inline">
+                            <label class="form-label">Delete</label>
+                            {{ iform.DELETE }}
+                        </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/products.js' %}"></script>
+{% endblock %}
+

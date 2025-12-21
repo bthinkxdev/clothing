@@ -1,0 +1,68 @@
+/* static/admin_dashboard/css/payments.css */
+
+/* Payment Management Styles */
+@import url('./design-system.css');
+
+.method-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.method-cod {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.method-razorpay {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.method-wallet {
+    background: #e9d5ff;
+    color: #6b21a8;
+}
+
+.payment-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-completed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-failed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-refunded {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.btn-view {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.btn-view:hover {
+    background: #3b82f6;
+    color: white;
+}

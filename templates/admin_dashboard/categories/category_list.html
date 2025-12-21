@@ -1,0 +1,203 @@
+<!-- templates/admin_dashboard/categories/category_list.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Categories - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/categories.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="category-management">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-folder"></i> Category Management</h1>
+            <p>Organize and manage your product categories</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:category_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Create Category
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon bg-blue">
+                <i class="fas fa-folder-open"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Total Categories</span>
+                <h3>{{ categories.count }}</h3>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon bg-green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Active Categories</span>
+                <h3>{{ categories|length }}</h3>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon bg-purple">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Total Products</span>
+                <h3>{{ categories|length }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="filter-section">
+        <div class="search-box-large">
+            <i class="fas fa-search"></i>
+            <input type="text" id="categorySearch" placeholder="Search categories...">
+        </div>
+
+        <div class="filter-group">
+            <select class="filter-select" id="statusFilter">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+
+            <select class="filter-select" id="sortBy">
+                <option value="sort_order">Sort Order</option>
+                <option value="name">Name A-Z</option>
+                <option value="-name">Name Z-A</option>
+                <option value="-product_count">Most Products</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="content-card">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Parent</th>
+                        <th>Products</th>
+                        <th>Sort Order</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                    <tr data-category-id="{{ category.id }}">
+                        <td>
+                            <div class="category-info">
+                                <div class="category-name">
+                                    <i class="fas fa-folder"></i>
+                                    <strong>{{ category.name }}</strong>
+                                </div>
+                                {% if category.description %}
+                                <small class="text-muted">{{ category.description|truncatewords:10 }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if category.parent %}
+                            <span class="badge badge-light">
+                                <i class="fas fa-level-up-alt"></i>
+                                {{ category.parent.name }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="product-count">
+                                <i class="fas fa-box"></i>
+                                {{ category.product_count|default:0 }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="sort-order-badge">{{ category.sort_order }}</span>
+                        </td>
+                        <td>
+                            {% if category.is_active %}
+                            <span class="status-badge status-active">
+                                <i class="fas fa-check-circle"></i>
+                                Active
+                            </span>
+                            {% else %}
+                            <span class="status-badge status-inactive">
+                                <i class="fas fa-times-circle"></i>
+                                Inactive
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'admin_dashboard:category_update' category.pk %}"
+                                    class="btn-icon btn-edit" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn-icon btn-delete" data-category-id="{{ category.id }}"
+                                    data-category-name="{{ category.name }}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-folder-open"></i>
+                                <h3>No Categories Found</h3>
+                                <p>Start by creating your first category</p>
+                                <a href="{% url 'admin_dashboard:category_create' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i>
+                                    Create Category
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Delete Category</h3>
+            <button class="btn-close" onclick="closeDeleteModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="warning-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <p>Are you sure you want to delete <strong id="categoryNameToDelete"></strong>?</p>
+            <p class="text-muted">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Delete Category</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/categories.js' %}"></script>
+{% endblock %}

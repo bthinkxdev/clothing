@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Coupons - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container account-page">
+    <div class="card">
+        <h2>Active Coupons</h2>
+        {% if coupons %}
+        <table class="table">
+            <thead><tr><th>Code</th><th>Discount</th><th>Valid Till</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for c in coupons %}
+                <tr>
+                    <td>{{ c.code }}</td>
+                    <td>{{ c.discount_type }} - {{ c.discount_value }}</td>
+                    <td>{{ c.end_date|date:"M d, Y" }}</td>
+                    <td><span class="badge">{% if c.active %}Active{% else %}Inactive{% endif %}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">No coupons available.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

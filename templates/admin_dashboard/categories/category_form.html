@@ -1,0 +1,177 @@
+<!-- templates/admin_dashboard/categories/category_form.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Category - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/categories.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="category-form-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-folder"></i>
+                {% if form.instance.pk %}Edit Category{% else %}Create New Category{% endif %}
+            </h1>
+            <p>{% if form.instance.pk %}Update category information{% else %}Add a new category to organize your
+                products{% endif %}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:category_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Categories
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <form method="post" id="categoryForm">
+            {% csrf_token %}
+
+            <div class="form-grid">
+                <!-- Category Name -->
+                <div class="form-group">
+                    <label for="{{ form.name.id_for_label }}" class="form-label required">
+                        <i class="fas fa-tag"></i>
+                        Category Name
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <div class="error-message">
+                        {{ form.name.errors }}
+                    </div>
+                    {% endif %}
+                    <small class="form-help">Enter a unique, descriptive name for the category</small>
+                </div>
+
+                <!-- Slug -->
+                <div class="form-group">
+                    <label for="{{ form.slug.id_for_label }}" class="form-label required">
+                        <i class="fas fa-link"></i>
+                        Slug
+                    </label>
+                    {{ form.slug }}
+                    {% if form.slug.errors %}
+                    <div class="error-message">
+                        {{ form.slug.errors }}
+                    </div>
+                    {% endif %}
+                    <small class="form-help">URL-friendly version (auto-generated from name)</small>
+                </div>
+
+                <!-- Parent Category -->
+                <div class="form-group">
+                    <label for="{{ form.parent.id_for_label }}" class="form-label">
+                        <i class="fas fa-sitemap"></i>
+                        Parent Category
+                    </label>
+                    {{ form.parent }}
+                    {% if form.parent.errors %}
+                    <div class="error-message">
+                        {{ form.parent.errors }}
+                    </div>
+                    {% endif %}
+                    <small class="form-help">Select a parent category to create a subcategory</small>
+                </div>
+
+                <!-- Sort Order -->
+                <div class="form-group">
+                    <label for="{{ form.sort_order.id_for_label }}" class="form-label">
+                        <i class="fas fa-sort-numeric-down"></i>
+                        Sort Order
+                    </label>
+                    {{ form.sort_order }}
+                    {% if form.sort_order.errors %}
+                    <div class="error-message">
+                        {{ form.sort_order.errors }}
+                    </div>
+                    {% endif %}
+                    <small class="form-help">Lower numbers appear first</small>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}" class="form-label">
+                    <i class="fas fa-align-left"></i>
+                    Description
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <div class="error-message">
+                    {{ form.description.errors }}
+                </div>
+                {% endif %}
+                <small class="form-help">Brief description of the category</small>
+            </div>
+
+            <!-- Active Status -->
+            <div class="form-group">
+                <div class="checkbox-group">
+                    {{ form.is_active }}
+                    <label for="{{ form.is_active.id_for_label }}" class="checkbox-label">
+                        <i class="fas fa-toggle-on"></i>
+                        Active
+                    </label>
+                </div>
+                {% if form.is_active.errors %}
+                <div class="error-message">
+                    {{ form.is_active.errors }}
+                </div>
+                {% endif %}
+                <small class="form-help">Inactive categories won't be visible to customers</small>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <a href="{% url 'admin_dashboard:category_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    {% if form.instance.pk %}Update Category{% else %}Create Category{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Help Section -->
+    <div class="help-card">
+        <h3><i class="fas fa-info-circle"></i> Category Guidelines</h3>
+        <ul>
+            <li><strong>Name:</strong> Use clear, descriptive names that customers will understand</li>
+            <li><strong>Slug:</strong> Automatically generated but can be customized for SEO</li>
+            <li><strong>Parent:</strong> Create hierarchical categories (e.g., Clothing → Men's Clothing → Shirts)</li>
+            <li><strong>Sort Order:</strong> Control the display order on your store</li>
+            <li><strong>Active:</strong> Only active categories appear on the storefront</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/categories.js' %}"></script>
+<script>
+    // Auto-generate slug from name
+    document.addEventListener('DOMContentLoaded', function () {
+        const nameInput = document.getElementById('{{ form.name.id_for_label }}');
+        const slugInput = document.getElementById('{{ form.slug.id_for_label }}');
+
+        if (nameInput && slugInput && !slugInput.value) {
+            nameInput.addEventListener('input', function () {
+                const slug = this.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+                slugInput.value = slug;
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,141 @@
+/* Account pages */
+
+.account-page {
+    padding: 30px 0 70px;
+}
+
+.account-grid {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: 20px;
+}
+
+.account-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.card h2 {
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    font-size: 14px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 10px;
+    background: var(--bg-cream);
+    font-size: 12px;
+}
+
+.filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.form-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.form-group {
+    display: grid;
+    gap: 6px;
+}
+
+.form-control {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.timeline {
+    display: grid;
+    gap: 8px;
+}
+
+.timeline-item {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.summary {
+    display: grid;
+    gap: 8px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+.summary-row.total {
+    font-weight: 700;
+}
+
+.empty-state {
+    padding: 50px 20px;
+    text-align: center;
+    background: var(--bg-cream);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.link-list {
+    display: grid;
+    gap: 8px;
+}
+
+.link-list a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-dark);
+    background: var(--white);
+}
+
+.link-list a:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+@media (max-width: 900px) {
+    .account-grid {
+        grid-template-columns: 1fr;
+    }
+}
+

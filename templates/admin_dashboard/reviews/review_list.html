@@ -1,0 +1,110 @@
+<!-- templates/admin_dashboard/reviews/review_list.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Reviews - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/reviews.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="review-management">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-star"></i> Review Management</h1>
+            <p>Moderate product reviews</p>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon bg-orange">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Pending Reviews</span>
+                <h3>{{ pending_count }}</h3>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon bg-green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Approved Reviews</span>
+                <h3>{{ approved_count }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <div class="filter-group">
+            <select class="filter-select" id="statusFilter">
+                <option value="pending" selected>Pending</option>
+                <option value="approved">Approved</option>
+                <option value="">All</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="reviews-list">
+        {% for review in reviews %}
+        <div class="review-card">
+            <div class="review-header">
+                <div class="review-user">
+                    <div class="user-avatar">
+                        {{ review.user.username|slice:":1"|upper }}
+                    </div>
+                    <div class="user-info">
+                        <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
+                        <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+                <div class="review-rating">
+                    {% for i in "12345" %}
+                    <i class="fas fa-star {% if forloop.counter <= review.rating %}active{% endif %}"></i>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="review-body">
+                <div class="review-product">
+                    <i class="fas fa-box"></i>
+                    <a href="{% url 'admin_dashboard:product_detail' review.product.slug %}">
+                        {{ review.product.name }}
+                    </a>
+                </div>
+                <p class="review-text">{{ review.review }}</p>
+            </div>
+
+            <div class="review-footer">
+                {% if not review.approved %}
+                <button class="btn-sm btn-success approve-btn" data-review-id="{{ review.pk }}">
+                    <i class="fas fa-check"></i>
+                    Approve
+                </button>
+                {% else %}
+                <span class="status-badge status-active">Approved</span>
+                {% endif %}
+                <button class="btn-sm btn-danger delete-btn" data-review-id="{{ review.pk }}">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-star"></i>
+            <h3>No Reviews Found</h3>
+            <p>No reviews match your filter criteria</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/reviews.js' %}"></script>
+{% endblock %}

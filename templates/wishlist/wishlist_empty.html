@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Wishlist - Empty{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/wishlist.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+<div class="container wishlist-page">
+    <div class="empty-state">
+        <i class="far fa-heart"></i>
+        <h3>Your wishlist is empty</h3>
+        <p>Save items you love and move them to cart anytime.</p>
+        <a href="{% url 'product_list' %}" class="btn btn-primary" style="margin-top:12px;">Browse Products</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Wallet - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container account-page">
+    <div class="card">
+        <h2>Wallet Balance</h2>
+        <div class="stat-value">₹{{ wallet_balance|default:"0.00" }}</div>
+        <p class="address-meta">Use your wallet balance at checkout.</p>
+    </div>
+    <div class="card" style="margin-top:16px;">
+        <h2>Transactions</h2>
+        {% if transactions %}
+        <table class="table">
+            <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Note</th></tr></thead>
+            <tbody>
+                {% for tx in transactions %}
+                <tr>
+                    <td>{{ tx.created_at|date:"M d, Y H:i" }}</td>
+                    <td>{{ tx.type }}</td>
+                    <td>{% if tx.type == 'debit' %}-{% else %}+{% endif %}₹{{ tx.amount }}</td>
+                    <td>{{ tx.note|default:"" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">No transactions yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

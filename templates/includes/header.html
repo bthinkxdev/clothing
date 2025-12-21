@@ -1,0 +1,89 @@
+{% load static %}
+<!-- Top Bar -->
+<div class="top-bar">
+    <div class="container">
+        <div class="top-bar-content">
+            <div class="top-bar-left">
+                <span><i class="fas fa-phone"></i> +91 1800-123-4567</span>
+                <span><i class="fas fa-envelope"></i> support@fashion.com</span>
+            </div>
+            <div class="top-bar-right">
+                <span><i class="fas fa-truck"></i> Free Shipping on Orders ₹1000+</span>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'account_dashboard' %}">My Account</a>
+                    <a href="{% url 'logout' %}">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Header -->
+<header class="main-header">
+    <div class="container">
+        <div class="header-content">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <a href="{% url 'home' %}" class="logo">FASHION</a>
+            
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'product_list' %}">Shop</a></li>
+                    {% for category in categories %}
+                        <li><a href="{% url 'product_list_category' category.slug %}">{{ category.name }}</a></li>
+                    {% empty %}
+                        <li><a href="#">Women</a></li>
+                        <li><a href="#">Men</a></li>
+                    {% endfor %}
+                    <li><a href="{% url 'product_list' %}?discount=20">Sale</a></li>
+                </ul>
+            </nav>
+            
+            <form class="search-bar" action="{% url 'product_search' %}" method="get">
+                <input type="text" name="q" placeholder="Search products..." value="{{ query|default:'' }}">
+                <button type="submit"><i class="fas fa-search"></i></button>
+            </form>
+            
+            <div class="header-actions">
+                <a href="{% url 'product_search' %}" class="header-icon mobile-search">
+                    <i class="fas fa-search"></i>
+                </a>
+                
+                {% if user.is_authenticated %}
+                    <a href="{% url 'wishlist' %}" class="header-icon">
+                        <i class="far fa-heart"></i>
+                        {% if wishlist_count > 0 %}
+                            <span class="badge">{{ wishlist_count }}</span>
+                        {% endif %}
+                    </a>
+                {% endif %}
+                
+                <a href="{% url 'cart' %}" class="header-icon">
+                    <i class="fas fa-shopping-bag"></i>
+                    {% if cart_count > 0 %}
+                        <span class="badge">{{ cart_count }}</span>
+                    {% endif %}
+                </a>
+                
+                <a href="{% if user.is_authenticated %}{% url 'account_dashboard' %}{% else %}{% url 'login' %}{% endif %}" class="header-icon">
+                    <i class="far fa-user"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Mobile search dropdown -->
+<div class="mobile-search-panel" data-mobile-search>
+    <div class="container">
+        <form class="search-bar" action="{% url 'product_search' %}" method="get">
+            <input type="text" name="q" placeholder="Search products..." value="{{ query|default:'' }}">
+            <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
+    </div>
+</div>

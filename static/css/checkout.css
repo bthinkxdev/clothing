@@ -1,0 +1,259 @@
+/* Checkout shared styles */
+
+.checkout-page {
+    padding: 30px 0 70px;
+}
+
+.checkout-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    max-width: 900px;
+}
+
+.card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 18px;
+    display: grid;
+    gap: 12px;
+}
+
+.card h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.order-summary-card {
+    margin-top: 24px;
+    position: sticky;
+    top: 100px;
+}
+
+.address-list {
+    display: grid;
+    gap: 14px;
+}
+
+.address-card {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--white);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+
+.address-meta {
+    color: var(--text-light);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.address-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.badge-default {
+    background: var(--bg-cream);
+    color: var(--text-dark);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    display: inline-block;
+    margin-left: 8px;
+}
+
+.shipping-options {
+    display: grid;
+    gap: 10px;
+}
+
+.shipping-option {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+}
+
+.summary {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    display: grid;
+    gap: 10px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+.summary-row.total {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.line {
+    height: 1px;
+    background: var(--border-color);
+    margin: 4px 0;
+}
+
+.form-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.address-form-card {
+    background: var(--white);
+    border: 2px solid var(--secondary-color);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+#toggleAddressFormBtn {
+    display: inline-flex;
+    gap: 6px;
+    font-size: 14px;
+    padding: 10px 18px;
+}
+
+#toggleAddressFormBtn i {
+    font-size: 12px;
+}
+
+#closeAddressFormBtn {
+    padding: 8px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 18px;
+}
+
+#closeAddressFormBtn:hover {
+    color: var(--error-color);
+    transform: scale(1.1);
+}
+
+.form-grid .form-group {
+    display: grid;
+    gap: 6px;
+}
+
+.form-control {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.table-mini {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.table-mini th,
+.table-mini td {
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.table-mini img {
+    width: 54px;
+    height: 54px;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-cream);
+}
+
+.empty-state {
+    padding: 50px 20px;
+    text-align: center;
+    background: var(--bg-cream);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: var(--border-color);
+    margin-bottom: 12px;
+}
+
+@media (max-width: 900px) {
+    .checkout-page {
+        padding: 20px 0 50px;
+    }
+
+    .checkout-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    .card h2 {
+        font-size: 18px;
+    }
+
+    .address-card {
+        flex-direction: column;
+        padding: 12px;
+    }
+
+    .address-actions {
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .address-actions button,
+    .address-actions a {
+        flex: 1;
+        font-size: 13px;
+        padding: 10px 12px;
+    }
+
+    #toggleAddressFormBtn {
+        font-size: 13px;
+        padding: 8px 14px;
+    }
+
+    .order-summary-card {
+        position: static;
+        margin-top: 20px;
+    }
+
+    .table-mini {
+        font-size: 13px;
+    }
+
+    .table-mini img {
+        width: 40px;
+        height: 40px;
+    }
+}
+

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Reviews - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container account-page">
+    <div class="card">
+        <h2>My Reviews</h2>
+        {% if my_reviews %}
+        <table class="table">
+            <thead><tr><th>Product</th><th>Rating</th><th>Comment</th><th>Date</th></tr></thead>
+            <tbody>
+                {% for r in my_reviews %}
+                <tr>
+                    <td>{{ r.product.name }}</td>
+                    <td>{{ r.rating }}/5</td>
+                    <td>{{ r.comment }}</td>
+                    <td>{{ r.created_at|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">You haven't reviewed any products yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,138 @@
+<!-- templates/admin_dashboard/coupons/coupon_list.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Coupons - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/coupons.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="coupon-management">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-ticket-alt"></i> Coupon Management</h1>
+            <p>Create and manage discount coupons for your store</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:coupon_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Create Coupon
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon bg-blue">
+                <i class="fas fa-ticket-alt"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Total Coupons</span>
+                <h3>{{ total_coupons }}</h3>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon bg-green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Active Coupons</span>
+                <h3>{{ active_coupons }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <div class="search-box-large">
+            <i class="fas fa-search"></i>
+            <input type="text" id="couponSearch" placeholder="Search by code or description...">
+        </div>
+
+        <div class="filter-group">
+            <select class="filter-select" id="statusFilter">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="expired">Expired</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Coupons Grid -->
+    <div class="coupons-grid">
+        {% for coupon in coupons %}
+        <div class="coupon-card" data-coupon-id="{{ coupon.id }}">
+            <div class="coupon-header">
+                <div class="coupon-code">
+                    <i class="fas fa-tag"></i>
+                    <span>{{ coupon.code }}</span>
+                </div>
+                <div class="coupon-toggle">
+                    <label class="switch">
+                        <input type="checkbox" {% if coupon.active %}checked{% endif %} data-coupon-id="{{ coupon.id }}"
+                            class="coupon-toggle-input">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="coupon-body">
+                <div class="coupon-value">
+                    {% if coupon.coupon_type == 'percentage' %}
+                    <span class="value-large">{{ coupon.value }}%</span>
+                    <span class="value-label">OFF</span>
+                    {% else %}
+                    <span class="value-large">₹{{ coupon.value }}</span>
+                    <span class="value-label">OFF</span>
+                    {% endif %}
+                </div>
+
+                <p class="coupon-description">{{ coupon.description|truncatewords:15 }}</p>
+
+                <div class="coupon-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>{{ coupon.start_date|date:"M d" }} - {{ coupon.end_date|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-users"></i>
+                        <span>{{ coupon.usages.count }}/{{ coupon.max_usage|default:"∞" }} used</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="coupon-footer">
+                <a href="{% url 'admin_dashboard:coupon_detail' coupon.pk %}" class="btn-sm btn-outline">
+                    <i class="fas fa-eye"></i>
+                    View Details
+                </a>
+                <a href="{% url 'admin_dashboard:coupon_update' coupon.pk %}" class="btn-sm btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Edit
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state-full">
+            <i class="fas fa-ticket-alt"></i>
+            <h3>No Coupons Found</h3>
+            <p>Create your first coupon to start offering discounts</p>
+            <a href="{% url 'admin_dashboard:coupon_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Create Coupon
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/coupons.js' %}"></script>
+{% endblock %}

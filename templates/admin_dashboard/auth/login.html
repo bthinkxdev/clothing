@@ -1,0 +1,118 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard Login</title>
+    <link rel="stylesheet" href="{% static 'admin_dashboard/css/admin.css' %}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fb 0%, #eef2f7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            padding: 28px;
+            border: 1px solid var(--border-color);
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .auth-header h1 {
+            margin: 0 0 6px;
+            font-size: 22px;
+            color: var(--text-primary);
+        }
+        .auth-header p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+        .auth-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+            transition: all var(--transition-fast);
+            font-size: 14px;
+        }
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.12);
+            background: white;
+        }
+        .errorlist {
+            color: var(--danger-color);
+            font-size: 13px;
+            margin: 6px 0 0;
+            list-style: none;
+            padding-left: 0;
+        }
+        .btn-submit {
+            width: 100%;
+            justify-content: center;
+        }
+        .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+        }
+        .meta a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>Admin Login</h1>
+            <p>Sign in to manage your store</p>
+        </div>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <ul class="errorlist">{{ form.non_field_errors }}</ul>
+            {% endif %}
+            <div class="form-group">
+                <label class="form-label" for="{{ form.username.id_for_label }}">Username or Email</label>
+                <input type="text" name="username" autocomplete="username" class="auth-input" id="{{ form.username.id_for_label }}" value="{{ form.username.value|default_if_none:'' }}">
+                {% if form.username.errors %}<ul class="errorlist">{{ form.username.errors }}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+                <input type="password" name="password" autocomplete="current-password" class="auth-input" id="{{ form.password.id_for_label }}">
+                {% if form.password.errors %}<ul class="errorlist">{{ form.password.errors }}</ul>{% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary btn-submit">Sign In</button>
+            <div class="meta">
+                <span></span>
+                <span class="text-muted" style="color: var(--text-muted); font-size: 13px;">Need help? Contact an administrator.</span>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+

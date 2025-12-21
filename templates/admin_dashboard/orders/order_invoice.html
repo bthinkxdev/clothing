@@ -1,0 +1,99 @@
+<!-- templates/admin_dashboard/orders/order_invoice.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Invoice - {{ invoice_number }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/orders.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-file-invoice-dollar"></i> Invoice {{ invoice_number }}</h1>
+            <p>Issued on {{ invoice_date|date:"M d, Y" }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="?download=pdf" class="btn btn-primary">
+                <i class="fas fa-download"></i> Download PDF
+            </a>
+            <a href="{% url 'admin_dashboard:order_detail' order.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Order
+            </a>
+        </div>
+    </div>
+
+    <div class="card invoice-card">
+        <div class="card-body">
+            <div class="invoice-header">
+                <div>
+                    <h2>ColorPixel</h2>
+                    <p>Order ID: {{ order.id }}</p>
+                    <p>Invoice #: {{ invoice_number }}</p>
+                    <p>Date: {{ invoice_date|date:"M d, Y" }}</p>
+                </div>
+                <div class="invoice-address">
+                    <h4>Billing To</h4>
+                    {% if order.address %}
+                    <p>{{ order.address.full_name }}</p>
+                    <p>{{ order.address.line1 }}</p>
+                    <p>{{ order.address.city }}, {{ order.address.state }} {{ order.address.postal_code }}</p>
+                    <p>{{ order.address.country }}</p>
+                    {% else %}
+                    <p>No billing address</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ item.variant.product.name }} - {{ item.variant.name|default:item.variant.sku }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>₹{{ item.price }}</td>
+                            <td>₹{% widthratio item.price 1 item.quantity %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center">No items</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="invoice-summary">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span>₹{{ order.subtotal|default:order.total|default:"0.00" }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Discount</span>
+                    <span>- ₹{{ order.discount_total|default:"0.00" }}</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Grand Total</span>
+                    <span>₹{{ order.total|default:"0.00" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/orders.js' %}"></script>
+{% endblock %}
+

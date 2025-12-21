@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order {{ order.id }} - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container account-page">
+    <div class="card">
+        <h2>Order {{ order.id }}</h2>
+        <div class="summary">
+            <div class="summary-row"><span>Status</span><span class="badge">{{ order.status }}</span></div>
+            <div class="summary-row"><span>Total</span><span>₹{{ order.total }}</span></div>
+            <div class="summary-row"><span>Placed</span><span>{{ order.placed_at|date:"M d, Y" }}</span></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Items</h2>
+        <table class="table">
+            <thead><tr><th>Product</th><th>Variant</th><th>Qty</th><th>Price</th></tr></thead>
+            <tbody>
+                {% for item in order_items %}
+                <tr>
+                    <td>{{ item.variant.product.name }}</td>
+                    <td>
+                        {% if item.variant.size %}Size: {{ item.variant.size }}{% endif %}
+                        {% if item.variant.color %}{% if item.variant.size %} | {% endif %}Color: {{ item.variant.color }}{% endif %}
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₹{{ item.unit_price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Tracking</h2>
+        {% if tracking_timeline %}
+        <div class="timeline">
+            {% for item in tracking_timeline %}
+            <div class="timeline-item">
+                <strong>{{ item.label }}</strong> - {% if item.completed %}Completed{% else %}Pending{% endif %}<br>
+                {% if item.date %}<span class="address-meta">{{ item.date|date:"M d, Y H:i" }}</span>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <div class="address-meta">No tracking updates.</div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>Payment</h2>
+        {% if payment %}
+        <div class="summary">
+            <div class="summary-row"><span>Method</span><span>{{ payment.method }}</span></div>
+            <div class="summary-row"><span>Status</span><span class="badge">{{ payment.status }}</span></div>
+            <div class="summary-row"><span>Amount</span><span>₹{{ payment.amount }}</span></div>
+        </div>
+        {% else %}
+            <div class="address-meta">No payment recorded.</div>
+        {% endif %}
+    </div>
+
+    {% if can_cancel %}
+    <form method="post" action="{% url 'order_cancel' order.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary">Cancel Order</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

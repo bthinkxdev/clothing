@@ -1,0 +1,70 @@
+<!-- templates/admin_dashboard/inventory/inventory_form.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Update Inventory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/inventory.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="inventory-form-page">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-warehouse"></i> Update Inventory</h1>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:inventory_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Inventory
+            </a>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="{{ form.quantity.id_for_label }}" class="form-label required">
+                        <i class="fas fa-box"></i> Quantity
+                    </label>
+                    {{ form.quantity }}
+                    {% if form.quantity.errors %}<div class="error-message">{{ form.quantity.errors }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.low_stock_threshold.id_for_label }}" class="form-label">
+                        <i class="fas fa-exclamation-triangle"></i> Low Stock Threshold
+                    </label>
+                    {{ form.low_stock_threshold }}
+                    {% if form.low_stock_threshold.errors %}<div class="error-message">{{
+                        form.low_stock_threshold.errors }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.reserved.id_for_label }}" class="form-label">
+                        <i class="fas fa-lock"></i> Reserved
+                    </label>
+                    {{ form.reserved }}
+                    <small class="form-help">Reserved quantity (readonly)</small>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'admin_dashboard:inventory_list' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Update Inventory
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/inventory.js' %}"></script>
+{% endblock %}

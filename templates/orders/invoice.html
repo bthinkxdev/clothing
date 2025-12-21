@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Invoice {{ order.id }} - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container account-page">
+    <div class="card">
+        <h2>Invoice #{{ order.id }}</h2>
+        <div class="summary">
+            <div class="summary-row"><span>Date</span><span>{{ order.placed_at|date:"M d, Y" }}</span></div>
+            <div class="summary-row"><span>Status</span><span class="badge">{{ order.status }}</span></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Billing & Shipping</h2>
+        {% if order.address %}
+        <div class="address-meta">
+            {{ order.address.full_name }}<br>
+            {{ order.address.address_line1 }}{% if order.address.address_line2 %}, {{ order.address.address_line2 }}{% endif %}<br>
+            {{ order.address.city }}, {{ order.address.state }} - {{ order.address.postal_code }}<br>
+            {{ order.address.country }}<br>
+            Phone: {{ order.address.phone }}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>Items</h2>
+        <table class="table">
+            <thead><tr><th>Product</th><th>Qty</th><th>Unit</th><th>Total</th></tr></thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td>{{ item.variant.product.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₹{{ item.unit_price }}</td>
+                    <td>₹{{ item.unit_price|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="summary" style="margin-top:10px;">
+            <div class="summary-row"><span>Subtotal</span><span>₹{{ order.subtotal }}</span></div>
+            <div class="summary-row"><span>Shipping</span><span>₹{{ order.shipping_amount }}</span></div>
+            <div class="summary-row"><span>Tax</span><span>₹{{ order.tax_amount }}</span></div>
+            <div class="summary-row"><span>Discount</span><span>- ₹{{ order.discount_amount }}</span></div>
+            <div class="summary-row total"><span>Total</span><span>₹{{ order.total }}</span></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

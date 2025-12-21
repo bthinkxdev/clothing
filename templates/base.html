@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}Ultimate Fashion Destination - Shop Latest Trends{% endblock %}">
+    <title>{% block title %}Fashion Store{% endblock %}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Global stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/chatbot.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% include 'includes/header.html' %}
+    
+    {% include 'includes/messages.html' %}
+    
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include 'includes/footer.html' %}
+
+    <!-- Quick view modal -->
+    <div class="quickview-overlay" data-quickview-overlay>
+        <div class="quickview-modal" data-quickview-modal>
+            <button class="quickview-close" data-quickview-close aria-label="Close">&times;</button>
+            <div class="quick-view-loading">Loading...</div>
+        </div>
+    </div>
+    {% include 'includes/chatbot_icon.html' %}
+    {% include 'includes/chatbot_window.html' %}
+    
+    <script src="{% static 'js/chatbot.js' %}"></script>
+
+    <!-- Global scripts -->
+    <script src="{% static 'js/base.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

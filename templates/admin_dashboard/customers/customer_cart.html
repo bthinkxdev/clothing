@@ -1,0 +1,71 @@
+<!-- templates/admin_dashboard/customers/customer_cart.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Customer Cart - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/customers.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-shopping-cart"></i> Cart - {{ customer.username }}</h1>
+            <p>{{ item_count }} item(s) in cart</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:customer_detail' customer.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to customer
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if cart_items %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Variant</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart_items %}
+                        <tr>
+                            <td>{{ item.variant.product.name }}</td>
+                            <td>{{ item.variant.name|default:item.variant.sku }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>₹{{ item.price }}</td>
+                            <td>₹{% widthratio item.price 1 item.quantity %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="summary-row total">
+                <span>Cart Total</span>
+                <span>₹{{ cart_total|default:"0.00" }}</span>
+            </div>
+            {% else %}
+            <div class="empty-state-full">
+                <i class="fas fa-cart-plus"></i>
+                <h3>No active cart</h3>
+                <p>This customer currently has no items in their cart.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/customers.js' %}"></script>
+{% endblock %}
+

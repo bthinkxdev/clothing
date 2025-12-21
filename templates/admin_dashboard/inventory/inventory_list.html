@@ -1,0 +1,147 @@
+<!-- templates/admin_dashboard/inventory/inventory_list.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Inventory Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/inventory.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="inventory-management">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-warehouse"></i> Inventory Management</h1>
+            <p>Monitor and manage product stock levels</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:low_stock_report' %}" class="btn btn-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                Low Stock Report
+            </a>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon bg-blue">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Total Products</span>
+                <h3>{{ total_products }}</h3>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon bg-orange">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Low Stock Items</span>
+                <h3>{{ low_stock_count }}</h3>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon bg-red">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Out of Stock</span>
+                <h3>{{ out_of_stock_count }}</h3>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon bg-green">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Stock Value</span>
+                <h3>₹{{ total_stock_value|floatformat:0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <div class="search-box-large">
+            <i class="fas fa-search"></i>
+            <input type="text" id="inventorySearch" placeholder="Search by SKU or product name...">
+        </div>
+
+        <div class="filter-group">
+            <select class="filter-select" id="stockFilter">
+                <option value="">All Stock Levels</option>
+                <option value="in_stock">In Stock</option>
+                <option value="low_stock">Low Stock</option>
+                <option value="out_of_stock">Out of Stock</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Variant</th>
+                        <th>Quantity</th>
+                        <th>Reserved</th>
+                        <th>Available</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in inventory_items %}
+                    <tr>
+                        <td>
+                            <div class="product-info">
+                                <strong>{{ item.variant.product.name }}</strong>
+                            </div>
+                        </td>
+                        <td><code>{{ item.variant.sku }}</code></td>
+                        <td>
+                            <span class="variant-badge">
+                                {{ item.variant.size|default:"—" }} / {{ item.variant.color|default:"—" }}
+                            </span>
+                        </td>
+                        <td><strong>{{ item.quantity }}</strong></td>
+                        <td class="text-muted">{{ item.reserved }}</td>
+                        <td><strong>{{ item.available_stock }}</strong></td>
+                        <td>
+                            {% if item.quantity == 0 %}
+                            <span class="stock-badge stock-out">Out of Stock</span>
+                            {% elif item.quantity <= item.low_stock_threshold %} <span class="stock-badge stock-low">Low
+                                Stock</span>
+                                {% else %}
+                                <span class="stock-badge stock-in">In Stock</span>
+                                {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'admin_dashboard:inventory_update' item.pk %}" class="btn-icon btn-edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <p class="text-muted">No inventory items found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/inventory.js' %}"></script>
+{% endblock %}

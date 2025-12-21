@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - Address{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/checkout.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container checkout-page">
+    <div class="checkout-grid">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2>Select Address</h2>
+                {% if addresses %}
+                <button type="button" class="btn btn-secondary" id="toggleAddressFormBtn">
+                    <i class="fas fa-plus"></i> Add New
+                </button>
+                {% endif %}
+            </div>
+            <div class="address-list">
+                {% if addresses %}
+                    {% for addr in addresses %}
+                    <div class="address-card">
+                        <div>
+                            <strong>{{ addr.full_name }}</strong>
+                            {% if addr.is_default %}<span class="badge-default">Default</span>{% endif %}<br>
+                            <div class="address-meta">
+                                {{ addr.address_line1 }}{% if addr.address_line2 %}, {{ addr.address_line2 }}{% endif %}<br>
+                                {{ addr.city }}, {{ addr.state }} - {{ addr.postal_code }}<br>
+                                {{ addr.country }}<br>
+                                Phone: {{ addr.phone }}
+                            </div>
+                        </div>
+                        <div class="address-actions">
+                            <form method="post" action="{% url 'checkout_address_select' addr.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary" {% if selected_address_id == addr.id %}disabled{% endif %}>Use this</button>
+                            </form>
+                            <a class="btn btn-secondary" href="{% url 'address_edit' addr.id %}">Edit</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <h3>No addresses saved</h3>
+                        <p>Add an address to continue.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card address-form-card" id="addressFormCard" style="display: {% if addresses %}none{% else %}block{% endif %};">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2>Add New Address</h2>
+                {% if addresses %}
+                <button type="button" class="btn-icon" id="closeAddressFormBtn" style="border: none; color: var(--text-light);">
+                    <i class="fas fa-times"></i>
+                </button>
+                {% endif %}
+            </div>
+            <form method="post" class="form-grid">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Save & Continue</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card order-summary-card">
+        <h2>Order Summary</h2>
+        <table class="table-mini">
+            <thead>
+                <tr><th>Item</th><th>Qty</th><th>Price</th></tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                <tr>
+                    <td>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            {% with item.variant.product.images.first as img %}
+                                {% if img %}<img src="{{ img.image.url }}" alt="{{ item.variant.product.name }}">{% endif %}
+                            {% endwith %}
+                            {{ item.variant.product.name }}
+                        </div>
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₹{{ item.variant.get_price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="line"></div>
+        <div class="summary">
+            <div class="summary-row"><span>Subtotal</span><span>₹{{ subtotal }}</span></div>
+            <div class="summary-row total"><span>Total</span><span>₹{{ subtotal }}</span></div>
+            {% if selected_address_id %}
+            <a href="{% url 'checkout_shipping' %}" class="btn btn-primary" style="width:100%; text-align:center; margin-top:12px;">Continue to Shipping</a>
+            {% else %}
+            <button type="button" class="btn btn-secondary" disabled style="width:100%; text-align:center; margin-top:12px;">Select an address to continue</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('toggleAddressFormBtn');
+    const closeBtn = document.getElementById('closeAddressFormBtn');
+    const formCard = document.getElementById('addressFormCard');
+    
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            formCard.style.display = 'block';
+            formCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            toggleBtn.style.display = 'none';
+        });
+    }
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            formCard.style.display = 'none';
+            if (toggleBtn) {
+                toggleBtn.style.display = 'inline-flex';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

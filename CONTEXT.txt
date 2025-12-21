@@ -1,0 +1,808 @@
+CONTEXT VARIABLES FOR EVERY VIEW
+
+## Complete Context Variables Reference
+
+### Global Context (Available in All Templates via CommonContextMixin)
+{
+    'cart': Cart object or None,
+    'cart_count': Integer (number of items),
+    'wishlist': Wishlist object or None,
+    'wishlist_count': Integer (number of items),
+    'categories': QuerySet of Category objects (parent categories only),
+    'user': request.user (Django built-in),
+}
+```
+
+---
+
+### HomeView Context
+```python
+{
+    # Global context +
+    'banners': QuerySet[Banner] - Active banners within date range,
+    'new_arrivals': QuerySet[Product] - Tagged as 'new', limited to 12,
+    'best_sellers': QuerySet[Product] - Tagged as 'best-seller', limited to 12,
+    'sale_products': QuerySet[Product] - Products with discounts, limited to 12,
+    'featured_categories': QuerySet[Category] - Top-level categories, limited to 8,
+}
+```
+
+---
+
+### ProductListView Context
+```python
+{
+    # Global context +
+    'products': Paginated QuerySet[Product] - Filtered and sorted products,
+    'current_category': Category object or None,
+    'breadcrumbs': List[Dict] - [{'name': str, 'url': str}],
+    
+    # Filter Options
+    'available_sizes': List[str] - Distinct sizes from variants,
+    'available_colors': List[str] - Distinct colors from variants,
+    'available_brands': List[str] - Distinct brands,
+    'price_range': Dict - {'min_price': Decimal, 'max_price': Decimal},
+    
+    # Applied Filters
+    'applied_filters': Dict - {
+        'sizes': List[str],
+        'colors': List[str],
+        'brands': List[str],
+        'price_min': str or None,
+        'price_max': str or None,
+        'discount': str or None,
+        'availability': str or None,
+        'rating': str or None,
+    },
+    
+    # Sorting & Pagination
+    'sort_by': str - Current sort option ('popularity', 'price_low', etc.),
+    'per_page': int - Items per page,
+    'total_count': int - Total matching products,
+    'paginator': Paginator object,
+    'page_obj': Page object,
+}
+```
+
+---
+
+### ProductDetailView Context
+```python
+{
+    # Global context +
+    'product': Product object,
+    'variants': QuerySet[ProductVariant] - Active variants with inventory,
+    'default_variant': ProductVariant - Main/first variant,
+    'images': QuerySet[ProductImage] - All product images,
+    
+    # Reviews
+    'reviews': QuerySet[Review] - Approved reviews, limited to 10,
+    'total_reviews': int - Total approved review count,
+    'avg_rating': float - Average rating (0-5),
+    'rating_breakdown': Dict - {
+        1: {'count': int, 'percentage': float},
+        2: {'count': int, 'percentage': float},
+        3: {'count': int, 'percentage': float},
+        4: {'count': int, 'percentage': float},
+        5: {'count': int, 'percentage': float},
+    },
+    
+    # User Review Status
+    'can_review': bool - Whether user has purchased this product,
+    'user_review': Review object or None - User's existing review,
+    
+    # Recommendations
+    'similar_products': QuerySet[Product] - Same category, limited to 8,
+    'recently_viewed': QuerySet[Product] - From session, limited to 8,
+    
+    # Navigation
+    'breadcrumbs': List[Dict] - Full category hierarchy + product,
+}
+```
+
+---
+
+### ProductSearchView Context
+```python
+{
+    # Global context +
+    'products': Paginated QuerySet[Product] - Search results,
+    'query': str - Search query string,
+    'total_results': int - Number of matching products,
+    
+    # If no results:
+    'popular_searches': List[str] - Suggested search terms,
+    'trending_products': QuerySet[Product] - Fallback recommendations,
+    
+    # Same filters as ProductListView
+    'applied_filters': Dict,
+    'sort_by': str,
+}
+```
+
+---
+
+### CartView Context
+```python
+{
+    # Global context +
+    'cart': Cart object or None,
+    'cart_items': QuerySet[CartItem] - With variant, product, inventory,
+    'subtotal': Decimal - Cart total before charges,
+    'shipping': Decimal - Shipping charges,
+    'tax': Decimal - Tax amount,
+    'total': Decimal - Final total,
+    
+    # Issues
+    'stock_issues': List[Dict] - [
+        {'item': CartItem, 'available': int, 'requested': int}
+    ],
+    
+    # Coupons
+    'available_coupons': QuerySet[Coupon] - Currently valid coupons,
+    'applied_coupon': Coupon or None,
+}
+```
+
+---
+
+### WishlistView Context
+```python
+{
+    # Global context +
+    'wishlist': Wishlist object or None,
+    'wishlist_items': QuerySet[WishlistItem] - With variant, product, inventory,
+    'total_items': int - Item count,
+    'total_value': Decimal - Sum of all item prices,
+}
+```
+
+---
+
+### CheckoutAddressView Context
+```python
+{
+    # Global context +
+    'addresses': QuerySet[Address] - User's saved addresses,
+    'default_address': Address or None,
+    'selected_address_id': int or None - From session,
+    'address_form': AddressForm - For adding new address,
+    
+    # Cart Summary
+    'cart': Cart object,
+    'cart_items': QuerySet[CartItem],
+    'subtotal': Decimal,
+}
+```
+
+---
+
+### CheckoutShippingView Context
+```python
+{
+    # Global context +
+    'selected_address': Address object,
+    'shipping_options': List[Dict] - [
+        {
+            'id': str,
+            'name': str,
+            'description': str,
+            'cost': Decimal,
+            'estimated_days': int,
+        }
+    ],
+    'selected_shipping': str or None - Shipping ID from session,
+    'cart': Cart object,
+    'subtotal': Decimal,
+}
+```
+
+---
+
+### CheckoutPaymentView Context
+```python
+{
+    # Global context +
+    'selected_address': Address object,
+    'cart': Cart object,
+    'cart_items': QuerySet[CartItem],
+    
+    # Pricing
+    'subtotal': Decimal,
+    'shipping': Decimal,
+    'tax': Decimal,
+    'discount': Decimal,
+    'total': Decimal - Final payable amount,
+    
+    # Payment Options
+    'payment_methods': List[Dict] - [
+        {
+            'id': str,
+            'name': str,
+            'icon': str,
+            'extra_charge': Decimal (optional),
+        }
+    ],
+    'wallet_balance': Decimal - User's wallet balance,
+    
+    # Coupons
+    'applied_coupon': Coupon or None,
+    
+    # Razorpay
+    'razorpay_key': str - Public API key,
+}
+```
+
+---
+
+### OrderSuccessView Context
+```python
+{
+    # Global context +
+    'order': Order object,
+    'order_items': QuerySet[OrderItem] - With variant and product,
+    'payment': Payment object - Successful payment,
+    'delivery_address': Address object,
+    'expected_delivery': date - Expected delivery date,
+    'tracking_available': bool - Whether tracking number exists,
+    'recommended_products': QuerySet[Product] - Post-purchase recommendations,
+}
+```
+
+---
+
+### MyOrdersView Context
+```python
+{
+    # Global context +
+    'orders': Paginated QuerySet[Order] - User's orders,
+    'status_filter': str - Current filter ('all', 'pending', 'delivered', etc.),
+    'date_from': str or None,
+    'date_to': str or None,
+    'order_count': int,
+}
+```
+
+---
+
+### OrderDetailView Context
+```python
+{
+    # Global context +
+    'order': Order object,
+    'order_items': QuerySet[OrderItem] - With variant and product,
+    'payment': Payment object - Successful payment,
+    'delivery_address': Address object,
+    
+    # Tracking
+    'tracking_timeline': List[Dict] - [
+        {
+            'status': str,
+            'label': str,
+            'completed': bool,
+            'date': datetime or None,
+        }
+    ],
+    
+    # Actions
+    'can_cancel': bool - Whether order can be cancelled,
+    'can_return': bool - Whether order can be returned,
+    'courier_tracking_url': str or None - External tracking link,
+}
+```
+
+---
+
+### AccountDashboardView Context
+```python
+{
+    # Global context +
+    'user': User object,
+    'recent_orders': QuerySet[Order] - Last 5 orders,
+    'total_orders': int,
+    'wallet_balance': Decimal,
+    'loyalty_points': int,
+    'active_coupons': QuerySet[Coupon],
+    'saved_addresses': int - Address count,
+}
+```
+
+---
+
+### ReviewCreateView Context
+```python
+{
+    # Global context +
+    'product': Product object,
+    'form': ReviewForm,
+    'is_edit': bool - True if editing existing review,
+    'review': Review object or None - If editing,
+    'order_item': OrderItem - Proof of purchase,
+}
+```
+
+---
+
+# SECTION F: SPECIAL FLOWS & EDGE CASES
+
+## 1. OTP Login Flow (Detailed)
+
+### Step 1: Login Page
+```
+URL: /auth/login/
+View: LoginView (TemplateView)
+Template: auth/login.html
+
+UI Elements:
+- Phone number input (10 digits)
+- Send OTP button
+- Privacy policy checkbox
+- Guest checkout option
+```
+
+### Step 2: Send OTP
+```
+URL: /auth/otp/send/ (AJAX POST)
+View: OTPSendView
+
+Process:
+1. Validate phone number
+2. Generate 6-digit OTP
+3. Send via SMS gateway
+4. Store in session with expiry (5 minutes)
+5. Return success JSON
+
+Response:
+{
+    'success': True,
+    'message': 'OTP sent successfully'
+}
+```
+
+### Step 3: Verify OTP
+```
+URL: /auth/otp/verify/ (AJAX POST)
+View: OTPVerifyView
+
+Process:
+1. Get phone and OTP from request
+2. Check against session data
+3. Verify expiry
+4. If valid:
+   - Get or create user with phone
+   - Login user
+   - Clear session OTP data
+   - Redirect to 'next' URL or home
+5. If invalid:
+   - Return error
+
+Response:
+{
+    'success': True,
+    'redirect': '/checkout/address/'
+}
+```
+
+### Edge Cases Handled:
+- **OTP Expiry:** After 5 minutes, show "OTP expired, resend"
+- **Invalid OTP:** Show error, allow 3 attempts before requiring resend
+- **Resend Limit:** Max 3 OTPs within 30 minutes
+- **Phone Already Exists:** Auto-login existing user
+- **Phone Not Registered:** Create new customer account
+- **Return URL:** After login, redirect to previous page using 'next' parameter
+
+---
+
+## 2. Cart & Inventory Management Flow
+
+### Adding to Cart
+```python
+Process:
+1. Check variant is active
+2. Check available stock (quantity - reserved)
+3. If in stock:
+   - Add to cart or increment quantity
+   - Do NOT reserve inventory yet
+4. If insufficient stock:
+   - Add maximum available
+   - Show warning message
+
+Edge Cases:
+- Out of stock: Disable add-to-cart, show "Notify Me"
+- Low stock: Show "Only X left" badge
+- Preorder variant: Allow add-to-cart, show "Preorder" badge
+```
+
+### Cart to Checkout
+```python
+Process:
+1. User clicks "Proceed to Checkout"
+2. Verify all cart items have stock
+3. Reserve inventory for all items
+4. Redirect to checkout/address
+
+Edge Cases:
+- Stock became unavailable: Remove item, show message
+- Quantity exceeds stock: Reduce to available, show warning
+```
+
+### Checkout Abandonment
+```python
+Process (Background Task - Celery):
+1. After 30 minutes of inactivity
+2. Unreserve inventory
+3. Mark cart as abandoned
+4. Send reminder email after 24 hours
+
+Cleanup:
+- Unreserved inventory available for other customers
+- Cart remains but not blocking inventory
+```
+
+### Order Placement
+```python
+Process:
+1. Create order record
+2. Create order items from cart
+3. Reserve inventory for each item
+4. Create payment record
+5. If payment succeeds:
+   - Deduct inventory permanently
+   - Unreserve from reserved pool
+   - Clear cart
+6. If payment fails:
+   - Keep order as 'pending'
+   - Keep inventory reserved for retry
+   - After 2 hours, unreserve and cancel order
+```
+
+---
+
+## 3. Coupon Application Flow
+
+### Apply Coupon
+```python
+URL: /checkout/apply-coupon/
+View: ApplyCouponView (POST)
+
+Validation:
+1. Coupon code exists
+2. Coupon is active
+3. Within date range (start_date to end_date)
+4. Cart value >= min_purchase_amount
+5. Global usage limit not exceeded
+6. User usage limit not exceeded
+7. Product/category restrictions match cart items
+
+Process:
+1. Validate all conditions
+2. Calculate discount amount
+3. Store coupon code in session
+4. Redirect to payment page
+
+Edge Cases:
+- Invalid code: "Coupon not found"
+- Expired: "Coupon expired on [date]"
+- Below minimum: "Add ₹X more to apply this coupon"
+- Already used: "You've already used this coupon"
+- Limit exceeded: "This coupon is no longer available"
+```
+
+### Remove Coupon
+```python
+URL: /checkout/remove-coupon/
+View: RemoveCouponView (POST)
+
+Process:
+1. Remove from session
+2. Recalculate totals
+3. Redirect back
+```
+
+### Coupon Usage Record
+```python
+Created when:
+- Order is successfully placed and paid
+
+Record includes:
+- Coupon
+- User
+- Order reference
+- Timestamp
+
+Used for:
+- Tracking usage limits
+- Preventing re-use
+- Analytics
+```
+
+---
+
+## 4. Multiple Payment Attempts
+
+### Payment Failure Handling
+```python
+Scenario: Razorpay payment fails
+
+Process:
+1. Order created, status='pending'
+2. Payment record created, status='failed'
+3. Inventory remains reserved
+4. User redirected to failure page
+5. Options shown:
+   - Retry with same method
+   - Choose different method
+   - Contact support
+
+Retry Process:
+1. Get existing order
+2. Create new payment record
+3. Initialize payment again
+4. On success: Mark order paid
+5. On failure: Keep order pending
+
+Auto-Cancellation:
+- After 2 hours of pending payment
+- Unreserve inventory
+- Change order status to 'cancelled'
+- Send email notification
+```
+
+---
+
+## 5. Guest Checkout → Login → Cart Merge
+
+### Guest Cart Storage
+```python
+# Option 1: Session-based
+request.session['guest_cart'] = {
+    'items': [
+        {'variant_id': 1, 'quantity': 2},
+        {'variant_id': 5, 'quantity': 1},
+    ]
+}
+
+# Option 2: Cookie-based
+# For persistent guest carts across sessions
+```
+
+### Merge on Login
+```python
+Process (in OTPVerifyView):
+1. User logs in successfully
+2. Check for guest_cart in session
+3. Get or create user's Cart
+4. For each guest cart item:
+   - Check if already in user cart
+   - If yes: Update quantity (combine)
+   - If no: Add new CartItem
+5. Clear guest_cart from session
+
+Edge Cases:
+- Duplicate variants: Combine quantities
+- Out of stock: Add available quantity only
+- User cart + guest cart > stock: Cap at available
+```
+
+---
+
+## 6. Variant Out of Stock Handling
+
+### Product Detail Page
+```javascript
+// When variant selected
+$.ajax({
+    url: '/api/variants/' + variant_id + '/stock/',
+    success: function(data) {
+        if (data.in_stock) {
+            $('#add-to-cart').prop('disabled', false);
+            $('#stock-status').html('<span class="text-success">In Stock</span>');
+            
+            if (data.is_low) {
+                $('#stock-status').append('<span class="text-warning"> - Only ' + data.available + ' left!</span>');
+            }
+        } else {
+            $('#add-to-cart').prop('disabled', true);
+            $('#stock-status').html('<span class="text-danger">Out of Stock</span>');
+            $('#notify-me').show();
+        }
+    }
+});
+```
+
+### Cart Page
+
+# Display stock issues prominently
+for issue in stock_issues:
+    message = f"{issue['item'].variant.product.name} - Only {issue['available']} available (you requested {issue['requested']})"
+    # Show warning banner
+    # Disable checkout if critical issue
+```
+
+### Checkout Validation
+
+# Before order creation
+for item in cart_items:
+    available = item.variant.available_stock()
+    if available < item.quantity:
+        raise ValidationError(f"Insufficient stock for {item.variant.product.name}")
+```
+
+---
+
+## 7. Preorder Variant Handling
+
+### Product Display
+```html
+{% if variant.is_preorder %}
+    <span class="badge bg-info">Pre-Order</span>
+    <small class="text-muted">Ships in 2-3 weeks</small>
+{% endif %}
+```
+
+### Add to Cart
+
+# Preorder items don't check current stock
+# They're assumed to be fulfilled later
+
+if variant.is_preorder:
+    # Allow any quantity within reasonable limits
+    max_quantity = 10  # Business rule
+else:
+    max_quantity = variant.available_stock()
+```
+
+### Order Processing
+
+# Preorder items:
+# - Don't deduct from current inventory
+# - Get special shipping timeline
+# - May require advance payment
+```
+
+---
+
+## 8. Low Stock Alerts
+
+### Customer Notification
+```html
+{% if variant.inventory.is_low %}
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        Hurry! Only {{ variant.inventory.quantity }} left in stock!
+    </div>
+{% endif %}
+```
+
+### Admin Notification (Background Task)
+
+# Celery periodic task - runs every 6 hours
+@app.task
+def check_low_stock_alerts():
+    low_stock = Inventory.objects.filter(
+        quantity__lte=F('low_stock_threshold')
+    ).select_related('variant__product')
+    
+    if low_stock.exists():
+        # Send email to admin with list
+        send_mail(
+            subject=f'Low Stock Alert - {low_stock.count()} items',
+            message=...,
+            recipient_list=[settings.ADMIN_EMAIL]
+        )
+```
+
+---
+
+## 9. Order Cancellation Flow
+
+### Customer-Initiated
+
+URL: /orders/<uuid:id>/cancel/
+View: OrderCancelView (POST)
+
+Conditions:
+- Order status in ['pending', 'processing']
+- Not yet shipped
+
+Process:
+1. Check cancellation eligibility
+2. Unreserve/restore inventory
+3. Update order status to 'cancelled'
+4. If payment made:
+   - Initiate refund
+   - Credit to wallet or original payment method
+5. Send cancellation email
+
+Edge Cases:
+- Already shipped: Cannot cancel, show return option
+- COD order: Just cancel, no refund needed
+- Partial cancellation: Not supported (business rule)
+```
+
+---
+
+## 10. Wallet Payment Flow
+
+### Wallet Payment
+
+Process:
+1. Check wallet balance >= order total
+2. Deduct from wallet balance
+3. Create payment record (status='success')
+4. Mark order as paid
+5. Finalize order (deduct inventory)
+6. Clear cart
+7. Redirect to success page
+
+Edge Cases:
+- Insufficient balance: Show error, suggest other methods
+- Race condition: Use F() expressions and transactions
+```
+
+### Wallet Top-Up
+
+Process:
+1. User selects amount
+2. Initiate Razorpay payment
+3. On success:
+   - Credit to wallet_balance
+   - Create transaction record
+4. On failure:
+   - Show error, allow retry
+```
+
+---
+
+## 11. Gift Card Redemption
+
+### Apply Gift Card
+
+Process:
+1. Validate gift card code
+2. Check active status
+3. Check expiry
+4. Check balance >= redemption amount
+5. Deduct from gift card balance
+6. Apply to order discount
+7. Create redemption record
+
+Edge Cases:
+- Expired: "Gift card expired on [date]"
+- Inactive: "Invalid gift card"
+- Insufficient balance: "Gift card balance: ₹X, Order total: ₹Y"
+- Multiple gift cards: Allow stacking up to order total
+```
+
+---
+
+## 12. Review Submission Requirements
+
+### Eligibility Check
+
+def can_review(user, product):
+    # Must have purchased and received
+    return OrderItem.objects.filter(
+        order__user=user,
+        order__status='delivered',
+        variant__product=product
+    ).exists()
+```
+
+### Duplicate Prevention
+
+# One review per product per user
+# Allow editing existing review
+# Show "Update Review" if already reviewed
+```
+
+### Review Moderation
+
+# All reviews start with approved=False
+# Admin reviews and approves
+# Then visible on product page
+```
+
+---
+
+This comprehensive reference covers all major flows, edge cases, and context data needed for a production-ready eCommerce platform!

@@ -1,0 +1,94 @@
+<!-- templates/admin_dashboard/inventory/low_stock_report.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Low Stock Report{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/inventory.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="low-stock-report">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-exclamation-triangle"></i> Low Stock Report</h1>
+            <p>Products that need restocking</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:inventory_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Inventory
+            </a>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i>
+                Print Report
+            </button>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Variant</th>
+                        <th>Current Stock</th>
+                        <th>Threshold</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in low_stock_items %}
+                    <tr class="{% if item.quantity == 0 %}critical-row{% endif %}">
+                        <td><strong>{{ item.variant.product.name }}</strong></td>
+                        <td><code>{{ item.variant.sku }}</code></td>
+                        <td>
+                            <span class="variant-badge">
+                                {{ item.variant.size|default:"—" }} / {{ item.variant.color|default:"—" }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong class="{% if item.quantity == 0 %}text-danger{% else %}text-warning{% endif %}">
+                                {{ item.quantity }}
+                            </strong>
+                        </td>
+                        <td>{{ item.low_stock_threshold }}</td>
+                        <td>
+                            {% if item.quantity == 0 %}
+                            <span class="stock-badge stock-out">Out of Stock</span>
+                            {% else %}
+                            <span class="stock-badge stock-low">Low Stock</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'admin_dashboard:inventory_update' item.pk %}" class="btn-sm btn-primary">
+                                <i class="fas fa-plus"></i>
+                                Restock
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <h3>All Stock Levels Good!</h3>
+                                <p>No products are running low on stock</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/inventory.js' %}"></script>
+{% endblock %}

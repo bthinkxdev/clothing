@@ -1,0 +1,174 @@
+<!-- templates/admin_dashboard/customers/customer_detail.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Customer Detail - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/customers.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-user"></i> {{ customer.username }}</h1>
+            <p>{{ customer.email }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:customer_orders' customer.id %}" class="btn btn-primary"><i class="fas fa-shopping-bag"></i> Orders</a>
+            <a href="{% url 'admin_dashboard:customer_cart' customer.id %}" class="btn btn-secondary"><i class="fas fa-shopping-cart"></i> Cart</a>
+            <a href="{% url 'admin_dashboard:customer_wishlist' customer.id %}" class="btn btn-outline"><i class="fas fa-heart"></i> Wishlist</a>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon bg-blue"><i class="fas fa-receipt"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Total Orders</span>
+                <h3>{{ order_stats.total_orders|default:0 }}</h3>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-green"><i class="fas fa-indian-rupee-sign"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Total Spent</span>
+                <h3>₹{{ order_stats.total_spent|default:"0.00" }}</h3>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-purple"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Avg. Order Value</span>
+                <h3>₹{{ order_stats.avg_order_value|default:"0.00" }}</h3>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-orange"><i class="fas fa-wallet"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Wallet Balance</span>
+                <h3>₹{{ wallet_balance|default:"0.00" }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-info-circle"></i> Account Info</h3>
+            </div>
+            <div class="card-body info-grid">
+                <div class="info-item">
+                    <span class="label">Email</span>
+                    <span class="value">{{ customer.email }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Phone</span>
+                    <span class="value">{{ customer.phone|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Joined</span>
+                    <span class="value">{{ customer.date_joined|date:"M d, Y" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Status</span>
+                    <span class="value">
+                        {% if customer.is_blocked %}
+                        <span class="badge badge-danger">Blocked</span>
+                        {% elif customer.is_active %}
+                        <span class="badge badge-success">Active</span>
+                        {% else %}
+                        <span class="badge">Inactive</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-clock"></i> Recent Orders</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-compact">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Placed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>#{{ order.id|stringformat:"s"|slice:":8" }}</td>
+                                <td>₹{{ order.total|default:"0.00" }}</td>
+                                <td><span class="badge badge-pill">{{ order.status|capfirst }}</span></td>
+                                <td>{{ order.placed_at|date:"M d, Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center">No recent orders</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header"><h3><i class="fas fa-shopping-cart"></i> Cart Snapshot</h3></div>
+            <div class="card-body">
+                {% if cart_items %}
+                <ul class="item-list">
+                    {% for item in cart_items %}
+                    <li>
+                        <div>
+                            <strong>{{ item.variant.product.name }}</strong><br>
+                            <small>{{ item.variant.name|default:item.variant.sku }}</small>
+                        </div>
+                        <span class="badge">{{ item.quantity }} x ₹{{ item.price }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span>₹{{ cart_total|default:"0.00" }}</span>
+                </div>
+                {% else %}
+                <p>No active cart.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3><i class="fas fa-heart"></i> Wishlist</h3></div>
+            <div class="card-body">
+                {% if wishlist_items %}
+                <ul class="item-list">
+                    {% for item in wishlist_items %}
+                    <li>
+                        <div>
+                            <strong>{{ item.variant.product.name }}</strong><br>
+                            <small>{{ item.variant.name|default:item.variant.sku }}</small>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>No wishlist items.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/customers.js' %}"></script>
+{% endblock %}
+

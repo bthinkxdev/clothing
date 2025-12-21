@@ -1,0 +1,75 @@
+{% load static %}
+<footer>
+    <div class="footer-main">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h3>About FASHION</h3>
+                    <p>Your ultimate destination for trendy and affordable fashion. We bring you the latest styles from around the world, delivered right to your doorstep.</p>
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                        <a href="#" aria-label="Pinterest"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-col">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="{% url 'product_list' %}">Shop All</a></li>
+                        <li><a href="{% url 'product_list' %}?tag=new">New Arrivals</a></li>
+                        <li><a href="{% url 'product_list' %}?tag=best-seller">Best Sellers</a></li>
+                        <li><a href="{% url 'product_list' %}?discount=20">Sale</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h3>Customer Care</h3>
+                    <ul>
+                        <li><a href="{% url 'contact' %}">Contact Us</a></li>
+                        <li><a href="{% url 'track_order' %}">Track Order</a></li>
+                        <li><a href="{% url 'shipping_policy' %}">Shipping Info</a></li>
+                        <li><a href="{% url 'return_policy' %}">Returns</a></li>
+                        <li><a href="{% url 'product_search' %}?q=size guide">Size Guide</a></li>
+                        <li><a href="{% url 'faq' %}">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h3>Company</h3>
+                    <ul>
+                        <li><a href="{% url 'about' %}">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="{% url 'product_search' %}?q=blog">Blog</a></li>
+                        <li><a href="{% url 'privacy' %}">Privacy Policy</a></li>
+                        <li><a href="{% url 'terms' %}">Terms of Service</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h3>Newsletter</h3>
+                    <p>Subscribe to get special offers and updates</p>
+                    <form class="newsletter-form" method="post" action="{% url 'newsletter_subscribe' %}">
+                        {% csrf_token %}
+                        <input type="email" name="email" placeholder="Your email" required>
+                        <button type="submit">Subscribe</button>
+                    </form>
+                    <div class="payment-methods">
+                        <i class="fab fa-cc-visa"></i>
+                        <i class="fab fa-cc-mastercard"></i>
+                        <i class="fab fa-cc-amex"></i>
+                        <i class="fab fa-google-pay"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer-bottom">
+        <div class="container">
+            <p>&copy; 2024 FASHION. All rights reserved.</p>
+        </div>
+    </div>
+</footer>

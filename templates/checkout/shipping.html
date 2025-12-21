@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - Shipping{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/checkout.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container checkout-page">
+    <div class="checkout-grid">
+        <div class="card">
+            <h2>Shipping Address</h2>
+            {% if selected_address %}
+                <div class="address-card">
+                    <div>
+                        <strong>{{ selected_address.full_name }}</strong><br>
+                        <div class="address-meta">
+                            {{ selected_address.address_line1 }}{% if selected_address.address_line2 %}, {{ selected_address.address_line2 }}{% endif %}<br>
+                            {{ selected_address.city }}, {{ selected_address.state }} - {{ selected_address.postal_code }}<br>
+                            {{ selected_address.country }}<br>
+                            Phone: {{ selected_address.phone }}
+                        </div>
+                    </div>
+                    <div class="address-actions">
+                        <a class="btn btn-secondary" href="{% url 'checkout_address' %}">Change</a>
+                    </div>
+                </div>
+            {% else %}
+                <p>No address selected. <a href="{% url 'checkout_address' %}">Select an address</a>.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h2>Shipping Options</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="shipping-options">
+                    {% for option in shipping_options %}
+                    <label class="shipping-option">
+                        <div>
+                            <div><strong>{{ option.name }}</strong></div>
+                            <div class="address-meta">{{ option.description }}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div>₹{{ option.cost }}</div>
+                            <div class="address-meta">{{ option.estimated_days }} days</div>
+                            <input type="radio" name="shipping_option" value="{{ option.id }}" data-cost="{{ option.cost }}" {% if forloop.first %}checked{% endif %}>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top:12px;">Continue to Payment</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+        <h2>Order Summary</h2>
+        <div class="summary">
+            <div class="summary-row"><span>Subtotal</span><span>₹{{ cart.total }}</span></div>
+            <div class="summary-row"><span>Shipping</span><span id="shippingCost">₹0.00</span></div>
+            <div class="summary-row total"><span>Estimated Total</span><span id="estimatedTotal">₹{{ cart.total }}</span></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const subtotal = parseFloat('{{ cart.total|floatformat:2 }}') || 0;
+    const shippingInputs = document.querySelectorAll('input[name="shipping_option"]');
+    const shippingCostEl = document.getElementById('shippingCost');
+    const estimatedEl = document.getElementById('estimatedTotal');
+
+    const updateTotals = () => {
+        const selected = document.querySelector('input[name="shipping_option"]:checked');
+        const ship = selected ? parseFloat(selected.dataset.cost || '0') : 0;
+        if (shippingCostEl) shippingCostEl.textContent = `₹${ship.toFixed(2)}`;
+        if (estimatedEl) estimatedEl.textContent = `₹${(subtotal + ship).toFixed(2)}`;
+    };
+
+    shippingInputs.forEach(input => input.addEventListener('change', updateTotals));
+    updateTotals();
+});
+</script>
+{% endblock %}

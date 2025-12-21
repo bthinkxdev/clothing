@@ -1,0 +1,1268 @@
+/* static/admin_dashboard/css/orders.css */
+@import url('./design-system.css');
+
+/* ============================================
+   iOS-Inspired Order Management Styles
+   Complete Implementation
+   ============================================ */
+
+/* ============================================
+   Stats Row - Dashboard Cards
+   ============================================ */
+
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 0;
+}
+
+.stat-card {
+    background: var(--ios-bg);
+    border: 1px solid var(--ios-separator);
+    border-radius: var(--ios-radius-lg);
+    padding: 24px;
+    box-shadow: var(--ios-shadow);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    transition: var(--ios-transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--ios-shadow-lg);
+}
+
+.stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon.bg-blue {
+    background: linear-gradient(135deg, #4A90E2, #5AC8FA);
+}
+
+.stat-icon.bg-green {
+    background: linear-gradient(135deg, #5CD65C, #4CAF50);
+}
+
+.stat-icon.bg-red {
+    background: linear-gradient(135deg, #FF3B30, #FF6B6B);
+}
+
+.stat-icon.bg-purple {
+    background: linear-gradient(135deg, #AF52DE, #D65CD6);
+}
+
+.stat-icon.bg-orange {
+    background: linear-gradient(135deg, #FF9500, #FFB340);
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--ios-text-tertiary);
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.stat-info h3 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ios-text);
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+/* ============================================
+   Filter Section
+   ============================================ */
+
+.filter-section {
+    background: var(--ios-bg);
+    border: 1px solid var(--ios-separator);
+    border-radius: var(--ios-radius-lg);
+    padding: 20px;
+    box-shadow: var(--ios-shadow);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-box-large {
+    flex: 1;
+    min-width: 280px;
+    position: relative;
+}
+
+.search-box-large i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ios-gray);
+    font-size: 16px;
+    pointer-events: none;
+}
+
+.search-box-large input {
+    width: 100%;
+    padding: 14px 16px 14px 44px;
+    border: 1px solid var(--ios-gray-light);
+    border-radius: 10px;
+    background: var(--ios-bg-tertiary);
+    font-size: 16px;
+    color: var(--ios-text);
+    transition: var(--ios-transition);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.search-box-large input:focus {
+    outline: none;
+    border-color: var(--ios-blue);
+    background: var(--ios-bg);
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.08);
+    transform: translateY(-1px);
+}
+
+.search-box-large input::placeholder {
+    color: var(--ios-text-tertiary);
+}
+
+.filter-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 12px 40px 12px 16px;
+    border: 1px solid var(--ios-gray-light);
+    border-radius: 10px;
+    background: var(--ios-bg-tertiary);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ios-text);
+    cursor: pointer;
+    transition: var(--ios-transition);
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238E8E93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 180px;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--ios-blue);
+    background: var(--ios-bg);
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.08);
+}
+
+/* ============================================
+   Cards
+   ============================================ */
+
+.card,
+.card-table {
+    background: var(--ios-bg);
+    border: 1px solid var(--ios-separator);
+    border-radius: var(--ios-radius-lg);
+    box-shadow: var(--ios-shadow);
+    overflow: hidden;
+    transition: var(--ios-transition);
+}
+
+.card:hover,
+.card-table:hover {
+    box-shadow: var(--ios-shadow-lg);
+}
+
+.card-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--ios-separator);
+    background: var(--ios-bg-secondary);
+}
+
+.card-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ios-text);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-header h3 i {
+    color: var(--ios-blue);
+    font-size: 16px;
+}
+
+.card-body {
+    padding: 24px;
+}
+
+/* ============================================
+   Grid Layouts
+   ============================================ */
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 20px;
+}
+
+/* ============================================
+   Info Grid - Order Details
+   ============================================ */
+
+.info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--ios-separator);
+    gap: 20px;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-item .label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ios-text-tertiary);
+    flex-shrink: 0;
+    min-width: 140px;
+}
+
+.info-item .value {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ios-text);
+    text-align: right;
+    flex: 1;
+    line-height: 1.6;
+}
+
+/* ============================================
+   Order Summary Grid
+   ============================================ */
+
+.order-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.summary-item {
+    background: var(--ios-bg-secondary);
+    padding: 16px 20px;
+    border-radius: 10px;
+    border: 1px solid var(--ios-separator);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: var(--ios-transition);
+}
+
+.summary-item:hover {
+    background: var(--ios-bg-tertiary);
+    transform: translateY(-2px);
+    box-shadow: var(--ios-shadow);
+}
+
+.summary-item .label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ios-text-tertiary);
+}
+
+.summary-item .value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ios-text);
+}
+
+/* ============================================
+   Payment Summary
+   ============================================ */
+
+.payment-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--ios-separator);
+}
+
+/* ============================================
+   Tables - iOS Style
+   ============================================ */
+
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 10px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 15px;
+}
+
+.table thead tr {
+    background: var(--ios-bg-secondary);
+}
+
+.table th {
+    padding: 16px 20px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ios-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--ios-separator);
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 18px 20px;
+    font-size: 15px;
+    color: var(--ios-text-secondary);
+    border-bottom: 1px solid var(--ios-separator);
+    vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr {
+    transition: var(--ios-transition);
+}
+
+.table tbody tr:hover {
+    background: var(--ios-bg-tertiary);
+}
+
+.table-compact {
+    font-size: 14px;
+}
+
+.table-compact th {
+    padding: 12px 16px;
+}
+
+.table-compact td {
+    padding: 14px 16px;
+}
+
+.table-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* ============================================
+   User Cell - Customer Info in Tables
+   ============================================ */
+
+.user-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-name {
+    font-weight: 600;
+    color: var(--ios-text);
+    font-size: 15px;
+}
+
+.user-meta {
+    font-size: 13px;
+    color: var(--ios-text-tertiary);
+}
+
+/* ============================================
+   Badges - Status Indicators
+   ============================================ */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.badge-success {
+    background: rgba(92, 214, 92, 0.12);
+    color: #4CAF50;
+}
+
+.badge-danger {
+    background: rgba(255, 59, 48, 0.12);
+    color: var(--ios-red);
+}
+
+.badge-info {
+    background: rgba(74, 144, 226, 0.12);
+    color: var(--ios-blue);
+}
+
+.badge-warning {
+    background: rgba(255, 149, 0, 0.12);
+    color: var(--ios-orange);
+}
+
+.badge-pill {
+    background: var(--ios-bg-secondary);
+    color: var(--ios-text-secondary);
+    border: 1px solid var(--ios-separator);
+    font-size: 12px;
+    text-transform: capitalize;
+    padding: 6px 14px;
+}
+
+/* ============================================
+   Timeline - Order History
+   ============================================ */
+
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 30px;
+    bottom: 30px;
+    width: 2px;
+    background: var(--ios-separator);
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 56px;
+    margin-bottom: 32px;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4A90E2, #5AC8FA);
+    border: 3px solid var(--ios-bg);
+    box-shadow: 0 0 0 2px var(--ios-separator);
+    z-index: 1;
+}
+
+.timeline-content {
+    background: var(--ios-bg-secondary);
+    padding: 16px 20px;
+    border-radius: 10px;
+    border: 1px solid var(--ios-separator);
+    transition: var(--ios-transition);
+}
+
+.timeline-content:hover {
+    background: var(--ios-bg-tertiary);
+    transform: translateX(4px);
+    box-shadow: var(--ios-shadow);
+}
+
+.timeline-date {
+    font-size: 13px;
+    color: var(--ios-text-tertiary);
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.timeline-content h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ios-text);
+    margin: 0 0 8px 0;
+}
+
+.timeline-content p {
+    font-size: 14px;
+    color: var(--ios-text-secondary);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* ============================================
+   Invoice Styles
+   ============================================ */
+
+.invoice-card {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    padding: 24px 0;
+    margin-bottom: 32px;
+    border-bottom: 2px solid var(--ios-separator);
+}
+
+.invoice-header h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--ios-blue);
+    margin: 0 0 12px 0;
+    letter-spacing: -0.5px;
+}
+
+.invoice-header p {
+    font-size: 14px;
+    color: var(--ios-text-secondary);
+    margin: 4px 0;
+    line-height: 1.6;
+}
+
+.invoice-address {
+    text-align: right;
+}
+
+.invoice-address h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ios-text-tertiary);
+    margin: 0 0 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.invoice-address p {
+    font-size: 14px;
+    color: var(--ios-text);
+    margin: 4px 0;
+    line-height: 1.6;
+}
+
+.invoice-summary {
+    max-width: 400px;
+    margin-left: auto;
+    margin-top: 32px;
+    padding: 20px;
+    background: var(--ios-bg-secondary);
+    border-radius: var(--ios-radius);
+    border: 1px solid var(--ios-separator);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    font-size: 15px;
+}
+
+.summary-row span:first-child {
+    color: var(--ios-text-secondary);
+    font-weight: 500;
+}
+
+.summary-row span:last-child {
+    color: var(--ios-text);
+    font-weight: 600;
+}
+
+.summary-row.total {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ios-text);
+    padding: 16px 0 8px 0;
+    border-top: 2px solid var(--ios-separator);
+    margin-top: 12px;
+}
+
+.summary-row.total span:last-child {
+    color: var(--ios-blue);
+    font-size: 24px;
+}
+
+/* ============================================
+   Form Elements
+   ============================================ */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ios-text-secondary);
+    margin: 0;
+}
+
+.form-label.required::after {
+    content: '*';
+    color: var(--ios-red);
+    margin-left: 4px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--ios-gray-light);
+    border-radius: 10px;
+    background: var(--ios-bg-tertiary);
+    font-size: 16px;
+    color: var(--ios-text);
+    transition: var(--ios-transition);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+}
+
+.form-group select {
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238E8E93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--ios-blue);
+    background: var(--ios-bg);
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.08);
+    transform: translateY(-1px);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--ios-text-tertiary);
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.error-message {
+    background: rgba(255, 59, 48, 0.08);
+    color: var(--ios-red);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 8px;
+    border-left: 3px solid var(--ios-red);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.error-message::before {
+    content: '⚠️';
+    font-size: 14px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 24px;
+    border-top: 1px solid var(--ios-separator);
+    margin-top: 32px;
+}
+
+/* ============================================
+   Empty States
+   ============================================ */
+
+.empty-state-full {
+    text-align: center;
+    padding: 60px 40px;
+    background: var(--ios-bg-secondary);
+    border-radius: var(--ios-radius);
+    margin: 20px 0;
+}
+
+.empty-state-full i {
+    font-size: 64px;
+    color: var(--ios-gray-light);
+    margin-bottom: 16px;
+    display: block;
+}
+
+.empty-state-full h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ios-text);
+    margin: 12px 0 8px 0;
+}
+
+.empty-state-full p {
+    font-size: 15px;
+    color: var(--ios-text-tertiary);
+    margin: 0;
+}
+
+/* ============================================
+   Pagination
+   ============================================ */
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 24px 20px;
+    border-top: 1px solid var(--ios-separator);
+    background: var(--ios-bg-secondary);
+}
+
+.pagination a,
+.pagination span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ios-text);
+    background: var(--ios-bg);
+    border: 1px solid var(--ios-separator);
+    transition: var(--ios-transition);
+    text-decoration: none;
+}
+
+.pagination a:hover {
+    background: var(--ios-blue);
+    color: white;
+    border-color: var(--ios-blue);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+}
+
+.pagination .current {
+    background: var(--ios-blue);
+    color: white;
+    border-color: var(--ios-blue);
+}
+
+.pagination .disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+
+@media (max-width: 1024px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .order-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .payment-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .invoice-header {
+        flex-direction: column;
+        gap: 24px;
+    }
+    
+    .invoice-address {
+        text-align: left;
+    }
+    
+    .invoice-summary {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+    
+    .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+    
+    .stats-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-box-large {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .filter-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .filter-select {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .filter-group .btn {
+        width: 100%;
+    }
+    
+    .table-actions {
+        flex-direction: row;
+        justify-content: flex-start;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .info-item .label {
+        min-width: auto;
+    }
+    
+    .info-item .value {
+        text-align: left;
+    }
+    
+    .timeline::before {
+        left: 8px;
+    }
+    
+    .timeline-item {
+        padding-left: 40px;
+    }
+    
+    .timeline-dot {
+        left: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-header h1 {
+        font-size: 24px;
+    }
+    
+    .page-header p {
+        font-size: 14px;
+    }
+    
+    .card-body {
+        padding: 16px;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+    
+    .stat-info h3 {
+        font-size: 24px;
+    }
+    
+    .table th,
+    .table td {
+        padding: 12px 14px;
+        font-size: 14px;
+    }
+    
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-outline {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .header-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .header-actions .btn {
+        width: 100%;
+    }
+    
+    .invoice-header h2 {
+        font-size: 24px;
+    }
+    
+    .invoice-summary {
+        padding: 16px;
+    }
+    
+    .summary-row.total {
+        font-size: 18px;
+    }
+    
+    .summary-row.total span:last-child {
+        font-size: 20px;
+    }
+}
+
+/* ============================================
+   Better Touch Targets for Mobile
+   ============================================ */
+
+@media (max-width: 768px) {
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-outline,
+    .btn-sm {
+        min-height: 44px;
+    }
+}
+
+/* ============================================
+   Smooth Scrolling & Font Smoothing
+   ============================================ */
+
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================
+   Focus States for Accessibility
+   ============================================ */
+
+*:focus-visible {
+    outline: 2px solid var(--ios-blue);
+    outline-offset: 2px;
+}
+
+button:focus-visible,
+.btn:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--ios-blue);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   Custom Scrollbar
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--ios-gray-light);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--ios-gray);
+}
+
+/* ============================================
+   Animation Utilities
+   ============================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.4s ease-out;
+}
+
+/* ============================================
+   Loading States
+   ============================================ */
+
+.btn.loading {
+    position: relative;
+    color: transparent;
+    pointer-events: none;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: button-spin 0.6s linear infinite;
+}
+
+@keyframes button-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   Print Styles for Invoice
+   ============================================ */
+
+@media print {
+    .page-header,
+    .header-actions,
+    .btn,
+    .filter-section,
+    .table-actions,
+    .pagination {
+        display: none !important;
+    }
+    
+    .card,
+    .card-table,
+    .invoice-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+    }
+    
+    .timeline-content {
+        background: white;
+        border: 1px solid #ddd;
+    }
+    
+    .invoice-card {
+        max-width: 100%;
+    }
+    
+    .invoice-header {
+        border-bottom: 2px solid #000;
+    }
+    
+    .summary-row.total {
+        border-top: 2px solid #000;
+    }
+    
+    body {
+        background: white;
+    }
+}
+
+/* ============================================
+   Additional Helper Classes
+   ============================================ */
+
+.text-right {
+    text-align: right;
+}
+
+.text-muted {
+    color: var(--ios-text-tertiary);
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mt-4 { margin-top: 32px; }
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+.mb-4 { margin-bottom: 32px; }
+
+.p-0 { padding: 0; }
+.p-1 { padding: 8px; }
+.p-2 { padding: 16px; }
+.p-3 { padding: 24px; }
+.p-4 { padding: 32px; }
+
+/* ============================================
+   Status-Specific Badge Colors
+   ============================================ */
+
+.badge-pill[data-status="pending"],
+.badge-pill[data-status="processing"] {
+    background: rgba(255, 149, 0, 0.12);
+    color: var(--ios-orange);
+    border-color: rgba(255, 149, 0, 0.2);
+}
+
+.badge-pill[data-status="confirmed"],
+.badge-pill[data-status="shipped"],
+.badge-pill[data-status="delivered"],
+.badge-pill[data-status="completed"] {
+    background: rgba(92, 214, 92, 0.12);
+    color: #4CAF50;
+    border-color: rgba(92, 214, 92, 0.2);
+}
+
+.badge-pill[data-status="cancelled"],
+.badge-pill[data-status="failed"],
+.badge-pill[data-status="returned"] {
+    background: rgba(255, 59, 48, 0.12);
+    color: var(--ios-red);
+    border-color: rgba(255, 59, 48, 0.2);
+}
+
+.badge-pill[data-status="refunded"] {
+    background: rgba(74, 144, 226, 0.12);
+    color: var(--ios-blue);
+    border-color: rgba(74, 144, 226, 0.2);
+}
+
+/* ============================================
+   Hover Effects for Interactive Elements
+   ============================================ */
+
+.card-body .info-item:hover {
+    background: var(--ios-bg-tertiary);
+    margin-left: -12px;
+    margin-right: -12px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-radius: 8px;
+}
+
+.summary-item:hover .value {
+    color: var(--ios-blue);
+}
+
+/* ============================================
+   End of Order Management CSS
+   ============================================ */

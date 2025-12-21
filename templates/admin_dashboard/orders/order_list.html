@@ -1,0 +1,129 @@
+<!-- templates/admin_dashboard/orders/order_list.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Orders - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/orders.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-shopping-cart"></i> Orders</h1>
+            <p>Track and manage all customer orders</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:order_list' %}" class="btn btn-secondary">
+                <i class="fas fa-rotate-right"></i>
+                Refresh
+            </a>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon bg-blue"><i class="fas fa-list"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Total Orders</span>
+                <h3>{{ total_orders|default:0 }}</h3>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-green"><i class="fas fa-indian-rupee-sign"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Total Revenue</span>
+                <h3>₹{{ total_revenue|default:"0.00" }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <form method="get" class="filter-section">
+        <div class="search-box-large">
+            <i class="fas fa-search"></i>
+            <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search by ID, customer, email, tracking #">
+        </div>
+        <div class="filter-group">
+            <select class="filter-select" name="status">
+                <option value="">All Status</option>
+                {% for code,label in filter_options.statuses %}
+                <option value="{{ code }}" {% if current_status == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select class="filter-select" name="payment_method">
+                <option value="">All Payment Methods</option>
+                {% for code,label in filter_options.payment_methods %}
+                <option value="{{ code }}" {% if current_payment_method == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select class="filter-select" name="order_by">
+                <option value="-placed_at" {% if request.GET.order_by == "-placed_at" or not request.GET.order_by %}selected{% endif %}>Newest first</option>
+                <option value="placed_at" {% if request.GET.order_by == "placed_at" %}selected{% endif %}>Oldest first</option>
+                <option value="-total" {% if request.GET.order_by == "-total" %}selected{% endif %}>Highest total</option>
+                <option value="total" {% if request.GET.order_by == "total" %}selected{% endif %}>Lowest total</option>
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i> Apply
+            </button>
+        </div>
+    </form>
+
+    <div class="card-table">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Payment</th>
+                        <th>Placed</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>#{{ order.id|stringformat:"s"|slice:":8" }}</td>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-name">{{ order.user.username|default:"Guest" }}</div>
+                                <div class="user-meta">{{ order.user.email|default:"-" }}</div>
+                            </div>
+                        </td>
+                        <td><span class="badge badge-pill">{{ order.status|capfirst }}</span></td>
+                        <td>₹{{ order.total|default:"0.00" }}</td>
+                        <td>{{ order.payment_method|default:"-" }}</td>
+                        <td>{{ order.placed_at|date:"M d, Y H:i" }}</td>
+                        <td class="table-actions">
+                            <a href="{% url 'admin_dashboard:order_detail' order.id %}" class="btn-sm btn-outline"><i class="fas fa-eye"></i></a>
+                            <a href="{% url 'admin_dashboard:order_update' order.id %}" class="btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'admin_dashboard:order_invoice' order.id %}" class="btn-sm btn-secondary"><i class="fas fa-file-invoice"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state-full">
+                                <i class="fas fa-box-open"></i>
+                                <h3>No orders found</h3>
+                                <p>Try adjusting the filters or come back later.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include 'includes/pagination.html' %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/orders.js' %}"></script>
+{% endblock %}
+

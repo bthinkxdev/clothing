@@ -1,0 +1,11 @@
+{% if cart and cart.items.exists %}
+    <ul>
+        {% for item in cart.items.all %}
+            <li>{{ item.variant.product.name }} x {{ item.quantity }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'cart' %}">View Cart</a>
+{% else %}
+    <p>Your cart is empty.</p>
+{% endif %}
+

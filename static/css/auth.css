@@ -1,0 +1,95 @@
+/* Auth pages */
+
+.auth-page {
+    padding: 40px 0 70px;
+    display: grid;
+    place-items: center;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}
+
+.auth-card h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.auth-card p {
+    color: var(--text-light);
+    margin-bottom: 16px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.info-text {
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.otp-message {
+    font-size: 13px;
+    color: var(--text-dark);
+    margin-top: 8px;
+}
+
+.divider {
+    margin: 20px 0;
+    text-align: center;
+    color: var(--border-color);
+    position: relative;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    position: absolute;
+    height: 1px;
+    background: var(--border-color);
+    width: 40%;
+    top: 50%;
+}
+
+.divider::before { left: 0; }
+.divider::after { right: 0; }
+
+@media (max-width: 576px) {
+    .auth-card {
+        padding: 18px;
+    }
+
+    .auth-card h1 {
+        font-size: 20px;
+    }
+}
+

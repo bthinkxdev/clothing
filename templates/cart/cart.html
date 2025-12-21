@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Your Cart - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/cart.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container cart-page">
+    <div class="cart-header">
+        <h1>Your Cart</h1>
+        <div class="cart-actions">
+            <a href="{% url 'product_list' %}" class="btn btn-secondary">Continue Shopping</a>
+            {% if user.is_authenticated and cart_items %}
+            <form method="post" action="{% url 'cart_clear' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary">Clear Cart</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not user.is_authenticated %}
+        <div class="empty-state">
+            <i class="fas fa-shopping-bag"></i>
+            <h3>Please log in to view your cart</h3>
+            <a href="{% url 'login' %}" class="btn btn-primary" style="margin-top:12px;">Login</a>
+        </div>
+    {% else %}
+        {% if cart_items %}
+        <div class="cart-layout">
+            <div>
+                {% if stock_issues %}
+                    {% for issue in stock_issues %}
+                    <div class="stock-warning">
+                        {{ issue.item.variant.product.name }}: Only {{ issue.available }} available (you requested {{ issue.requested }}).
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Variant</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart_items %}
+                        <tr>
+                            <td>
+                                <div class="cart-item">
+                                    {% with item.variant.product.images.first as img %}
+                                        {% if img %}
+                                            <a href="{{ item.variant.product.get_absolute_url }}">
+                                                <img src="{{ img.image.url }}" alt="{{ item.variant.product.name }}">
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ item.variant.product.get_absolute_url }}">
+                                                <img src="https://via.placeholder.com/120x120/FAF7F2/8B4513?text=No+Image" alt="{{ item.variant.product.name }}">
+                                            </a>
+                                        {% endif %}
+                                    {% endwith %}
+                                    <div>
+                                        <div class="item-title">
+                                            <a href="{{ item.variant.product.get_absolute_url }}">{{ item.variant.product.name }}</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="item-meta">
+                                    {% if item.variant.size %}Size: {{ item.variant.size }}<br>{% endif %}
+                                    {% if item.variant.color %}Color: {{ item.variant.color }}{% endif %}
+                                </div>
+                            </td>
+                            <td class="price">₹{{ item.variant.get_price }}</td>
+                            <td>
+                                <form method="post" action="{% url 'cart_update' item.id %}" data-qty-form class="qty-form">
+                                    {% csrf_token %}
+                                    <button data-qty-minus type="button">-</button>
+                                    <input type="number" name="quantity" class="qty-input" value="{{ item.quantity }}" min="1">
+                                    <button data-qty-plus type="button">+</button>
+                                </form>
+                            </td>
+                            <td class="price">
+                                {% widthratio item.quantity 1 item.variant.get_price as line_total %}
+                                ₹{{ line_total }}
+                            </td>
+                            <td>
+                                <form method="post" action="{% url 'cart_remove' item.id %}" data-remove-form>
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-icon"><i class="fas fa-times"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span>₹{{ subtotal }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span>₹{{ shipping|default:'0.00' }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax</span>
+                    <span>₹{{ tax|default:'0.00' }}</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span>₹{{ total|default:subtotal }}</span>
+                </div>
+
+                {% if available_coupons %}
+                <div class="coupon-list">
+                    <strong>Available Coupons</strong>
+                    {% for coupon in available_coupons %}
+                        <div class="coupon-tag">{{ coupon.code }} - {{ coupon.discount_amount|default:'Discount' }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <a href="{% url 'checkout_address' %}" class="btn btn-primary" style="width:100%; text-align:center;">Proceed to Checkout</a>
+            </div>
+        </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-shopping-bag"></i>
+                <h3>Your cart is empty</h3>
+                <p>Browse the shop and add items to your cart.</p>
+                <a href="{% url 'product_list' %}" class="btn btn-primary" style="margin-top:12px;">Start Shopping</a>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cart.js' %}"></script>
+{% endblock %}

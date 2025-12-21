@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Success{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container account-page">
+    <div class="empty-state">
+        <i class="fas fa-check-circle"></i>
+        <h3>Thank you! Your order was placed.</h3>
+        <p>Order ID: {{ order.id }}</p>
+        <a href="{% url 'order_detail' order.id %}" class="btn btn-primary" style="margin-top:12px;">View Order</a>
+    </div>
+</div>
+{% endblock %}

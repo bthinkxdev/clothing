@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/product-detail.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container product-page">
+    <div class="product-layout">
+        <!-- Gallery -->
+        <div class="gallery">
+            <div class="thumbs">
+                {% if images %}
+                    {% for image in images %}
+                    <button type="button" class="{% if forloop.first %}active{% endif %}" data-thumb data-src="{{ image.image.url }}">
+                        <img src="{{ image.image.url }}" alt="{{ product.name }} thumbnail {{ forloop.counter }}">
+                    </button>
+                    {% endfor %}
+                {% else %}
+                    <button type="button" class="active" data-thumb data-src="https://via.placeholder.com/600x750/FAF7F2/8B4513?text={{ product.name|slice:':12' }}">
+                        <img src="https://via.placeholder.com/100x100/FAF7F2/8B4513?text=No+Img" alt="{{ product.name }}">
+                    </button>
+                {% endif %}
+            </div>
+            <div class="main-image">
+                {% if images %}
+                    <img src="{{ images.0.image.url }}" alt="{{ product.name }}" data-main-image>
+                {% else %}
+                    <img src="https://via.placeholder.com/600x750/FAF7F2/8B4513?text={{ product.name|slice:':12' }}" alt="{{ product.name }}" data-main-image>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Info -->
+        <div class="product-info-block">
+            <div class="product-meta">
+                {% if product.brand %}<span>{{ product.brand }}</span>{% endif %}
+                {% if product.category %}<span>&middot; {{ product.category.name }}</span>{% endif %}
+            </div>
+
+            <h1 class="product-title">{{ product.name }}</h1>
+
+            <div class="rating-summary">
+                {% if avg_rating and avg_rating > 0 %}
+                    {% include 'includes/rating_stars.html' with rating=avg_rating %}
+                    <span>{{ avg_rating|floatformat:1 }} ({{ total_reviews }} reviews)</span>
+                {% else %}
+                    <span>No reviews yet</span>
+                {% endif %}
+            </div>
+
+            <div class="price-row">
+                {% if default_variant %}
+                    <span class="price-current">₹{{ default_variant.get_price }}</span>
+                    {% if default_variant.discount_percent > 0 %}
+                        <span class="price-original">₹{{ default_variant.price }}</span>
+                        <span class="price-discount">{{ default_variant.discount_percent }}% OFF</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="info-list">
+                {% if product.short_description %}<div>{{ product.short_description }}</div>{% endif %}
+                {% if default_variant and default_variant.available_stock %}
+                    <div>Stock: {{ default_variant.available_stock|default:"Check availability" }}</div>
+                {% endif %}
+            </div>
+
+            <div class="variant-grid">
+                <div class="variant-group">
+                    <label for="variantSelect">Select Variant</label>
+                    <select id="variantSelect" class="variant-select" name="variant_id" form="addToCartForm">
+                        {% for v in variants %}
+                            <option value="{{ v.id }}"
+                                {% if default_variant and v.id == default_variant.id %}selected{% endif %}>
+                                {{ v.sku }}{% if v.size %} - Size {{ v.size }}{% endif %}{% if v.color %} - {{ v.color }}{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="variant-group">
+                    <label for="qtyInput">Quantity</label>
+                    <input id="qtyInput" class="qty-input" type="number" name="quantity" form="addToCartForm" value="1" min="1">
+                </div>
+            </div>
+
+            <div class="actions">
+                <form id="addToCartForm" method="post" action="{% url 'cart_add' %}">
+                    {% csrf_token %}
+                    {% if default_variant %}
+                    <input type="hidden" name="variant_id" value="{{ default_variant.id }}">
+                    {% endif %}
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" class="btn btn-primary" {% if not default_variant %}disabled{% endif %}>Add to Cart</button>
+                </form>
+
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'wishlist_add' %}">
+                    {% csrf_token %}
+                    {% if default_variant %}
+                    <input type="hidden" name="variant_id" value="{{ default_variant.id }}">
+                    {% endif %}
+                    <button type="submit" class="btn-icon" {% if not default_variant %}disabled{% endif %}><i class="far fa-heart"></i> Wishlist</button>
+                </form>
+                {% endif %}
+
+                <button type="button" class="btn-icon" data-share-url="{{ request.build_absolute_uri }}">
+                    <i class="fas fa-share-alt"></i> Share
+                </button>
+            </div>
+
+            <div class="accordion">
+                <div class="accordion-item">
+                    <button class="accordion-header" type="button">
+                        Description
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-body">
+                        {{ product.description|default:"No description available." }}
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-header" type="button">
+                        Shipping & Returns
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-body">
+                        Easy 7-day returns. Free shipping on orders above ₹1000.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews -->
+    <div class="reviews-summary">
+        <div class="reviews-score">
+            <div class="score">{{ avg_rating|default:"0"|floatformat:1 }}</div>
+            {% include 'includes/rating_stars.html' with rating=avg_rating %}
+            <div class="text-light">{{ total_reviews }} reviews</div>
+        </div>
+        <div class="rating-bars">
+            {% if rating_breakdown %}
+                {% for star, data in rating_breakdown.items|dictsort:"0" reversed %}
+                <div class="rating-row">
+                    <span>{{ star }} stars</span>
+                    <div class="bar">
+                        <div class="bar-inner" style="width: {{ data.percentage|default:0 }}%"></div>
+                    </div>
+                    <span>{{ data.count|default:0 }}</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-light">No ratings yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="reviews-list">
+        {% if reviews %}
+            {% for review in reviews %}
+            <div class="review-card">
+                <div class="review-meta">
+                    <span>{{ review.user.get_full_name|default:review.user.username }}</span>
+                    <span>{{ review.created_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="review-title">
+                    {% include 'includes/rating_stars.html' with rating=review.rating %}
+                </div>
+                <div class="review-body">
+                    {{ review.comment|default:"No comment provided." }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-light">No reviews yet. Be the first to review!</p>
+        {% endif %}
+    </div>
+
+    <!-- Similar products -->
+    {% if similar_products %}
+    <div class="similar-section">
+        <div class="section-header">
+            <h2>Similar Products</h2>
+            <p>Customers also liked</p>
+        </div>
+        <div class="card-grid">
+            {% for product in similar_products %}
+                {% include 'includes/product_card.html' with product=product %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recently viewed -->
+    {% if recently_viewed %}
+    <div class="recent-section">
+        <div class="section-header">
+            <h2>Recently Viewed</h2>
+        </div>
+        <div class="card-grid">
+            {% for product in recently_viewed %}
+                {% include 'includes/product_card.html' with product=product %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/product-detail.js' %}"></script>
+{% endblock %}

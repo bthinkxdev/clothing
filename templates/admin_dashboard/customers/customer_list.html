@@ -1,0 +1,129 @@
+<!-- templates/admin_dashboard/customers/customer_list.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Customers - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/customers.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-users"></i> Customers</h1>
+            <p>Manage and analyze your customer base</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:customer_list' %}" class="btn btn-secondary">
+                <i class="fas fa-rotate-right"></i> Refresh
+            </a>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon bg-blue"><i class="fas fa-users"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Total Customers</span>
+                <h3>{{ total_customers|default:0 }}</h3>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-green"><i class="fas fa-user-check"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Active</span>
+                <h3>{{ active_customers|default:0 }}</h3>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-red"><i class="fas fa-user-slash"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Blocked</span>
+                <h3>{{ blocked_customers|default:0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <form method="get" class="filter-section">
+        <div class="search-box-large">
+            <i class="fas fa-search"></i>
+            <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search by name, email, phone">
+        </div>
+        <div class="filter-group">
+            <select class="filter-select" name="status">
+                {% for value,label in filter_options.status_options %}
+                <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select class="filter-select" name="order_by">
+                <option value="-date_joined" {% if request.GET.order_by == "-date_joined" or not request.GET.order_by %}selected{% endif %}>Newest</option>
+                <option value="date_joined" {% if request.GET.order_by == "date_joined" %}selected{% endif %}>Oldest</option>
+                <option value="-total_spent" {% if request.GET.order_by == "-total_spent" %}selected{% endif %}>Highest spender</option>
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i> Apply
+            </button>
+        </div>
+    </form>
+
+    <div class="card-table">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Orders</th>
+                        <th>Total Spent</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>{{ customer.username }}</td>
+                        <td>{{ customer.email }}</td>
+                        <td>{{ customer.phone|default:"-" }}</td>
+                        <td>{{ customer.total_orders|default:0 }}</td>
+                        <td>₹{{ customer.total_spent|default:"0.00" }}</td>
+                        <td>
+                            {% if customer.is_blocked %}
+                                <span class="badge badge-danger">Blocked</span>
+                            {% elif customer.is_active %}
+                                <span class="badge badge-success">Active</span>
+                            {% else %}
+                                <span class="badge">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="table-actions">
+                            <a href="{% url 'admin_dashboard:customer_detail' customer.id %}" class="btn-sm btn-outline"><i class="fas fa-eye"></i></a>
+                            <a href="{% url 'admin_dashboard:customer_orders' customer.id %}" class="btn-sm btn-primary"><i class="fas fa-shopping-bag"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state-full">
+                                <i class="fas fa-user-friends"></i>
+                                <h3>No customers found</h3>
+                                <p>Try adjusting your filters.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include 'includes/pagination.html' %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/customers.js' %}"></script>
+{% endblock %}
+

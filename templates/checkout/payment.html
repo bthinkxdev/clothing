@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - Payment{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/checkout.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container checkout-page">
+    <div class="checkout-grid">
+        <div class="card">
+            <h2>Payment Method</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="shipping-options">
+                    {% for method in payment_methods %}
+                    <label class="shipping-option">
+                        <div>
+                            <strong>{{ method.name }}</strong>
+                            {% if method.extra_charge %}<div class="address-meta">Charge: ₹{{ method.extra_charge }}</div>{% endif %}
+                        </div>
+                        <div>
+                            <input type="radio" name="payment_method" value="{{ method.id }}" {% if forloop.first %}checked{% endif %}>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <div class="line"></div>
+
+                <div class="summary">
+                    <div class="summary-row"><span>Subtotal</span><span>₹{{ subtotal }}</span></div>
+                    <div class="summary-row"><span>Shipping</span><span>₹{{ shipping }}</span></div>
+                    <div class="summary-row"><span>Tax</span><span>₹{{ tax }}</span></div>
+                    <div class="summary-row"><span>Discount</span><span>- ₹{{ discount }}</span></div>
+                    <div class="summary-row total"><span>Total</span><span>₹{{ total }}</span></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="margin-top:12px;">Pay Now</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Order Items</h2>
+            <table class="table-mini">
+                <thead><tr><th>Item</th><th>Qty</th><th>Price</th></tr></thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.variant.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₹{{ item.variant.get_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

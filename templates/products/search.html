@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search: "{{ query|default:"Search" }}" - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/products-list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="shop-page">
+        <div class="shop-header">
+            <div class="results-info">
+                {% if query %}Results for "<strong>{{ query }}</strong>" – {% endif %}
+                <span>{{ total_results|default:products.count|default:"0" }}</span> items found
+            </div>
+        </div>
+
+        {% if products %}
+            <div class="products-grid">
+                {% for product in products %}
+                    {% include 'includes/product_card.html' with product=product %}
+                {% endfor %}
+            </div>
+            {% include 'includes/pagination.html' %}
+        {% else %}
+            <div class="no-products">
+                <i class="fas fa-search"></i>
+                <h3>No results found</h3>
+                <p>Try a different term or check popular searches below.</p>
+                <a href="{% url 'product_list' %}" class="btn btn-primary">Back to Shop</a>
+            </div>
+
+            {% if popular_searches or trending_products %}
+            <div class="similar-section" style="margin-top:40px;">
+                {% if popular_searches %}
+                <div class="section-header">
+                    <h2>Popular Searches</h2>
+                </div>
+                <div class="applied-filters" style="margin-bottom:20px;">
+                    {% for term in popular_searches %}
+                        <a class="filter-tag" href="{% url 'product_search' %}?q={{ term }}">
+                            <span>{{ term }}</span>
+                            <button type="button" aria-label="Search {{ term }}"><i class="fas fa-search"></i></button>
+                        </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if trending_products %}
+                <div class="section-header">
+                    <h2>Trending Products</h2>
+                </div>
+                <div class="products-grid">
+                    {% for product in trending_products %}
+                        {% include 'includes/product_card.html' with product=product %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

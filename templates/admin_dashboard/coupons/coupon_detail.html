@@ -1,0 +1,164 @@
+<!-- templates/admin_dashboard/coupons/coupon_detail.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{{ coupon.code }} - Coupon Details{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/coupons.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="coupon-detail-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-ticket-alt"></i> {{ coupon.code }}</h1>
+            <p>Coupon Details and Usage Statistics</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:coupon_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Coupons
+            </a>
+            <a href="{% url 'admin_dashboard:coupon_update' coupon.pk %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i>
+                Edit Coupon
+            </a>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <!-- Coupon Info Card -->
+        <div class="info-card">
+            <h3><i class="fas fa-info-circle"></i> Coupon Information</h3>
+
+            <div class="info-row">
+                <span class="info-label">Code:</span>
+                <span class="info-value coupon-code-display">{{ coupon.code }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Type:</span>
+                <span class="info-value">{{ coupon.get_coupon_type_display }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Value:</span>
+                <span class="info-value discount-value">
+                    {% if coupon.coupon_type == 'percentage' %}
+                    {{ coupon.value }}%
+                    {% else %}
+                    ₹{{ coupon.value }}
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Min Purchase:</span>
+                <span class="info-value">₹{{ coupon.min_purchase_amount|default:"0" }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Valid Period:</span>
+                <span class="info-value">
+                    {{ coupon.start_date|date:"M d, Y" }} - {{ coupon.end_date|date:"M d, Y" }}
+                </span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Status:</span>
+                {% if coupon.active %}
+                <span class="status-badge status-active">Active</span>
+                {% else %}
+                <span class="status-badge status-inactive">Inactive</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Usage Stats Card -->
+        <div class="stats-card">
+            <h3><i class="fas fa-chart-bar"></i> Usage Statistics</h3>
+
+            <div class="stat-item">
+                <div class="stat-icon bg-blue">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Total Uses</span>
+                    <h3>{{ total_uses }}</h3>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-icon bg-green">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Total Discount Given</span>
+                    <h3>₹{{ total_discount|floatformat:2 }}</h3>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-icon bg-purple">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Total Revenue</span>
+                    <h3>₹{{ total_revenue|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Usage Table -->
+    <div class="content-card">
+        <div class="card-header">
+            <h3><i class="fas fa-history"></i> Recent Usage</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Order</th>
+                        <th>Discount</th>
+                        <th>Order Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usage in recent_usages %}
+                    <tr>
+                        <td>{{ usage.used_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'admin_dashboard:customer_detail' usage.user.pk %}">
+                                {{ usage.user.get_full_name|default:usage.user.username }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'admin_dashboard:order_detail' usage.order.pk %}">
+                                #{{ usage.order.order_number }}
+                            </a>
+                        </td>
+                        <td class="text-success">-₹{{ usage.discount_amount|floatformat:2 }}</td>
+                        <td>₹{{ usage.order.total_amount|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <p class="text-muted">No usage history yet</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/coupons.js' %}"></script>
+{% endblock %}

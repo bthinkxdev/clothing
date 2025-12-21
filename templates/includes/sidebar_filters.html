@@ -1,0 +1,123 @@
+<aside class="filters-sidebar">
+    <form method="get" id="filterForm">
+        <button type="button" class="btn btn-secondary filter-close" onclick="toggleFilters(false)">Close Filters</button>
+        <!-- Category -->
+        {% if categories %}
+        <div class="filter-section">
+            <div class="filter-title">Category</div>
+            <div class="filter-options">
+                {% for category in categories %}
+                <div class="filter-checkbox">
+                    <input type="checkbox" name="category" value="{{ category.slug }}" id="cat_{{ category.id }}"
+                        {% if category.slug in applied_filters.categories %}checked{% endif %}>
+                    <label for="cat_{{ category.id }}">{{ category.name }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Price Range -->
+        <div class="filter-section">
+            <div class="filter-title">Price Range</div>
+            <div class="price-range-inputs">
+                <input type="number" name="price_min" placeholder="Min ₹" value="{{ applied_filters.price_min|default:'' }}" min="0">
+                <input type="number" name="price_max" placeholder="Max ₹" value="{{ applied_filters.price_max|default:'' }}" min="0">
+            </div>
+        </div>
+        
+        <!-- Size -->
+        {% if available_sizes %}
+        <div class="filter-section">
+            <div class="filter-title">Size</div>
+            <div class="filter-options">
+                {% for size in available_sizes %}
+                <div class="filter-checkbox">
+                    <input type="checkbox" name="size" value="{{ size }}" id="size_{{ forloop.counter }}"
+                        {% if size in applied_filters.sizes %}checked{% endif %}>
+                    <label for="size_{{ forloop.counter }}">{{ size }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Color -->
+        {% if available_colors %}
+        <div class="filter-section">
+            <div class="filter-title">Color</div>
+            <div class="filter-options">
+                {% for color in available_colors %}
+                <div class="filter-checkbox">
+                    <input type="checkbox" name="color" value="{{ color }}" id="color_{{ forloop.counter }}"
+                        {% if color in applied_filters.colors %}checked{% endif %}>
+                    <label for="color_{{ forloop.counter }}">{{ color }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Brand -->
+        {% if available_brands %}
+        <div class="filter-section">
+            <div class="filter-title">Brand</div>
+            <div class="filter-options">
+                {% for brand in available_brands %}
+                <div class="filter-checkbox">
+                    <input type="checkbox" name="brand" value="{{ brand }}" id="brand_{{ forloop.counter }}"
+                        {% if brand in applied_filters.brands %}checked{% endif %}>
+                    <label for="brand_{{ forloop.counter }}">{{ brand }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Discount -->
+        <div class="filter-section">
+            <div class="filter-title">Discount</div>
+            <div class="filter-options">
+                <div class="filter-checkbox">
+                    <input type="radio" name="discount" value="" id="disc_all" {% if not applied_filters.discount %}checked{% endif %}>
+                    <label for="disc_all">All</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="radio" name="discount" value="10" id="disc_10" {% if applied_filters.discount == '10' %}checked{% endif %}>
+                    <label for="disc_10">10% and above</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="radio" name="discount" value="20" id="disc_20" {% if applied_filters.discount == '20' %}checked{% endif %}>
+                    <label for="disc_20">20% and above</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="radio" name="discount" value="30" id="disc_30" {% if applied_filters.discount == '30' %}checked{% endif %}>
+                    <label for="disc_30">30% and above</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="radio" name="discount" value="50" id="disc_50" {% if applied_filters.discount == '50' %}checked{% endif %}>
+                    <label for="disc_50">50% and above</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Availability -->
+        <div class="filter-section">
+            <div class="filter-title">Availability</div>
+            <div class="filter-options">
+                <div class="filter-checkbox">
+                    <input type="radio" name="availability" value="" id="avail_all" {% if not applied_filters.availability %}checked{% endif %}>
+                    <label for="avail_all">All</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="radio" name="availability" value="in_stock" id="avail_in" {% if applied_filters.availability == 'in_stock' %}checked{% endif %}>
+                    <label for="avail_in">In Stock</label>
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn filter-apply-btn">Apply Filters</button>
+        <a href="{% url 'product_list' %}" class="clear-filters">Clear All Filters</a>
+    </form>
+</aside>
+

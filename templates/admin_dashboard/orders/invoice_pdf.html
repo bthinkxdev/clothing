@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Invoice {{ invoice_number }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; color: #222; }
+        h1,h2,h3,h4 { margin: 0; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 24px; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .table th, .table td { border: 1px solid #ddd; padding: 8px; }
+        .table th { background: #f5f5f5; text-align: left; }
+        .summary { width: 40%; margin-left: auto; margin-top: 16px; }
+        .summary-row { display: flex; justify-content: space-between; padding: 6px 0; }
+        .total { font-weight: 700; border-top: 1px solid #ddd; margin-top: 6px; padding-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h2>ColorPixel</h2>
+            <p>Invoice #: {{ invoice_number }}</p>
+            <p>Date: {{ invoice_date|date:"M d, Y" }}</p>
+        </div>
+        <div>
+            <h4>Bill To</h4>
+            {% if order.address %}
+            <p>
+                {{ order.address.full_name }}<br>
+                {{ order.address.line1 }}<br>
+                {{ order.address.city }}, {{ order.address.state }} {{ order.address.postal_code }}<br>
+                {{ order.address.country }}
+            </p>
+            {% else %}
+            <p>No billing address</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.variant.product.name }} - {{ item.variant.name|default:item.variant.sku }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>₹{{ item.price }}</td>
+                <td>₹{% widthratio item.price 1 item.quantity %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align:center;">No items</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="summary">
+        <div class="summary-row">
+            <span>Subtotal</span>
+            <span>₹{{ order.subtotal|default:order.total|default:"0.00" }}</span>
+        </div>
+        <div class="summary-row">
+            <span>Discount</span>
+            <span>- ₹{{ order.discount_total|default:"0.00" }}</span>
+        </div>
+        <div class="summary-row total">
+            <span>Grand Total</span>
+            <span>₹{{ order.total|default:"0.00" }}</span>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Addresses - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/checkout.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container checkout-page">
+    <div class="checkout-grid">
+        <div class="card">
+            <div class="address-list">
+                {% if addresses %}
+                    {% for address in addresses %}
+                    <div class="address-card">
+                        <div>
+                            <strong>{{ address.full_name }}</strong>
+                            {% if address.is_default %}<span class="badge-default">Default</span>{% endif %}<br>
+                            <div class="address-meta">
+                                {{ address.address_line1 }}{% if address.address_line2 %}, {{ address.address_line2 }}{% endif %}<br>
+                                {{ address.city }}, {{ address.state }} - {{ address.postal_code }}<br>
+                                {{ address.country }}<br>
+                                Phone: {{ address.phone }}
+                            </div>
+                        </div>
+                        <div class="address-actions">
+                            <a class="btn btn-secondary" href="{% url 'address_edit' address.id %}">Edit</a>
+                            <form method="post" action="{% url 'address_delete' address.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-secondary">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <h3>No addresses saved</h3>
+                        <p>Add an address to speed up checkout.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card address-form-card">
+            <h2>Add Address</h2>
+            <form method="post" action="{% url 'address_add' %}" class="form-grid">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Save Address</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

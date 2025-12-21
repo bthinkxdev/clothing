@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Orders - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container account-page">
+    <div class="filters">
+        <form method="get">
+            <select name="status" class="form-control" style="max-width:200px;" onchange="this.form.submit()">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="processing" {% if status_filter == 'processing' %}selected{% endif %}>Processing</option>
+                <option value="shipped" {% if status_filter == 'shipped' %}selected{% endif %}>Shipped</option>
+                <option value="delivered" {% if status_filter == 'delivered' %}selected{% endif %}>Delivered</option>
+                <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </form>
+    </div>
+
+    {% if orders %}
+    <table class="table">
+        <thead><tr><th>Order</th><th>Status</th><th>Total</th><th>Placed</th><th></th></tr></thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td><span class="badge">{{ order.status }}</span></td>
+                <td>₹{{ order.total }}</td>
+                <td>{{ order.placed_at|date:"M d, Y" }}</td>
+                <td><a href="{% url 'order_detail' order.id %}" class="btn btn-secondary">View</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include 'includes/pagination.html' %}
+    {% else %}
+    <div class="empty-state">No orders yet.</div>
+    {% endif %}
+</div>
+{% endblock %}

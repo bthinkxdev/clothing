@@ -1,0 +1,84 @@
+<!-- templates/admin_dashboard/payments/payment_detail.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Payment Details{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/payments.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="payment-detail-page">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>Payment Details</h1>
+            <p>Transaction ID: {{ payment.id }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:payment_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Payments
+            </a>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <div class="info-card">
+            <h3>Payment Information</h3>
+            <div class="info-row">
+                <span class="info-label">Transaction ID:</span>
+                <span class="info-value"><code>{{ payment.id }}</code></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Amount:</span>
+                <span class="info-value">₹{{ payment.amount|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Method:</span>
+                <span class="method-badge method-{{ payment.method }}">
+                    {{ payment.get_method_display }}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status:</span>
+                <span class="payment-status status-{{ payment.status }}">
+                    {{ payment.get_status_display }}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date:</span>
+                <span class="info-value">{{ payment.created_at|date:"M d, Y H:i" }}</span>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h3>Order Information</h3>
+            <div class="info-row">
+                <span class="info-label">Order Number:</span>
+                <span class="info-value">
+                    <a href="{% url 'admin_dashboard:order_detail' payment.order.pk %}">
+                        #{{ payment.order.order_number }}
+                    </a>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Customer:</span>
+                <span class="info-value">
+                    <a href="{% url 'admin_dashboard:customer_detail' payment.order.user.pk %}">
+                        {{ payment.order.user.get_full_name|default:payment.order.user.username }}
+                    </a>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Order Total:</span>
+                <span class="info-value">₹{{ payment.order.total_amount|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/payments.js' %}"></script>
+{% endblock %}

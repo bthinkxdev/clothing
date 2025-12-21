@@ -1,0 +1,57 @@
+<!-- templates/admin_dashboard/customers/customer_wishlist.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Customer Wishlist - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/customers.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-heart"></i> Wishlist - {{ customer.username }}</h1>
+            <p>{{ item_count }} item(s) saved</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'admin_dashboard:customer_detail' customer.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to customer
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if wishlist_items %}
+            <ul class="item-list">
+                {% for item in wishlist_items %}
+                <li>
+                    <div>
+                        <strong>{{ item.variant.product.name }}</strong><br>
+                        <small>{{ item.variant.name|default:item.variant.sku }}</small>
+                    </div>
+                    <a href="{% url 'admin_dashboard:product_detail' item.variant.product.slug %}" class="btn-sm btn-outline">
+                        <i class="fas fa-eye"></i>
+                        View
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state-full">
+                <i class="fas fa-heart-broken"></i>
+                <h3>No wishlist items</h3>
+                <p>This customer has not saved any products yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/customers.js' %}"></script>
+{% endblock %}
+

@@ -1,0 +1,277 @@
+<!-- templates/admin_dashboard/sales_report.html -->
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Sales Report - Admin Panel{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="sales-report-page">
+    <!-- Report Header -->
+    <div class="report-header">
+        <div>
+            <h1><i class="fas fa-file-invoice-dollar"></i> Sales Report</h1>
+            <p>Detailed sales analysis and performance metrics</p>
+        </div>
+        
+        <div class="report-actions">
+            <button class="btn-outline" onclick="window.print()">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <a href="{% url 'admin_dashboard:sales_report_export' %}?format=csv&period={{ period }}" class="btn-outline">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </a>
+            <a href="{% url 'admin_dashboard:sales_report_export' %}?format=excel&period={{ period }}" class="btn-primary">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </a>
+        </div>
+    </div>
+    
+    <!-- Date Range Filter -->
+    <div class="filter-bar">
+        <form method="get" class="filter-form">
+            <div class="form-group">
+                <label>Period:</label>
+                <select name="period" class="form-select" onchange="this.form.submit()">
+                    <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
+                    <option value="yesterday" {% if period == 'yesterday' %}selected{% endif %}>Yesterday</option>
+                    <option value="last_7_days" {% if period == 'last_7_days' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="last_30_days" {% if period == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+                    <option value="this_month" {% if period == 'this_month' %}selected{% endif %}>This Month</option>
+                    <option value="last_month" {% if period == 'last_month' %}selected{% endif %}>Last Month</option>
+                    <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="customDateRange" style="display: {% if period == 'custom' %}flex{% else %}none{% endif %}; gap: 12px;">
+                <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="form-control">
+                <span>to</span>
+                <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="form-control">
+                <button type="submit" class="btn-primary">Apply</button>
+            </div>
+            
+            <div class="form-group">
+                <label>Group by:</label>
+                <select name="group_by" class="form-select" onchange="this.form.submit()">
+                    <option value="day" {% if group_by == 'day' %}selected{% endif %}>Daily</option>
+                    <option value="month" {% if group_by == 'month' %}selected{% endif %}>Monthly</option>
+                </select>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div class="summary-card">
+            <div class="summary-icon bg-blue">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="summary-content">
+                <span class="summary-label">Total Revenue</span>
+                <h2>₹{{ report.overall.total_revenue|floatformat:2 }}</h2>
+                <span class="summary-meta">{{ report.overall.total_orders }} orders</span>
+            </div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-icon bg-purple">
+                <i class="fas fa-shopping-bag"></i>
+            </div>
+            <div class="summary-content">
+                <span class="summary-label">Items Sold</span>
+                <h2>{{ report.overall.total_items_sold|floatformat:0 }}</h2>
+                <span class="summary-meta">Across all products</span>
+            </div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-icon bg-green">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="summary-content">
+                <span class="summary-label">Avg Order Value</span>
+                <h2>₹{{ report.overall.avg_order_value|floatformat:2 }}</h2>
+                <span class="summary-meta">Per transaction</span>
+            </div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-icon bg-orange">
+                <i class="fas fa-tag"></i>
+            </div>
+            <div class="summary-content">
+                <span class="summary-label">Total Discount</span>
+                <h2>₹{{ report.overall.total_discount|floatformat:2 }}</h2>
+                <span class="summary-meta">Coupons & offers</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sales Breakdown Chart -->
+    <div class="chart-card">
+        <div class="card-header">
+            <h3>Sales Breakdown</h3>
+        </div>
+        <div class="card-body">
+            <canvas id="salesBreakdownChart" height="80"></canvas>
+        </div>
+    </div>
+    
+    <!-- Payment Methods Comparison -->
+    <div class="comparison-cards">
+        <div class="comparison-card">
+            <div class="comparison-header">
+                <h3>COD vs Online Payment</h3>
+            </div>
+            <div class="comparison-body">
+                <div class="comparison-item">
+                    <div class="comparison-label">
+                        <i class="fas fa-money-bill-wave text-success"></i>
+                        <span>Cash on Delivery</span>
+                    </div>
+                    <div class="comparison-stats">
+                        <div class="stat-row">
+                            <span>Orders:</span>
+                            <strong>{{ report.cod_vs_online.cod.count }}</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span>Revenue:</span>
+                            <strong>₹{{ report.cod_vs_online.cod.revenue|floatformat:2 }}</strong>
+                        </div>
+                    </div>
+                    <div class="comparison-bar">
+                        <div class="bar-fill bg-success" style="width: {% widthratio report.cod_vs_online.cod.revenue report.overall.total_revenue 100 %}%"></div>
+                    </div>
+                    <div class="comparison-percentage">
+                        {% widthratio report.cod_vs_online.cod.revenue report.overall.total_revenue 100 %}%
+                    </div>
+                </div>
+                
+                <div class="comparison-item">
+                    <div class="comparison-label">
+                        <i class="fas fa-credit-card text-primary"></i>
+                        <span>Online Payment</span>
+                    </div>
+                    <div class="comparison-stats">
+                        <div class="stat-row">
+                            <span>Orders:</span>
+                            <strong>{{ report.cod_vs_online.online.count }}</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span>Revenue:</span>
+                            <strong>₹{{ report.cod_vs_online.online.revenue|floatformat:2 }}</strong>
+                        </div>
+                    </div>
+                    <div class="comparison-bar">
+                        <div class="bar-fill bg-primary" style="width: {% widthratio report.cod_vs_online.online.revenue report.overall.total_revenue 100 %}%"></div>
+                    </div>
+                    <div class="comparison-percentage">
+                        {% widthratio report.cod_vs_online.online.revenue report.overall.total_revenue 100 %}%
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cancellation Stats -->
+        <div class="comparison-card">
+            <div class="comparison-header">
+                <h3>Return & Cancellation</h3>
+            </div>
+            <div class="comparison-body">
+                <div class="cancellation-stats">
+                    <div class="cancel-item">
+                        <div class="cancel-icon bg-red">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="cancel-info">
+                            <h4>{{ report.cancellations.count }}</h4>
+                            <span>Cancelled Orders</span>
+                        </div>
+                        <div class="cancel-amount">₹{{ report.cancellations.amount|floatformat:2 }}</div>
+                    </div>
+                    
+                    <div class="cancel-rate">
+                        <span>Cancellation Rate:</span>
+                        <strong>{% widthratio report.cancellations.count report.overall.total_orders 100 %}%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product Performance Table -->
+    <div class="table-card">
+        <div class="card-header">
+            <h3>Product Performance</h3>
+            <input type="text" class="search-input" placeholder="Search products..." id="productSearch">
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th>Units Sold</th>
+                            <th>Revenue</th>
+                            <th>Avg Price</th>
+                            <th>Orders</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in product_performance %}
+                        <tr>
+                            <td><span class="rank-badge">{{ forloop.counter }}</span></td>
+                            <td>
+                                <a href="{% url 'admin_dashboard:product_detail' product.variant__product__slug %}" class="product-link">
+                                    {{ product.variant__product__name }}
+                                </a>
+                            </td>
+                            <td><span class="badge badge-light">{{ product.variant__product__category__name }}</span></td>
+                            <td><strong>{{ product.units_sold }}</strong></td>
+                            <td><strong class="text-success">₹{{ product.revenue|floatformat:2 }}</strong></td>
+                            <td>₹{{ product.avg_price|floatformat:2 }}</td>
+                            <td>{{ product.order_count }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No data available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_dashboard/js/reports.js' %}"></script>
+<script>
+    const reportData = {{ report|safe }};
+    initializeSalesReport(reportData);
+    
+    // Period selector change
+    document.querySelector('select[name="period"]').addEventListener('change', function() {
+        document.getElementById('customDateRange').style.display = 
+            this.value === 'custom' ? 'flex' : 'none';
+    });
+    
+    // Product search
+    document.getElementById('productSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('.data-table tbody tr');
+        
+        rows.forEach(row => {
+            const productName = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase();
+            row.style.display = productName?.includes(searchTerm) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

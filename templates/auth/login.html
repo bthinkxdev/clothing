@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login / OTP - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container auth-page">
+    <div class="auth-card">
+        <h1>OTP Login</h1>
+        <p>Enter your phone to receive a one-time password.</p>
+
+        <input type="hidden" data-next-url value="{{ next|default:'/' }}">
+
+        <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input id="phone" type="tel" class="form-control" placeholder="+91 90000 00000" data-otp-phone>
+            <div class="info-text">We’ll send a 6-digit code to this number.</div>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn btn-primary" data-otp-send>Send OTP</button>
+        </div>
+
+        <div class="form-group" style="margin-top:16px;">
+            <label for="otp">Enter OTP</label>
+            <input id="otp" type="text" class="form-control" placeholder="123456" data-otp-code>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn btn-secondary" data-otp-verify>Verify & Login</button>
+        </div>
+
+        <div class="otp-message" data-otp-status></div>
+
+        <div class="divider">or</div>
+
+        <div class="info-text">
+            Need help? Contact support@fashion.com
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+<!-- DEMO SCRIPT - Remove in production -->
+<script src="{% static 'js/auth-demo.js' %}"></script>
+{% endblock %}

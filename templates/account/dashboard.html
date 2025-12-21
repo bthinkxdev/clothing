@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Account Dashboard - FASHION{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumbs.html' %}
+
+<div class="container account-page">
+    <div class="card">
+        <h2>Welcome, {{ user.get_full_name|default:user.email }}</h2>
+    </div>
+
+    <div class="account-cards" style="margin-top:12px;">
+        <div class="card">
+            <div class="stat-value">{{ total_orders }}</div>
+            <div>Total Orders</div>
+        </div>
+        <div class="card">
+            <div class="stat-value">₹{{ wallet_balance|default:"0.00" }}</div>
+            <div>Wallet Balance</div>
+        </div>
+        <div class="card">
+            <div class="stat-value">{{ loyalty_points|default:"0" }}</div>
+            <div>Loyalty Points</div>
+        </div>
+        <div class="card">
+            <div class="stat-value">{{ saved_addresses|default:"0" }}</div>
+            <div>Saved Addresses</div>
+        </div>
+        <div class="card">
+            <div class="stat-value">{{ wishlist_count|default:"0" }}</div>
+            <div>Wishlist Items</div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+        <h2>Recent Orders</h2>
+        {% if recent_orders %}
+            <table class="table">
+                <thead><tr><th>ID</th><th>Status</th><th>Total</th><th>Date</th></tr></thead>
+                <tbody>
+                {% for order in recent_orders %}
+                    <tr>
+                        <td><a href="{% url 'order_detail' order.id %}">{{ order.id }}</a></td>
+                        <td><span class="badge">{{ order.status }}</span></td>
+                        <td>₹{{ order.total }}</td>
+                        <td>{{ order.placed_at|date:"M d, Y" }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">No recent orders.</div>
+        {% endif %}
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+        <h2>Quick Actions</h2>
+        <div class="link-list">
+            <a href="{% url 'profile_edit' %}"><i class="far fa-user"></i> Edit Profile</a>
+            <a href="{% url 'address_list' %}"><i class="fas fa-map-marker-alt"></i> Manage Addresses</a>
+            <a href="{% url 'my_orders' %}"><i class="fas fa-box"></i> View Orders</a>
+            <a href="{% url 'wishlist' %}"><i class="far fa-heart"></i> Wishlist</a>
+            <a href="{% url 'my_reviews' %}"><i class="far fa-star"></i> My Reviews</a>
+            <a href="{% url 'wallet' %}"><i class="fas fa-wallet"></i> Wallet & Points</a>
+            <a href="{% url 'my_coupons' %}"><i class="fas fa-ticket-alt"></i> Coupons</a>
+            <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
