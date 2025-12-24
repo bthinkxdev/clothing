@@ -18,7 +18,7 @@
                 {% if images %}
                     {% for image in images %}
                     <button type="button" class="{% if forloop.first %}active{% endif %}" data-thumb data-src="{{ image.image.url }}">
-                        <img src="{{ image.image.url }}" alt="{{ product.name }} thumbnail {{ forloop.counter }}">
+                        <img src="{{ image.image.url }}" alt="{{ product.name }} thumbnail {{ forloop.counter }}" onerror="this.onerror=null;this.src='https://via.placeholder.com/100x100/FAF7F2/8B4513?text=No+Img';">
                     </button>
                     {% endfor %}
                 {% else %}
@@ -29,7 +29,7 @@
             </div>
             <div class="main-image">
                 {% if images %}
-                    <img src="{{ images.0.image.url }}" alt="{{ product.name }}" data-main-image>
+                    <img src="{{ images.0.image.url }}" alt="{{ product.name }}" data-main-image onerror="this.onerror=null;this.src='https://via.placeholder.com/600x750/FAF7F2/8B4513?text=No+Image';">
                 {% else %}
                     <img src="https://via.placeholder.com/600x750/FAF7F2/8B4513?text={{ product.name|slice:':12' }}" alt="{{ product.name }}" data-main-image>
                 {% endif %}

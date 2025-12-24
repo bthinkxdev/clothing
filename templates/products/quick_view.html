@@ -2,7 +2,7 @@
 <div class="quick-view-content">
     <div class="quick-view-gallery">
         {% if images %}
-            <img src="{{ images.0.image.url }}" alt="{{ product.name }}">
+            <img src="{{ images.0.image.url }}" alt="{{ product.name }}" onerror="this.onerror=null;this.src='https://via.placeholder.com/400x500/FAF7F2/8B4513?text=No+Image';">
         {% else %}
             <img src="https://via.placeholder.com/400x500/FAF7F2/8B4513?text={{ product.name|slice:':12' }}" alt="{{ product.name }}">
         {% endif %}

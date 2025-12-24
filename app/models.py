@@ -106,6 +106,20 @@ class Product(models.Model):
         agg = self.reviews.aggregate(avg=models.Avg("rating"))
         return agg["avg"] or 0
 
+    def primary_image(self):
+        """Return primary image preferring featured then order, using prefetched cache when available."""
+        images_qs = self.images.all()
+        if hasattr(self, "_prefetched_objects_cache") and "images" in self._prefetched_objects_cache:
+            images_qs = self._prefetched_objects_cache["images"]
+        return images_qs.order_by("-is_feature", "order", "id").first()
+
+    def ordered_images(self):
+        """Return ordered images without breaking existing prefetch caches."""
+        images_qs = self.images.all()
+        if hasattr(self, "_prefetched_objects_cache") and "images" in self._prefetched_objects_cache:
+            images_qs = self._prefetched_objects_cache["images"]
+        return images_qs.order_by("-is_feature", "order", "id")
+
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")

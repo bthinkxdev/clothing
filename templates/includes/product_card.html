@@ -1,9 +1,10 @@
 <div class="product-card">
+    {% with placeholder="https://via.placeholder.com/400x500/FAF7F2/8B4513?text=No+Image" %}
     <a href="{{ product.get_absolute_url }}" class="product-image-wrapper">
-        {% if product.images.first %}
-            <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="product-image" loading="lazy">
+        {% if product.primary_image %}
+            <img src="{{ product.primary_image.image.url }}" alt="{{ product.primary_image.alt_text|default:product.name }}" class="product-image" loading="lazy" onerror="this.onerror=null;this.src='{{ placeholder }}';">
         {% else %}
-            <img src="https://via.placeholder.com/400x500/FAF7F2/8B4513?text={{ product.name|slice:':10' }}" alt="{{ product.name }}" class="product-image" loading="lazy">
+            <img src="{{ placeholder }}" alt="{{ product.name }}" class="product-image" loading="lazy">
         {% endif %}
         
         {% if product.main_variant.discount_percent > 0 %}
@@ -12,6 +13,7 @@
             <span class="product-badge badge-new">NEW</span>
         {% endif %}
     </a>
+    {% endwith %}
     
     <div class="product-actions">
         {% if user.is_authenticated %}
