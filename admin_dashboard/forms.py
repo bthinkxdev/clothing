@@ -3,7 +3,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from app.models import (
     Order, Product, ProductVariant, ProductImage,
-    Inventory, Coupon, Category, User
+    Inventory, Coupon, Category, User, SiteTheme
 )
 
 
@@ -293,3 +293,28 @@ class WalletAdjustmentForm(forms.Form):
             'placeholder': 'Reason for adjustment...'
         })
     )
+
+
+class ThemeForm(forms.ModelForm):
+    class Meta:
+        model = SiteTheme
+        fields = [
+            'name', 'primary_color', 'primary_dark', 'secondary_color', 
+            'accent_color', 'text_dark', 'text_light', 'bg_cream', 
+            'border_color', 'error_color', 'success_color', 
+            'warning_color', 'info_color', 'font_family', 'border_radius'
+        ]
+        widgets = {
+            'primary_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
+            'primary_dark': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
+            'secondary_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
+            'accent_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
+            'text_dark': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
+            'text_light': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
+            'bg_cream': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
+            'border_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
+            'error_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
+            'success_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
+            'warning_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
+            'info_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
+        }

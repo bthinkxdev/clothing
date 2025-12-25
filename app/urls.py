@@ -114,4 +114,7 @@ urlpatterns = [
     # ========================
     path('api/variants/<int:variant_id>/stock/', views.VariantStockCheckView.as_view(), name='variant_stock_check'),
     path('api/products/autocomplete/', views.ProductAutocompleteView.as_view(), name='product_autocomplete'),
+
+    path('theme.css', views.theme_css, name='dynamic_theme_css'),
+    
 ]

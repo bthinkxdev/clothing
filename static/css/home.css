@@ -4,7 +4,7 @@
 .hero-section {
     position: relative;
     min-height: 600px;
-    background: linear-gradient(135deg, var(--bg-cream) 0%, #F5E6D3 100%);
+    background: linear-gradient(135deg, var(--bg-cream) 0%, var(--bg-cream-soft) 100%);
     overflow: hidden;
     display: flex;
     align-items: center;

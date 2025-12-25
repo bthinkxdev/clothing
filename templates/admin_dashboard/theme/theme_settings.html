@@ -1,0 +1,385 @@
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Theme Settings - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admin_dashboard/css/theme_settings.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="theme-settings-container">
+    <div class="theme-header">
+        <h1>
+            <i class="fas fa-palette"></i>
+            Theme Customization
+        </h1>
+        <p>Customize your store's appearance with colors that match your brand identity</p>
+    </div>
+
+    <form method="post" id="themeForm">
+        {% csrf_token %}
+        
+        <div class="theme-content">
+            <!-- Left Column - Form -->
+            <div>
+                <!-- Theme Name -->
+                <div class="theme-form-section" style="margin-bottom: 2rem;">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-tag"></i>
+                            Theme Information
+                        </h2>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-group">
+                            <label for="id_name">
+                                Theme Name
+                                <i class="fas fa-info-circle" title="Give your theme a memorable name"></i>
+                            </label>
+                            {{ form.name }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="theme-form-section" style="margin-bottom: 2rem;">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-swatchbook"></i>
+                            Quick Presets
+                        </h2>
+                        <p>Click on a preset to apply pre-configured color schemes</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="palette-grid">
+                            <div class="palette-item" onclick="applyPreset('modern-pink')">
+                                <div class="palette-colors">
+                                    <div class="palette-color" style="background: #FF6B6B;"></div>
+                                    <div class="palette-color" style="background: #FFA07A;"></div>
+                                    <div class="palette-color" style="background: #FFD93D;"></div>
+                                    <div class="palette-color" style="background: #FFFFFF;"></div>
+                                </div>
+                                <div class="palette-name">Modern Pink</div>
+                            </div>
+                            
+                            <div class="palette-item" onclick="applyPreset('ocean-blue')">
+                                <div class="palette-colors">
+                                    <div class="palette-color" style="background: #667eea;"></div>
+                                    <div class="palette-color" style="background: #764ba2;"></div>
+                                    <div class="palette-color" style="background: #10b981;"></div>
+                                    <div class="palette-color" style="background: #f9fafb;"></div>
+                                </div>
+                                <div class="palette-name">Ocean Blue</div>
+                            </div>
+                            
+                            <div class="palette-item" onclick="applyPreset('forest-green')">
+                                <div class="palette-colors">
+                                    <div class="palette-color" style="background: #059669;"></div>
+                                    <div class="palette-color" style="background: #10b981;"></div>
+                                    <div class="palette-color" style="background: #fbbf24;"></div>
+                                    <div class="palette-color" style="background: #f0fdf4;"></div>
+                                </div>
+                                <div class="palette-name">Forest Green</div>
+                            </div>
+                            
+                            <div class="palette-item" onclick="applyPreset('sunset-orange')">
+                                <div class="palette-colors">
+                                    <div class="palette-color" style="background: #f97316;"></div>
+                                    <div class="palette-color" style="background: #fb923c;"></div>
+                                    <div class="palette-color" style="background: #fbbf24;"></div>
+                                    <div class="palette-color" style="background: #fff7ed;"></div>
+                                </div>
+                                <div class="palette-name">Sunset Orange</div>
+                            </div>
+                            
+                            <div class="palette-item" onclick="applyPreset('royal-purple')">
+                                <div class="palette-colors">
+                                    <div class="palette-color" style="background: #9333ea;"></div>
+                                    <div class="palette-color" style="background: #a855f7;"></div>
+                                    <div class="palette-color" style="background: #ec4899;"></div>
+                                    <div class="palette-color" style="background: #faf5ff;"></div>
+                                </div>
+                                <div class="palette-name">Royal Purple</div>
+                            </div>
+                            
+                            <div class="palette-item" onclick="applyPreset('midnight-dark')">
+                                <div class="palette-colors">
+                                    <div class="palette-color" style="background: #3b82f6;"></div>
+                                    <div class="palette-color" style="background: #6366f1;"></div>
+                                    <div class="palette-color" style="background: #14b8a6;"></div>
+                                    <div class="palette-color" style="background: #f8fafc;"></div>
+                                </div>
+                                <div class="palette-name">Midnight Dark</div>
+                            </div>
+                            
+                            <div class="palette-item" onclick="applyPreset('coral-reef')">
+                                <div class="palette-colors">
+                                    <div class="palette-color" style="background: #f43f5e;"></div>
+                                    <div class="palette-color" style="background: #fb7185;"></div>
+                                    <div class="palette-color" style="background: #fbbf24;"></div>
+                                    <div class="palette-color" style="background: #fff1f2;"></div>
+                                </div>
+                                <div class="palette-name">Coral Reef</div>
+                            </div>
+                            
+                            <div class="palette-item" onclick="applyPreset('mint-fresh')">
+                                <div class="palette-colors">
+                                    <div class="palette-color" style="background: #14b8a6;"></div>
+                                    <div class="palette-color" style="background: #2dd4bf;"></div>
+                                    <div class="palette-color" style="background: #06b6d4;"></div>
+                                    <div class="palette-color" style="background: #f0fdfa;"></div>
+                                </div>
+                                <div class="palette-name">Mint Fresh</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Brand Colors -->
+                <div class="theme-form-section" style="margin-bottom: 2rem;">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-paint-brush"></i>
+                            Brand Colors
+                        </h2>
+                        <p>Main colors used for buttons, links, and highlights</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="id_primary_color">Primary Color</label>
+                                    <div class="color-input-wrapper">
+                                        <div class="color-preview" style="background: {{ form.primary_color.value|default:'#FF6B6B' }};" onclick="document.getElementById('id_primary_color').click()"></div>
+                                        {{ form.primary_color }}
+                                        <input type="text" class="color-text-input" value="{{ form.primary_color.value|default:'#FF6B6B' }}" readonly>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="id_primary_dark">Primary Dark</label>
+                                    <div class="color-input-wrapper">
+                                        <div class="color-preview" style="background: {{ form.primary_dark.value|default:'#E85555' }};" onclick="document.getElementById('id_primary_dark').click()"></div>
+                                        {{ form.primary_dark }}
+                                        <input type="text" class="color-text-input" value="{{ form.primary_dark.value|default:'#E85555' }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="id_secondary_color">Secondary Color</label>
+                                    <div class="color-input-wrapper">
+                                        <div class="color-preview" style="background: {{ form.secondary_color.value|default:'#FFA07A' }};" onclick="document.getElementById('id_secondary_color').click()"></div>
+                                        {{ form.secondary_color }}
+                                        <input type="text" class="color-text-input" value="{{ form.secondary_color.value|default:'#FFA07A' }}" readonly>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="id_accent_color">Accent Color</label>
+                                    <div class="color-input-wrapper">
+                                        <div class="color-preview" style="background: {{ form.accent_color.value|default:'#FFD93D' }};" onclick="document.getElementById('id_accent_color').click()"></div>
+                                        {{ form.accent_color }}
+                                        <input type="text" class="color-text-input" value="{{ form.accent_color.value|default:'#FFD93D' }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text & Surface Colors -->
+                <div class="theme-form-section" style="margin-bottom: 2rem;">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-font"></i>
+                            Text & Surface Colors
+                        </h2>
+                        <p>Colors for text, backgrounds, and borders</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="id_text_dark">Text Dark</label>
+                                    <div class="color-input-wrapper">
+                                        <div class="color-preview" style="background: {{ form.text_dark.value|default:'#2D3142' }};" onclick="document.getElementById('id_text_dark').click()"></div>
+                                        {{ form.text_dark }}
+                                        <input type="text" class="color-text-input" value="{{ form.text_dark.value|default:'#2D3142' }}" readonly>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="id_text_light">Text Light</label>
+                                    <div class="color-input-wrapper">
+                                        <div class="color-preview" style="background: {{ form.text_light.value|default:'#6C757D' }};" onclick="document.getElementById('id_text_light').click()"></div>
+                                        {{ form.text_light }}
+                                        <input type="text" class="color-text-input" value="{{ form.text_light.value|default:'#6C757D' }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="id_bg_cream">Background</label>
+                                    <div class="color-input-wrapper">
+                                        <div class="color-preview" style="background: {{ form.bg_cream.value|default:'#FFFFFF' }};" onclick="document.getElementById('id_bg_cream').click()"></div>
+                                        {{ form.bg_cream }}
+                                        <input type="text" class="color-text-input" value="{{ form.bg_cream.value|default:'#FFFFFF' }}" readonly>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="id_border_color">Border Color</label>
+                                    <div class="color-input-wrapper">
+                                        <div class="color-preview" style="background: {{ form.border_color.value|default:'#E8E8E8' }};" onclick="document.getElementById('id_border_color').click()"></div>
+                                        {{ form.border_color }}
+                                        <input type="text" class="color-text-input" value="{{ form.border_color.value|default:'#E8E8E8' }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- State Colors -->
+                <div class="theme-form-section" style="margin-bottom: 2rem;">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-exclamation-circle"></i>
+                            State Colors
+                        </h2>
+                        <p>Colors for alerts, notifications, and status messages</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="id_success_color">Success</label>
+                                    <div class="color-input-wrapper">
+                                        <div class="color-preview" style="background: {{ form.success_color.value|default:'#4CAF50' }};" onclick="document.getElementById('id_success_color').click()"></div>
+                                        {{ form.success_color }}
+                                        <input type="text" class="color-text-input" value="{{ form.success_color.value|default:'#4CAF50' }}" readonly>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="id_error_color">Error</label>
+                                    <div class="color-input-wrapper">
+                                        <div class="color-preview" style="background: {{ form.error_color.value|default:'#FF5252' }};" onclick="document.getElementById('id_error_color').click()"></div>
+                                        {{ form.error_color }}
+                                        <input type="text" class="color-text-input" value="{{ form.error_color.value|default:'#FF5252' }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="id_warning_color">Warning</label>
+                                    <div class="color-input-wrapper">
+                                        <div class="color-preview" style="background: {{ form.warning_color.value|default:'#FFB300' }};" onclick="document.getElementById('id_warning_color').click()"></div>
+                                        {{ form.warning_color }}
+                                        <input type="text" class="color-text-input" value="{{ form.warning_color.value|default:'#FFB300' }}" readonly>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="id_info_color">Info</label>
+                                    <div class="color-input-wrapper">
+                                        <div class="color-preview" style="background: {{ form.info_color.value|default:'#00BCD4' }};" onclick="document.getElementById('id_info_color').click()"></div>
+                                        {{ form.info_color }}
+                                        <input type="text" class="color-text-input" value="{{ form.info_color.value|default:'#00BCD4' }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typography & Layout -->
+                <div class="theme-form-section">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-text-height"></i>
+                            Typography & Layout
+                        </h2>
+                        <p>Font and border styling options</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="id_font_family">Font Family</label>
+                                {{ form.font_family }}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="id_border_radius">Border Radius</label>
+                                {{ form.border_radius }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Save Theme
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                            <i class="fas fa-undo"></i>
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Live Preview -->
+            <div class="theme-preview">
+                <div class="preview-card">
+                    <div class="preview-header">
+                        <h3>
+                            <i class="fas fa-eye"></i>
+                            Live Preview
+                        </h3>
+                    </div>
+                    <div class="preview-content">
+                        <div class="preview-demo">
+                            <div class="preview-buttons">
+                                <button class="preview-btn preview-btn-primary">Primary Button</button>
+                                <button class="preview-btn preview-btn-secondary">Secondary</button>
+                                <button class="preview-btn preview-btn-accent">Accent</button>
+                            </div>
+                            
+                            <div class="preview-text">
+                                <h4>Preview Text</h4>
+                                <p>This is how your text will appear with the selected colors.</p>
+                            </div>
+                            
+                            <div class="preview-alerts">
+                                <div class="preview-alert preview-alert-success">
+                                    <i class="fas fa-check-circle"></i>
+                                    Success message
+                                </div>
+                                <div class="preview-alert preview-alert-error">
+                                    <i class="fas fa-times-circle"></i>
+                                    Error message
+                                </div>
+                                <div class="preview-alert preview-alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Warning message
+                                </div>
+                                <div class="preview-alert preview-alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    Info message
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<script src="{% static 'admin_dashboard/js/theme_settings.js' %}"></script>
+{% endblock %}

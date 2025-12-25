@@ -598,3 +598,73 @@ def ensure_unit_price(sender, instance, created, **kwargs):
     if created and (not instance.unit_price or instance.unit_price == 0):
         instance.unit_price = instance.variant.get_price()
         instance.save(update_fields=["unit_price"])
+
+
+class SiteTheme(models.Model):
+    """
+    Store site-wide theme configuration
+    """
+    name = models.CharField(max_length=100, default="Default Theme")
+    is_active = models.BooleanField(default=True)
+    
+    # Brand Colors
+    primary_color = models.CharField(max_length=7, default="#FF6B6B", help_text="Hex color code")
+    primary_dark = models.CharField(max_length=7, default="#E85555")
+    secondary_color = models.CharField(max_length=7, default="#FFA07A")
+    accent_color = models.CharField(max_length=7, default="#FFD93D")
+    
+    # Text & Surfaces
+    text_dark = models.CharField(max_length=7, default="#2D3142")
+    text_light = models.CharField(max_length=7, default="#6C757D")
+    bg_cream = models.CharField(max_length=7, default="#FFFFFF")
+    border_color = models.CharField(max_length=7, default="#E8E8E8")
+    
+    # State Colors
+    error_color = models.CharField(max_length=7, default="#FF5252")
+    success_color = models.CharField(max_length=7, default="#4CAF50")
+    warning_color = models.CharField(max_length=7, default="#FFB300")
+    info_color = models.CharField(max_length=7, default="#00BCD4")
+    
+    # Additional Settings
+    border_radius = models.CharField(max_length=10, default="8px")
+    font_family = models.CharField(max_length=200, default="'Inter', sans-serif")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ["-is_active", "-updated_at"]
+    
+    def __str__(self):
+        return f"{self.name} {'(Active)' if self.is_active else ''}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one active theme
+        if self.is_active:
+            SiteTheme.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_active_theme(cls):
+        """Get the currently active theme or create default"""
+        theme = cls.objects.filter(is_active=True).first()
+        if not theme:
+            theme = cls.objects.create(name="Default Theme", is_active=True)
+        return theme
+    
+    def to_css_vars(self):
+        """Convert theme to CSS variables dictionary"""
+        return {
+            '--primary-color': self.primary_color,
+            '--primary-dark': self.primary_dark,
+            '--secondary-color': self.secondary_color,
+            '--accent-color': self.accent_color,
+            '--text-dark': self.text_dark,
+            '--text-light': self.text_light,
+            '--bg-cream': self.bg_cream,
+            '--border-color': self.border_color,
+            '--error-color': self.error_color,
+            '--success-color': self.success_color,
+            '--warning-color': self.warning_color,
+            '--info-color': self.info_color,
+        }

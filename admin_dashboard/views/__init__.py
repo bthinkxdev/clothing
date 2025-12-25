@@ -70,6 +70,9 @@ from .other import (
     PaymentDetailView,
 )
 
+# Theme Management Views
+from .theme import theme_settings
+    
 # Auth
 from .auth import AdminLoginView, AdminLogoutView
 
@@ -145,4 +148,7 @@ __all__ = [
     # Payments
     'PaymentListView',
     'PaymentDetailView',
+
+    # Theme Management
+    'theme_settings',
 ]

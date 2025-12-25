@@ -37,7 +37,7 @@
 
 .thumbs button.active {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(139,69,19,0.1);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
 }
 
 .main-image {

@@ -141,9 +141,9 @@
 }
 
 .stock-warning {
-    background: #FFF3CD;
-    color: #856404;
-    border: 1px solid #FFE8A1;
+    background: var(--warning-soft);
+    color: var(--warning-soft-text);
+    border: 1px solid var(--warning-soft-border);
     padding: 10px 12px;
     border-radius: 4px;
     margin-bottom: 12px;

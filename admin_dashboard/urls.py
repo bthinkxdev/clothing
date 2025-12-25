@@ -79,4 +79,7 @@ urlpatterns = [
     path('api/order-status-chart/', views.OrderStatusChartAPIView.as_view(), name='api_order_status_chart'),
     path('api/product-performance/', views.ProductPerformanceAPIView.as_view(), name='api_product_performance'),
     path('api/customer-analytics/', views.CustomerAnalyticsAPIView.as_view(), name='api_customer_analytics'),
+
+    # Theme Management
+    path('theme/settings/', views.theme_settings, name='theme_settings'),
 ]

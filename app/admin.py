@@ -4,7 +4,7 @@ app/admin.py - Super User-Friendly Customized Admin Dashboard
 from django.contrib import admin, messages
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Sum, Count, Q, Avg,F
+from django.db.models import Sum, Count, Q, Avg, F
 from django.urls import path, reverse
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
@@ -17,7 +17,7 @@ from .models import (
     Coupon, CouponUsage, GiftCard, LoyaltyPoint,
     Order, OrderItem, Payment,
     Review, Banner, NewsletterSubscriber, Referral,
-    ProductView, AbandonedCartSnapshot, ShippingZone
+    ProductView, AbandonedCartSnapshot, ShippingZone, SiteTheme
 )
 
 
@@ -914,6 +914,43 @@ class NewsletterAdmin(admin.ModelAdmin):
     list_display = ('email', 'active', 'subscribed_at')
     list_filter = ('active',)
 
+
+@admin.register(SiteTheme, site=custom_admin_site)
+class SiteThemeAdmin(admin.ModelAdmin):
+    list_display = ['name', 'is_active', 'primary_color', 'updated_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['name']
+    
+    fieldsets = (
+        ('Basic Info', {
+            'fields': ('name', 'is_active')
+        }),
+        ('Brand Colors', {
+            'fields': ('primary_color', 'primary_dark', 'secondary_color', 'accent_color'),
+            'description': 'Main brand colors for buttons, links, and highlights'
+        }),
+        ('Text & Surfaces', {
+            'fields': ('text_dark', 'text_light', 'bg_cream', 'border_color'),
+            'description': 'Text colors and background colors'
+        }),
+        ('State Colors', {
+            'fields': ('error_color', 'success_color', 'warning_color', 'info_color'),
+            'description': 'Colors for alerts and notifications'
+        }),
+        ('Typography & Layout', {
+            'fields': ('font_family', 'border_radius'),
+            'description': 'Font and border settings'
+        }),
+    )
+    
+    class Media:
+        css = {
+            'all': ('admin/css/theme-admin.css',)
+        }
+        js = ('admin/js/theme-admin.js',)
+
+
+
 # Register remaining models simply
 custom_admin_site.register(ProductImage)
 custom_admin_site.register(ProductVariant)
@@ -928,7 +965,6 @@ custom_admin_site.register(Referral)
 custom_admin_site.register(ProductView)
 custom_admin_site.register(AbandonedCartSnapshot)
 custom_admin_site.register(ShippingZone)
-
 # Register django-allauth models with custom admin site
 try:
     from allauth.account.models import EmailAddress

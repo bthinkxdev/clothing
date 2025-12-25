@@ -7,21 +7,6 @@
     box-sizing: border-box;
 }
 
-:root {
-    --primary-color: #8B4513;
-    --secondary-color: #D2691E;
-    --accent-color: #FFD700;
-    --text-dark: #2C2C2C;
-    --text-light: #666666;
-    --bg-cream: #FAF7F2;
-    --white: #FFFFFF;
-    --border-color: #E5E5E5;
-    --error-color: #DC3545;
-    --success-color: #28A745;
-    --warning-color: #FFC107;
-    --info-color: #17A2B8;
-}
-
 /* ========================================
    BASE STYLES
 ======================================== */
@@ -108,7 +93,7 @@ select:focus,
 textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(132, 70, 20, 0.12);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
 }
 
 textarea {
@@ -164,7 +149,7 @@ main {
 }
 
 .btn-primary:hover {
-    background: #6B3410;
+    background: var(--primary-dark);
     transform: translateY(-1px);
 }
 
@@ -571,10 +556,10 @@ footer {
     to { transform: translateX(0); opacity: 1; }
 }
 
-.alert-success { background: #D4EDDA; color: #155724; border-left: 4px solid var(--success-color); }
-.alert-error { background: #F8D7DA; color: #721C24; border-left: 4px solid var(--error-color); }
-.alert-warning { background: #FFF3CD; color: #856404; border-left: 4px solid var(--warning-color); }
-.alert-info { background: #D1ECF1; color: #0C5460; border-left: 4px solid var(--info-color); }
+.alert-success { background: var(--success-soft); color: var(--success-soft-text); border-left: 4px solid var(--success-color); }
+.alert-error { background: var(--error-soft); color: var(--error-soft-text); border-left: 4px solid var(--error-color); }
+.alert-warning { background: var(--warning-soft); color: var(--warning-soft-text); border-left: 4px solid var(--warning-color); }
+.alert-info { background: var(--info-soft); color: var(--info-soft-text); border-left: 4px solid var(--info-color); }
 
 .alert i { font-size: 20px; }
 .alert-content { flex: 1; font-size: 14px; font-weight: 500; }
@@ -823,7 +808,7 @@ footer {
 }
 
 .filter-apply-btn:hover {
-    background: #6B3410;
+    background: var(--primary-dark);
 }
 
 .clear-filters {
@@ -836,7 +821,7 @@ footer {
 }
 
 .clear-filters:hover {
-    color: #6B3410;
+    color: var(--primary-dark);
 }
 
 /* ========================================
