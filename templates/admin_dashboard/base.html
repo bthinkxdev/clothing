@@ -17,6 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% url 'dynamic_theme_css' %}?v={{ site_theme.updated_at|date:'U' }}">
     <link rel="stylesheet" href="{% static 'admin_dashboard/css/admin.css' %}">
     
     {% block extra_css %}{% endblock %}

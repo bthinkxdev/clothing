@@ -19,6 +19,18 @@
 
     <form method="post" id="themeForm">
         {% csrf_token %}
+        {% if theme_form.errors or pattern_form.errors %}
+        <div class="alert alert-error">
+            <strong>There were validation issues saving your changes.</strong>
+            {{ theme_form.errors }}
+            {{ pattern_form.errors }}
+        </div>
+        {% endif %}
+        <div class="pattern-hidden-inputs" style="display:none" aria-hidden="true">
+            {% for field in pattern_form %}
+                {{ field }}
+            {% endfor %}
+        </div>
         
         <div class="theme-content">
             <!-- Left Column - Form -->
@@ -37,7 +49,7 @@
                                 Theme Name
                                 <i class="fas fa-info-circle" title="Give your theme a memorable name"></i>
                             </label>
-                            {{ form.name }}
+                            {{ theme_form.name }}
                         </div>
                     </div>
                 </div>
@@ -151,18 +163,18 @@
                                 <div class="form-group">
                                     <label for="id_primary_color">Primary Color</label>
                                     <div class="color-input-wrapper">
-                                        <div class="color-preview" style="background: {{ form.primary_color.value|default:'#FF6B6B' }};" onclick="document.getElementById('id_primary_color').click()"></div>
-                                        {{ form.primary_color }}
-                                        <input type="text" class="color-text-input" value="{{ form.primary_color.value|default:'#FF6B6B' }}" readonly>
+                                    <div class="color-preview" style="background: {{ theme_form.primary_color.value|default:'#FF6B6B' }};" onclick="document.getElementById('id_theme-primary_color').click()"></div>
+                                    {{ theme_form.primary_color }}
+                                        <input type="text" class="color-text-input" value="{{ theme_form.primary_color.value|default:'#FF6B6B' }}" readonly>
                                     </div>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="id_primary_dark">Primary Dark</label>
                                     <div class="color-input-wrapper">
-                                        <div class="color-preview" style="background: {{ form.primary_dark.value|default:'#E85555' }};" onclick="document.getElementById('id_primary_dark').click()"></div>
-                                        {{ form.primary_dark }}
-                                        <input type="text" class="color-text-input" value="{{ form.primary_dark.value|default:'#E85555' }}" readonly>
+                                    <div class="color-preview" style="background: {{ theme_form.primary_dark.value|default:'#E85555' }};" onclick="document.getElementById('id_theme-primary_dark').click()"></div>
+                                        {{ theme_form.primary_dark }}
+                                        <input type="text" class="color-text-input" value="{{ theme_form.primary_dark.value|default:'#E85555' }}" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -171,18 +183,18 @@
                                 <div class="form-group">
                                     <label for="id_secondary_color">Secondary Color</label>
                                     <div class="color-input-wrapper">
-                                        <div class="color-preview" style="background: {{ form.secondary_color.value|default:'#FFA07A' }};" onclick="document.getElementById('id_secondary_color').click()"></div>
-                                        {{ form.secondary_color }}
-                                        <input type="text" class="color-text-input" value="{{ form.secondary_color.value|default:'#FFA07A' }}" readonly>
+                                    <div class="color-preview" style="background: {{ theme_form.secondary_color.value|default:'#FFA07A' }};" onclick="document.getElementById('id_theme-secondary_color').click()"></div>
+                                        {{ theme_form.secondary_color }}
+                                        <input type="text" class="color-text-input" value="{{ theme_form.secondary_color.value|default:'#FFA07A' }}" readonly>
                                     </div>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="id_accent_color">Accent Color</label>
                                     <div class="color-input-wrapper">
-                                        <div class="color-preview" style="background: {{ form.accent_color.value|default:'#FFD93D' }};" onclick="document.getElementById('id_accent_color').click()"></div>
-                                        {{ form.accent_color }}
-                                        <input type="text" class="color-text-input" value="{{ form.accent_color.value|default:'#FFD93D' }}" readonly>
+                                    <div class="color-preview" style="background: {{ theme_form.accent_color.value|default:'#FFD93D' }};" onclick="document.getElementById('id_theme-accent_color').click()"></div>
+                                        {{ theme_form.accent_color }}
+                                        <input type="text" class="color-text-input" value="{{ theme_form.accent_color.value|default:'#FFD93D' }}" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -205,18 +217,18 @@
                                 <div class="form-group">
                                     <label for="id_text_dark">Text Dark</label>
                                     <div class="color-input-wrapper">
-                                        <div class="color-preview" style="background: {{ form.text_dark.value|default:'#2D3142' }};" onclick="document.getElementById('id_text_dark').click()"></div>
-                                        {{ form.text_dark }}
-                                        <input type="text" class="color-text-input" value="{{ form.text_dark.value|default:'#2D3142' }}" readonly>
+                                        <div class="color-preview" style="background: {{ theme_form.text_dark.value|default:'#2D3142' }};" onclick="document.getElementById('id_theme-text_dark').click()"></div>
+                                        {{ theme_form.text_dark }}
+                                        <input type="text" class="color-text-input" value="{{ theme_form.text_dark.value|default:'#2D3142' }}" readonly>
                                     </div>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="id_text_light">Text Light</label>
                                     <div class="color-input-wrapper">
-                                        <div class="color-preview" style="background: {{ form.text_light.value|default:'#6C757D' }};" onclick="document.getElementById('id_text_light').click()"></div>
-                                        {{ form.text_light }}
-                                        <input type="text" class="color-text-input" value="{{ form.text_light.value|default:'#6C757D' }}" readonly>
+                                        <div class="color-preview" style="background: {{ theme_form.text_light.value|default:'#6C757D' }};" onclick="document.getElementById('id_theme-text_light').click()"></div>
+                                        {{ theme_form.text_light }}
+                                        <input type="text" class="color-text-input" value="{{ theme_form.text_light.value|default:'#6C757D' }}" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -225,18 +237,18 @@
                                 <div class="form-group">
                                     <label for="id_bg_cream">Background</label>
                                     <div class="color-input-wrapper">
-                                        <div class="color-preview" style="background: {{ form.bg_cream.value|default:'#FFFFFF' }};" onclick="document.getElementById('id_bg_cream').click()"></div>
-                                        {{ form.bg_cream }}
-                                        <input type="text" class="color-text-input" value="{{ form.bg_cream.value|default:'#FFFFFF' }}" readonly>
+                                        <div class="color-preview" style="background: {{ theme_form.bg_cream.value|default:'#FFFFFF' }};" onclick="document.getElementById('id_theme-bg_cream').click()"></div>
+                                        {{ theme_form.bg_cream }}
+                                        <input type="text" class="color-text-input" value="{{ theme_form.bg_cream.value|default:'#FFFFFF' }}" readonly>
                                     </div>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="id_border_color">Border Color</label>
                                     <div class="color-input-wrapper">
-                                        <div class="color-preview" style="background: {{ form.border_color.value|default:'#E8E8E8' }};" onclick="document.getElementById('id_border_color').click()"></div>
-                                        {{ form.border_color }}
-                                        <input type="text" class="color-text-input" value="{{ form.border_color.value|default:'#E8E8E8' }}" readonly>
+                                        <div class="color-preview" style="background: {{ theme_form.border_color.value|default:'#E8E8E8' }};" onclick="document.getElementById('id_theme-border_color').click()"></div>
+                                        {{ theme_form.border_color }}
+                                        <input type="text" class="color-text-input" value="{{ theme_form.border_color.value|default:'#E8E8E8' }}" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -259,18 +271,18 @@
                                 <div class="form-group">
                                     <label for="id_success_color">Success</label>
                                     <div class="color-input-wrapper">
-                                        <div class="color-preview" style="background: {{ form.success_color.value|default:'#4CAF50' }};" onclick="document.getElementById('id_success_color').click()"></div>
-                                        {{ form.success_color }}
-                                        <input type="text" class="color-text-input" value="{{ form.success_color.value|default:'#4CAF50' }}" readonly>
+                                        <div class="color-preview" style="background: {{ theme_form.success_color.value|default:'#4CAF50' }};" onclick="document.getElementById('id_theme-success_color').click()"></div>
+                                        {{ theme_form.success_color }}
+                                        <input type="text" class="color-text-input" value="{{ theme_form.success_color.value|default:'#4CAF50' }}" readonly>
                                     </div>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="id_error_color">Error</label>
                                     <div class="color-input-wrapper">
-                                        <div class="color-preview" style="background: {{ form.error_color.value|default:'#FF5252' }};" onclick="document.getElementById('id_error_color').click()"></div>
-                                        {{ form.error_color }}
-                                        <input type="text" class="color-text-input" value="{{ form.error_color.value|default:'#FF5252' }}" readonly>
+                                        <div class="color-preview" style="background: {{ theme_form.error_color.value|default:'#FF5252' }};" onclick="document.getElementById('id_theme-error_color').click()"></div>
+                                        {{ theme_form.error_color }}
+                                        <input type="text" class="color-text-input" value="{{ theme_form.error_color.value|default:'#FF5252' }}" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -279,18 +291,18 @@
                                 <div class="form-group">
                                     <label for="id_warning_color">Warning</label>
                                     <div class="color-input-wrapper">
-                                        <div class="color-preview" style="background: {{ form.warning_color.value|default:'#FFB300' }};" onclick="document.getElementById('id_warning_color').click()"></div>
-                                        {{ form.warning_color }}
-                                        <input type="text" class="color-text-input" value="{{ form.warning_color.value|default:'#FFB300' }}" readonly>
+                                        <div class="color-preview" style="background: {{ theme_form.warning_color.value|default:'#FFB300' }};" onclick="document.getElementById('id_theme-warning_color').click()"></div>
+                                        {{ theme_form.warning_color }}
+                                        <input type="text" class="color-text-input" value="{{ theme_form.warning_color.value|default:'#FFB300' }}" readonly>
                                     </div>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="id_info_color">Info</label>
                                     <div class="color-input-wrapper">
-                                        <div class="color-preview" style="background: {{ form.info_color.value|default:'#00BCD4' }};" onclick="document.getElementById('id_info_color').click()"></div>
-                                        {{ form.info_color }}
-                                        <input type="text" class="color-text-input" value="{{ form.info_color.value|default:'#00BCD4' }}" readonly>
+                                        <div class="color-preview" style="background: {{ theme_form.info_color.value|default:'#00BCD4' }};" onclick="document.getElementById('id_theme-info_color').click()"></div>
+                                        {{ theme_form.info_color }}
+                                        <input type="text" class="color-text-input" value="{{ theme_form.info_color.value|default:'#00BCD4' }}" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -311,26 +323,263 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="id_font_family">Font Family</label>
-                                {{ form.font_family }}
+                                {{ theme_form.font_family }}
                             </div>
                             
                             <div class="form-group">
                                 <label for="id_border_radius">Border Radius</label>
-                                {{ form.border_radius }}
+                                {{ theme_form.border_radius }}
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Design Pattern (Shape & Shadows) -->
+                <div class="theme-form-section" style="margin-top: 2rem;">
+
+                    <div class="theme-form-section" style="margin-bottom: 2rem;">
+                        <div class="section-header">
+                            <h2>
+                                <i class="fas fa-shapes"></i>
+                                Design Pattern
+                            </h2>
+                            <p>Choose from professionally crafted design patterns or customize your own</p>
+                        </div>
+                        <div class="section-content">
+                            <div class="design-presets-grid">
+                                <!-- Modern Rounded -->
+                                <div class="design-preset-card" data-preset="modern-rounded">
+                                    <div class="preset-visual-header">
+                                        <h4>Modern Rounded</h4>
+                                        <span class="preset-badge">Popular</span>
+                                    </div>
+                                    <p class="preset-description">Smooth, contemporary feel with generous rounded corners</p>
+                                    <div class="preset-visual-demo">
+                                        <div class="demo-element" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);"></div>
+                                        <div class="demo-element" style="border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);"></div>
+                                        <div class="demo-element" style="border-radius: 16px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);"></div>
+                                        <div class="demo-element" style="border-radius: 24px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);"></div>
+                                    </div>
+                                    <div class="preset-specs">
+                                        <span><i class="fas fa-circle"></i> Radius: 8-24px</span>
+                                        <span><i class="fas fa-layer-group"></i> Soft shadows</span>
+                                    </div>
+                                </div>
                     
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i>
-                            Save Theme
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
-                            <i class="fas fa-undo"></i>
-                            Reset
-                        </button>
+                                <!-- Sharp Professional -->
+                                <div class="design-preset-card" data-preset="sharp-professional">
+                                    <div class="preset-visual-header">
+                                        <h4>Sharp Professional</h4>
+                                    </div>
+                                    <p class="preset-description">Clean, minimal rounding for corporate aesthetic</p>
+                                    <div class="preset-visual-demo">
+                                        <div class="demo-element" style="border-radius: 0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);"></div>
+                                        <div class="demo-element" style="border-radius: 2px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);"></div>
+                                        <div class="demo-element" style="border-radius: 4px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);"></div>
+                                        <div class="demo-element" style="border-radius: 6px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);"></div>
+                                    </div>
+                                    <div class="preset-specs">
+                                        <span><i class="fas fa-square"></i> Radius: 0-8px</span>
+                                        <span><i class="fas fa-layer-group"></i> Crisp edges</span>
+                                    </div>
+                                </div>
+                    
+                                <!-- Soft Minimal -->
+                                <div class="design-preset-card" data-preset="soft-minimal">
+                                    <div class="preset-visual-header">
+                                        <h4>Soft Minimal</h4>
+                                        <span class="preset-badge">Trending</span>
+                                    </div>
+                                    <p class="preset-description">Extra soft corners and light shadows</p>
+                                    <div class="preset-visual-demo">
+                                        <div class="demo-element" style="border-radius: 12px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);"></div>
+                                        <div class="demo-element" style="border-radius: 16px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);"></div>
+                                        <div class="demo-element" style="border-radius: 20px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);"></div>
+                                        <div class="demo-element" style="border-radius: 28px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.10);"></div>
+                                    </div>
+                                    <div class="preset-specs">
+                                        <span><i class="fas fa-circle"></i> Radius: 12-28px</span>
+                                        <span><i class="fas fa-cloud"></i> Light shadows</span>
+                                    </div>
+                                </div>
+                    
+                                <!-- Bold Dramatic -->
+                                <div class="design-preset-card" data-preset="bold-dramatic">
+                                    <div class="preset-visual-header">
+                                        <h4>Bold Dramatic</h4>
+                                    </div>
+                                    <p class="preset-description">Strong shadows for maximum visual impact</p>
+                                    <div class="preset-visual-demo">
+                                        <div class="demo-element" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);"></div>
+                                        <div class="demo-element" style="border-radius: 12px; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);"></div>
+                                        <div class="demo-element" style="border-radius: 16px; box-shadow: 0 20px 48px rgba(0, 0, 0, 0.20);"></div>
+                                        <div class="demo-element" style="border-radius: 20px; box-shadow: 0 32px 72px rgba(0, 0, 0, 0.24);"></div>
+                                    </div>
+                                    <div class="preset-specs">
+                                        <span><i class="fas fa-circle"></i> Radius: 8-20px</span>
+                                        <span><i class="fas fa-layer-group"></i> Bold shadows</span>
+                                    </div>
+                                </div>
+                    
+                                <!-- Ultra Soft -->
+                                <div class="design-preset-card" data-preset="ultra-soft">
+                                    <div class="preset-visual-header">
+                                        <h4>Ultra Soft</h4>
+                                    </div>
+                                    <p class="preset-description">Maximum softness with pill-shaped elements</p>
+                                    <div class="preset-visual-demo">
+                                        <div class="demo-element" style="border-radius: 14px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);"></div>
+                                        <div class="demo-element" style="border-radius: 20px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);"></div>
+                                        <div class="demo-element" style="border-radius: 28px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);"></div>
+                                        <div class="demo-element" style="border-radius: 40px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);"></div>
+                                    </div>
+                                    <div class="preset-specs">
+                                        <span><i class="fas fa-circle"></i> Radius: 14-40px</span>
+                                        <span><i class="fas fa-feather"></i> Barely-there</span>
+                                    </div>
+                                </div>
+                    
+                                <!-- Geometric Modern -->
+                                <div class="design-preset-card" data-preset="geometric-modern">
+                                    <div class="preset-visual-header">
+                                        <h4>Geometric Modern</h4>
+                                    </div>
+                                    <p class="preset-description">Balanced geometry with precise shadows</p>
+                                    <div class="preset-visual-demo">
+                                        <div class="demo-element" style="border-radius: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);"></div>
+                                        <div class="demo-element" style="border-radius: 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.09);"></div>
+                                        <div class="demo-element" style="border-radius: 12px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);"></div>
+                                        <div class="demo-element" style="border-radius: 16px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.14);"></div>
+                                    </div>
+                                    <div class="preset-specs">
+                                        <span><i class="fas fa-circle"></i> Radius: 6-16px</span>
+                                        <span><i class="fas fa-ruler"></i> Precise</span>
+                                    </div>
+                                </div>
+                    
+                                <!-- Playful Bouncy -->
+                                <div class="design-preset-card" data-preset="playful-bouncy">
+                                    <div class="preset-visual-header">
+                                        <h4>Playful Bouncy</h4>
+                                        <span class="preset-badge">Fun</span>
+                                    </div>
+                                    <p class="preset-description">Energetic with dynamic shadows</p>
+                                    <div class="preset-visual-demo">
+                                        <div class="demo-element" style="border-radius: 12px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.10);"></div>
+                                        <div class="demo-element" style="border-radius: 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);"></div>
+                                        <div class="demo-element" style="border-radius: 24px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);"></div>
+                                        <div class="demo-element" style="border-radius: 32px; box-shadow: 0 28px 70px rgba(0, 0, 0, 0.22);"></div>
+                                    </div>
+                                    <div class="preset-specs">
+                                        <span><i class="fas fa-circle"></i> Radius: 12-32px</span>
+                                        <span><i class="fas fa-smile"></i> Dynamic</span>
+                                    </div>
+                                </div>
+                    
+                                <!-- Elegant Refined -->
+                                <div class="design-preset-card" data-preset="elegant-refined">
+                                    <div class="preset-visual-header">
+                                        <h4>Elegant Refined</h4>
+                                    </div>
+                                    <p class="preset-description">Sophisticated with subtle curves</p>
+                                    <div class="preset-visual-demo">
+                                        <div class="demo-element" style="border-radius: 7px; box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);"></div>
+                                        <div class="demo-element" style="border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.07);"></div>
+                                        <div class="demo-element" style="border-radius: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.09);"></div>
+                                        <div class="demo-element" style="border-radius: 18px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.11);"></div>
+                                    </div>
+                                    <div class="preset-specs">
+                                        <span><i class="fas fa-circle"></i> Radius: 7-18px</span>
+                                        <span><i class="fas fa-gem"></i> Delicate</span>
+                                    </div>
+                                </div>
+                    
+                                <!-- Material Inspired -->
+                                <div class="design-preset-card" data-preset="material-inspired">
+                                    <div class="preset-visual-header">
+                                        <h4>Material Inspired</h4>
+                                    </div>
+                                    <p class="preset-description">Google Material Design elevation</p>
+                                    <div class="preset-visual-demo">
+                                        <div class="demo-element" style="border-radius: 4px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);"></div>
+                                        <div class="demo-element" style="border-radius: 8px; box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);"></div>
+                                        <div class="demo-element" style="border-radius: 12px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);"></div>
+                                        <div class="demo-element" style="border-radius: 16px; box-shadow: 0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22);"></div>
+                                    </div>
+                                    <div class="preset-specs">
+                                        <span><i class="fas fa-circle"></i> Radius: 4-16px</span>
+                                        <span><i class="fas fa-layer-group"></i> Elevation</span>
+                                    </div>
+                                </div>
+                    
+                                <!-- Glassmorphic -->
+                                <div class="design-preset-card" data-preset="glassmorphic">
+                                    <div class="preset-visual-header">
+                                        <h4>Glassmorphic</h4>
+                                        <span class="preset-badge">New</span>
+                                    </div>
+                                    <p class="preset-description">Frosted glass with heavy blur</p>
+                                    <div class="preset-visual-demo glass-demo">
+                                        <div class="demo-element" style="border-radius: 12px; backdrop-filter: blur(32px); background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);"></div>
+                                        <div class="demo-element" style="border-radius: 16px; backdrop-filter: blur(32px); background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);"></div>
+                                        <div class="demo-element" style="border-radius: 20px; backdrop-filter: blur(32px); background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);"></div>
+                                        <div class="demo-element" style="border-radius: 24px; backdrop-filter: blur(32px); background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);"></div>
+                                    </div>
+                                    <div class="preset-specs">
+                                        <span><i class="fas fa-circle"></i> Radius: 12-24px</span>
+                                        <span><i class="fas fa-magic"></i> Glass effect</span>
+                                    </div>
+                                </div>
+                    
+                                <!-- Retro Flat -->
+                                <div class="design-preset-card" data-preset="retro-flat">
+                                    <div class="preset-visual-header">
+                                        <h4>Retro Flat</h4>
+                                    </div>
+                                    <p class="preset-description">Flat design with minimal shadows</p>
+                                    <div class="preset-visual-demo">
+                                        <div class="demo-element" style="border-radius: 3px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); border: 2px solid rgba(0, 0, 0, 0.15);"></div>
+                                        <div class="demo-element" style="border-radius: 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.10); border: 2px solid rgba(0, 0, 0, 0.15);"></div>
+                                        <div class="demo-element" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12); border: 2px solid rgba(0, 0, 0, 0.15);"></div>
+                                        <div class="demo-element" style="border-radius: 12px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.14); border: 2px solid rgba(0, 0, 0, 0.15);"></div>
+                                    </div>
+                                    <div class="preset-specs">
+                                        <span><i class="fas fa-square"></i> Radius: 3-12px</span>
+                                        <span><i class="fas fa-ruler-horizontal"></i> Flat</span>
+                                    </div>
+                                </div>
+                    
+                                <!-- Neomorphic -->
+                                <div class="design-preset-card" data-preset="neomorphic">
+                                    <div class="preset-visual-header">
+                                        <h4>Neomorphic</h4>
+                                    </div>
+                                    <p class="preset-description">Soft UI with embossed effect</p>
+                                    <div class="preset-visual-demo neumorphic-demo">
+                                        <div class="demo-element" style="border-radius: 12px; box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.9);"></div>
+                                        <div class="demo-element" style="border-radius: 16px; box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.12), -8px -8px 16px rgba(255, 255, 255, 0.9);"></div>
+                                        <div class="demo-element" style="border-radius: 20px; box-shadow: 12px 12px 24px rgba(0, 0, 0, 0.14), -12px -12px 24px rgba(255, 255, 255, 0.9);"></div>
+                                        <div class="demo-element" style="border-radius: 24px; box-shadow: 20px 20px 40px rgba(0, 0, 0, 0.16), -20px -20px 40px rgba(255, 255, 255, 0.9);"></div>
+                                    </div>
+                                    <div class="preset-specs">
+                                        <span><i class="fas fa-circle"></i> Radius: 12-24px</span>
+                                        <span><i class="fas fa-layer-group"></i> Soft UI</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Save Theme & Pattern
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-undo"></i>
+                        Reset
+                    </button>
                 </div>
             </div>
 

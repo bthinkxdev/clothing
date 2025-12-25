@@ -1,0 +1,101 @@
+/* Global design pattern tokens and defaults */
+:root {
+    /* Radius scale */
+    --radius-xxs: 2px;
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
+    --shadow-card: var(--shadow-md);
+    --shadow-btn: var(--shadow-sm);
+    --shadow-floating: 0 20px 50px rgba(0, 0, 0, 0.12);
+
+    /* Blur / glass */
+    --backdrop-blur: 12px;
+
+    /* Borders */
+    --border-soft: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Utilities */
+.radius-xxs { border-radius: var(--radius-xxs) !important; }
+.radius-xs  { border-radius: var(--radius-xs) !important; }
+.radius-sm  { border-radius: var(--radius-sm) !important; }
+.radius-md  { border-radius: var(--radius-md) !important; }
+.radius-lg  { border-radius: var(--radius-lg) !important; }
+.radius-xl  { border-radius: var(--radius-xl) !important; }
+
+.shadow-sm { box-shadow: var(--shadow-sm) !important; }
+.shadow-md { box-shadow: var(--shadow-md) !important; }
+.shadow-lg { box-shadow: var(--shadow-lg) !important; }
+
+/* App-wide defaults */
+button,
+.btn {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-btn);
+}
+
+.btn-secondary,
+.btn-white,
+.btn-outline,
+.btn-link {
+    box-shadow: none;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+select,
+textarea,
+.form-control {
+    border-radius: var(--radius-sm);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.card,
+.panel,
+.widget,
+.feature-card,
+.info-card,
+.section-block,
+.section-card,
+.theme-form-section,
+.preview-card {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.badge,
+.tag {
+    border-radius: var(--radius-sm);
+}
+
+.alert {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.floating {
+    box-shadow: var(--shadow-floating);
+    border-radius: var(--radius-lg);
+}
+
+/* Glass-like panels */
+.glass {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(var(--backdrop-blur));
+    border: var(--border-soft);
+    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-lg);
+}
+

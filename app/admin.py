@@ -12,7 +12,7 @@ from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 from .models import (
-    User, Address, Category, Product, ProductImage, ProductVariant, Inventory,
+    DesignPattern, User, Address, Category, Product, ProductImage, ProductVariant, Inventory,
     Cart, CartItem, Wishlist, WishlistItem,
     Coupon, CouponUsage, GiftCard, LoyaltyPoint,
     Order, OrderItem, Payment,
@@ -949,7 +949,52 @@ class SiteThemeAdmin(admin.ModelAdmin):
         }
         js = ('admin/js/theme-admin.js',)
 
-
+@admin.register(DesignPattern, site=custom_admin_site)
+class DesignPatternAdmin(admin.ModelAdmin):
+    list_display = ['name', 'is_active', 'is_default', 'created_at', 'updated_at']
+    list_filter = ['is_active', 'is_default', 'created_at']
+    search_fields = ['name', 'description']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'description', 'is_active', 'is_default')
+        }),
+        ('Radius Scale', {
+            'fields': ('radius_xxs', 'radius_xs', 'radius_sm', 'radius_md', 'radius_lg', 'radius_xl'),
+            'classes': ('collapse',)
+        }),
+        ('Shadows', {
+            'fields': ('shadow_sm', 'shadow_md', 'shadow_lg', 'shadow_floating'),
+            'classes': ('collapse',)
+        }),
+        ('Effects & Borders', {
+            'fields': ('backdrop_blur', 'border_width', 'border_opacity'),
+            'classes': ('collapse',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['activate_pattern', 'deactivate_pattern']
+    
+    def activate_pattern(self, request, queryset):
+        if queryset.count() > 1:
+            self.message_user(request, "Please select only one pattern to activate.", level='error')
+            return
+        
+        pattern = queryset.first()
+        pattern.is_active = True
+        pattern.save()
+        self.message_user(request, f'Pattern "{pattern.name}" has been activated.')
+    activate_pattern.short_description = "Activate selected pattern"
+    
+    def deactivate_pattern(self, request, queryset):
+        queryset.update(is_active=False)
+        self.message_user(request, f'{queryset.count()} pattern(s) deactivated.')
+    deactivate_pattern.short_description = "Deactivate selected patterns"
 
 # Register remaining models simply
 custom_admin_site.register(ProductImage)

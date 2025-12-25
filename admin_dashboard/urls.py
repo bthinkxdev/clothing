@@ -80,6 +80,6 @@ urlpatterns = [
     path('api/product-performance/', views.ProductPerformanceAPIView.as_view(), name='api_product_performance'),
     path('api/customer-analytics/', views.CustomerAnalyticsAPIView.as_view(), name='api_customer_analytics'),
 
-    # Theme Management
+    # Theme Management (merged theme + design pattern)
     path('theme/settings/', views.theme_settings, name='theme_settings'),
 ]

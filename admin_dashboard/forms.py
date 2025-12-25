@@ -3,7 +3,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from app.models import (
     Order, Product, ProductVariant, ProductImage,
-    Inventory, Coupon, Category, User, SiteTheme
+    Inventory, Coupon, Category, User, SiteTheme, DesignPattern
 )
 
 
@@ -295,6 +295,82 @@ class WalletAdjustmentForm(forms.Form):
     )
 
 
+class DesignPatternForm(forms.ModelForm):
+    """Form for creating and editing design patterns"""
+    
+    class Meta:
+        model = DesignPattern
+        fields = [
+            'name', 'description', 'is_active', 'is_default',
+            'radius_xxs', 'radius_xs', 'radius_sm', 'radius_md', 'radius_lg', 'radius_xl',
+            'shadow_sm', 'shadow_md', 'shadow_lg', 'shadow_floating',
+            'backdrop_blur', 'border_width', 'border_opacity'
+        ]
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'text-input',
+                'placeholder': 'e.g., Modern Rounded'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'text-input',
+                'rows': 3,
+                'placeholder': 'Describe this design pattern...'
+            }),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_default': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            
+            # Radius fields
+            'radius_xxs': forms.NumberInput(attrs={'class': 'text-input', 'min': 0, 'max': 50}),
+            'radius_xs': forms.NumberInput(attrs={'class': 'text-input', 'min': 0, 'max': 50}),
+            'radius_sm': forms.NumberInput(attrs={'class': 'text-input', 'min': 0, 'max': 50}),
+            'radius_md': forms.NumberInput(attrs={'class': 'text-input', 'min': 0, 'max': 50}),
+            'radius_lg': forms.NumberInput(attrs={'class': 'text-input', 'min': 0, 'max': 50}),
+            'radius_xl': forms.NumberInput(attrs={'class': 'text-input', 'min': 0, 'max': 50}),
+            
+            # Shadow fields
+            'shadow_sm': forms.TextInput(attrs={
+                'class': 'text-input',
+                'placeholder': '0 2px 6px rgba(0, 0, 0, 0.06)'
+            }),
+            'shadow_md': forms.TextInput(attrs={
+                'class': 'text-input',
+                'placeholder': '0 6px 18px rgba(0, 0, 0, 0.08)'
+            }),
+            'shadow_lg': forms.TextInput(attrs={
+                'class': 'text-input',
+                'placeholder': '0 10px 30px rgba(0, 0, 0, 0.12)'
+            }),
+            'shadow_floating': forms.TextInput(attrs={
+                'class': 'text-input',
+                'placeholder': '0 20px 50px rgba(0, 0, 0, 0.12)'
+            }),
+            
+            # Other fields
+            'backdrop_blur': forms.NumberInput(attrs={'class': 'text-input', 'min': 0, 'max': 50}),
+            'border_width': forms.NumberInput(attrs={'class': 'text-input', 'min': 0, 'max': 10}),
+            'border_opacity': forms.NumberInput(attrs={
+                'class': 'text-input',
+                'min': 0,
+                'max': 1,
+                'step': 0.01
+            }),
+        }
+        labels = {
+            'radius_xxs': 'Extra Extra Small Radius (px)',
+            'radius_xs': 'Extra Small Radius (px)',
+            'radius_sm': 'Small Radius (px)',
+            'radius_md': 'Medium Radius (px)',
+            'radius_lg': 'Large Radius (px)',
+            'radius_xl': 'Extra Large Radius (px)',
+            'shadow_sm': 'Small Shadow',
+            'shadow_md': 'Medium Shadow',
+            'shadow_lg': 'Large Shadow',
+            'shadow_floating': 'Floating Shadow',
+            'backdrop_blur': 'Backdrop Blur (px)',
+            'border_width': 'Border Width (px)',
+            'border_opacity': 'Border Opacity (0-1)',
+        }
+
 class ThemeForm(forms.ModelForm):
     class Meta:
         model = SiteTheme
@@ -305,6 +381,7 @@ class ThemeForm(forms.ModelForm):
             'warning_color', 'info_color', 'font_family', 'border_radius'
         ]
         widgets = {
+            'design_pattern': forms.Select(attrs={'class': 'text-input'}),
             'primary_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
             'primary_dark': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
             'secondary_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),

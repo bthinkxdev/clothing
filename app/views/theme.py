@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 
 
-from ..models import SiteTheme
+from ..models import SiteTheme, DesignPattern
 
 
 def _hex_to_rgb(hex_color: str) -> str:
@@ -21,8 +21,9 @@ def _hex_to_rgb(hex_color: str) -> str:
 
 
 def theme_css(request):
-    """Serve CSS variables based on the active theme."""
+    """Serve CSS variables based on the active theme and design pattern."""
     theme = SiteTheme.get_active_theme()
+    pattern = theme.design_pattern or DesignPattern.get_active_pattern()
 
     defaults = {
         "--primary-color": "#8B4513",
@@ -30,6 +31,8 @@ def theme_css(request):
         "--primary-dark": "#6B3410",
         "--secondary-color": "#D2691E",
         "--accent-color": "#FFD700",
+        "--font-family": "'Inter', sans-serif",
+        "--border-radius": "8px",
         "--text-dark": "#2C2C2C",
         "--text-light": "#666666",
         "--bg-cream": "#FAF7F2",
@@ -76,8 +79,32 @@ def theme_css(request):
     overrides = theme.to_css_vars()
     css_vars = {**defaults, **overrides}
 
+    # Apply design pattern overrides
+    if pattern:
+        css_vars.update({
+            "--radius-xxs": f"{pattern.radius_xxs}px",
+            "--radius-xs": f"{pattern.radius_xs}px",
+            "--radius-sm": f"{pattern.radius_sm}px",
+            "--radius-md": f"{pattern.radius_md}px",
+            "--radius-lg": f"{pattern.radius_lg}px",
+            "--radius-xl": f"{pattern.radius_xl}px",
+            "--shadow-sm": pattern.shadow_sm,
+            "--shadow-md": pattern.shadow_md,
+            "--shadow-lg": pattern.shadow_lg,
+            "--shadow-card": pattern.shadow_md,
+            "--shadow-btn": pattern.shadow_sm,
+            "--shadow-floating": pattern.shadow_floating,
+            "--backdrop-blur": f"{pattern.backdrop_blur}px",
+            "--border-soft": f"{pattern.border_width}px solid rgba(0, 0, 0, {pattern.border_opacity})",
+        })
+
     # Derive rgb values from possibly overridden primary color
     css_vars["--primary-rgb"] = _hex_to_rgb(css_vars["--primary-color"])
+    # Carry through optional theme-level typography/roundness
+    if getattr(theme, "font_family", None):
+        css_vars["--font-family"] = theme.font_family
+    if getattr(theme, "border_radius", None):
+        css_vars["--border-radius"] = theme.border_radius
 
     css_lines = [":root {"]
     for key, value in css_vars.items():
