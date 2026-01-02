@@ -10,12 +10,15 @@ function initializeDashboard(data) {
     initializeRevenueCategoryChart();
     
     // Period selector
-    const periodSelector = document.getElementById('periodSelector');
-    if (periodSelector) {
-        periodSelector.addEventListener('change', function() {
-            refreshDashboard(this.value);
-        });
-    }
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentPeriod = urlParams.get('period') || 'last_30_days';
+    periodSelector.value = currentPeriod;
+
+    // When changed, reload the page with new period parameter
+    periodSelector.addEventListener('change', function() {
+        const selectedPeriod = this.value;
+        window.location.href = `${window.location.pathname}?period=${selectedPeriod}`;
+    });
     
     // Tab buttons
     const tabButtons = document.querySelectorAll('.btn-tab');
@@ -129,6 +132,15 @@ function initializeSalesChart() {
     const ctx = document.getElementById('salesChart');
     if (!ctx) return;
     
+    // Get real data from backend
+    const salesData = window.dashboardData?.salesTrend || [];
+    const labels = salesData.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+    const revenueData = salesData.map(item => parseFloat(item.revenue) || 0);
+    const ordersData = salesData.map(item => parseInt(item.orders) || 0);
+
     const gradient1 = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
     gradient1.addColorStop(0, 'rgba(102, 126, 234, 0.4)');
     gradient1.addColorStop(1, 'rgba(102, 126, 234, 0)');
@@ -140,11 +152,11 @@ function initializeSalesChart() {
     charts.salesChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: generateDateLabels(30),
+            labels: labels.length > 0 ? labels : generateDateLabels(30),
             datasets: [
                 {
                     label: 'Revenue',
-                    data: generateSparklineData(30, 8000, 25000),
+                    data: revenueData.length > 0 ? revenueData : generateSparklineData(30, 8000, 25000),
                     borderColor: '#667eea',
                     backgroundColor: gradient1,
                     borderWidth: 3,
@@ -158,7 +170,7 @@ function initializeSalesChart() {
                 },
                 {
                     label: 'Orders',
-                    data: generateSparklineData(30, 50, 200),
+                    data: ordersData.length > 0 ? ordersData : generateSparklineData(30, 50, 200),
                     borderColor: '#764ba2',
                     backgroundColor: gradient2,
                     borderWidth: 3,
@@ -278,13 +290,18 @@ function initializeSalesChart() {
 function initializeOrderStatusChart() {
     const ctx = document.getElementById('orderStatusChart');
     if (!ctx) return;
+
+    // Get real data from backend
+    const orderStatus = window.dashboardData?.orderStatus || {};
+    const statusLabels = Object.keys(orderStatus);
+    const statusData = Object.values(orderStatus);
     
     charts.orderStatusChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Delivered', 'Shipped', 'Processing', 'Cancelled'],
+            labels: statusLabels.length > 0 ? statusLabels : ['Delivered', 'Shipped', 'Processing', 'Cancelled'],
             datasets: [{
-                data: [52, 21, 14, 13],
+                data: statusData.length > 0 ? statusData : [52, 21, 14, 13],
                 backgroundColor: [
                     '#667eea',
                     '#764ba2',
@@ -317,20 +334,45 @@ function initializeOrderStatusChart() {
             }
         }
     });
+    // Generate custom legend with real data
+    const legendContainer = document.getElementById('orderStatusLegend');
+    if (legendContainer && statusLabels.length > 0) {
+        const total = statusData.reduce((a, b) => a + b, 0);
+        const colors = ['#667eea', '#764ba2', '#f59e0b', '#ef4444', '#10b981', '#8b5cf6'];
+        
+        legendContainer.innerHTML = statusLabels.map((label, i) => {
+            const value = statusData[i];
+            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+            const color = colors[i % colors.length];
+            
+            return `
+                <div class="legend-item">
+                    <span class="legend-dot" style="background: ${color};"></span>
+                    <span class="legend-label">${label.charAt(0).toUpperCase() + label.slice(1)}</span>
+                    <span class="legend-value">${percentage}%</span>
+                </div>
+            `;
+        }).join('');
+    }
 }
 
 // Revenue by Category Bar Chart
 function initializeRevenueCategoryChart() {
     const ctx = document.getElementById('revenueCategoryChart');
     if (!ctx) return;
+
+    // Get real data from backend
+    const categoryData = window.dashboardData?.categoryRevenue || [];
+    const categoryLabels = categoryData.map(item => item.variant__product__category__name || 'Unknown');
+    const categoryValues = categoryData.map(item => parseFloat(item.revenue) || 0);
     
     charts.revenueCategoryChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['T-Shirts', 'Jeans', 'Kurtas', 'Dresses', 'Jackets', 'Shoes'],
+            labels: categoryLabels,
             datasets: [{
                 label: 'Revenue',
-                data: [45000, 38000, 32000, 28000, 25000, 22000],
+                data: categoryValues,
                 backgroundColor: [
                     'rgba(102, 126, 234, 0.8)',
                     'rgba(118, 75, 162, 0.8)',
@@ -424,46 +466,27 @@ function generateDateLabels(days) {
 function updateSalesChart(days) {
     if (!charts.salesChart) return;
     
-    const labels = generateDateLabels(parseInt(days));
-    const revenueData = generateSparklineData(parseInt(days), 8000, 25000);
-    const ordersData = generateSparklineData(parseInt(days), 50, 200);
+    // had some hardcoded datas that affected the chart, is removed and replaced with dynamic code
     
-    charts.salesChart.data.labels = labels;
-    charts.salesChart.data.datasets[0].data = revenueData;
-    charts.salesChart.data.datasets[1].data = ordersData;
-    charts.salesChart.update('active');
+    // Fetch real data from API
+    fetch(`/dashboard/api/sales-chart/?days=${days}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                charts.salesChart.data.labels = data.data.labels;
+                charts.salesChart.data.datasets[0].data = data.data.datasets[0].data;
+                charts.salesChart.data.datasets[1].data = data.data.datasets[1].data;
+                charts.salesChart.update('active');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching sales chart data:', error);
+        });
 }
 
-async function refreshDashboard(period) {
-    try {
-        const response = await fetch(`/dashboard/api/dashboard-stats/?period=${period}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            updateDashboardStats(data.data);
-        }
-    } catch (error) {
-        console.error('Failed to refresh dashboard:', error);
-    }
-}
+// broken functions removed
 
-function updateDashboardStats(stats) {
-    // Update stat values
-    document.querySelectorAll('.stat-value').forEach((el, index) => {
-        // Update values based on index
-        // This is a simplified version - you'd match by data attributes in production
-    });
-}
-
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        if (typeof dashboardData !== 'undefined') {
-            initializeDashboard(dashboardData);
-        }
-    });
-} else {
-    if (typeof dashboardData !== 'undefined') {
-        initializeDashboard(dashboardData);
-    }
-}
+// Fixed the initialization
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDashboard();
+});

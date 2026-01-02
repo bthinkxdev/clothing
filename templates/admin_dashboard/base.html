@@ -131,10 +131,12 @@
                     <button class="btn-menu" id="menuToggle">
                         <i class="fas fa-bars"></i>
                     </button>
-                    
-                    <div class="search-box">
+                    {% comment %} for searching products {% endcomment %}
+                    <div class="search-box"> 
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search...">
+                        <form action="" method="get" id="headerSearchForm" style="display: flex; align-items: center; width: 100%;">
+                            <input type="text" name="search" placeholder="Products search" value="{{ search_query }}" id="headerSearchInput">
+                        </form>
                     </div>
                 </div>
                 
@@ -146,9 +148,7 @@
                         {% endif %}
                     </button>
                     
-                    <button class="header-icon">
-                        <i class="fas fa-envelope"></i>
-                    </button>
+                   
                     
                     <div class="user-profile">
                         <img src="{% static 'admin_dashboard/img/avatar.jpg' %}" alt="{{ admin_user.username }}" onerror="this.src='https://ui-avatars.com/api/?name={{ admin_user.username }}&background=667eea&color=fff'">
@@ -249,6 +249,25 @@
     <div class="overlay" id="overlay"></div>
     
     <!-- Scripts -->
+    <script>
+    // Header search  - for search products
+    document.addEventListener('DOMContentLoaded', function() {
+        const headerSearchForm = document.getElementById('headerSearchForm');
+        const headerSearchInput = document.getElementById('headerSearchInput');
+        
+        if (headerSearchForm && headerSearchInput) {
+            headerSearchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const searchQuery = headerSearchInput.value.trim();
+                
+                if (searchQuery) {
+                    window.location.href = "{% url 'admin_dashboard:product_list' %}?search=" + encodeURIComponent(searchQuery);
+                }
+            });
+        }
+    });
+    </script>
     <script src="{% static 'admin_dashboard/js/admin.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>

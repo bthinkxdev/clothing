@@ -129,27 +129,8 @@
             <div class="card-body">
                 <canvas id="orderStatusChart"></canvas>
             </div>
-            <div class="chart-legend">
-                <div class="legend-item">
-                    <span class="legend-dot" style="background: #667eea;"></span>
-                    <span class="legend-label">Delivered</span>
-                    <span class="legend-value">52%</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-dot" style="background: #764ba2;"></span>
-                    <span class="legend-label">Shipped</span>
-                    <span class="legend-value">21%</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-dot" style="background: #f59e0b;"></span>
-                    <span class="legend-label">Processing</span>
-                    <span class="legend-value">14%</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-dot" style="background: #ef4444;"></span>
-                    <span class="legend-label">Cancelled</span>
-                    <span class="legend-value">13%</span>
-                </div>
+            <div class="chart-legend" id="orderStatusLegend">
+                <!-- Legend will be dynamically generated -->
             </div>
         </div>
     </div>
@@ -230,7 +211,7 @@
                 <h3>Recent Activity</h3>
             </div>
             <div class="card-body">
-                <div class="activity-list">
+                {% comment %} <div class="activity-list">
                     <div class="activity-item">
                         <div class="activity-icon bg-blue">
                             <i class="fas fa-shopping-cart"></i>
@@ -286,6 +267,23 @@
                             <span class="activity-time">3 hours ago</span>
                         </div>
                     </div>
+                </div> {% endcomment %}
+                <div class="activity-list">
+                    {% for order in recent_orders %}
+                    <div class="activity-item">
+                        <div class="activity-icon bg-{% cycle 'blue' 'green' 'orange' 'purple' 'red' %}">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>{{ order.get_status_display }}</h4>
+                            <p>Order #{{ order.id|slice:":8" }} by {{ order.user.username }}</p>
+                            <span class="activity-time">{{ order.placed_at|timesince }} ago</span>
+                        </div>
+                        <span class="activity-amount">₹{{ order.total|floatformat:2 }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No recent activity</p>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -322,13 +320,13 @@
 
 {% block extra_js %}
 <script src="{% static 'admin_dashboard/js/dashboard.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Initialize dashboard with data
-    const dashboardData = {
-        stats: {{ stats|safe }},
-        period: '{{ period }}'
+    // Pass Django data to JavaScript
+    window.dashboardData = {
+        salesTrend: {{ sales_trend|safe }},
+        orderStatus: {{ order_status|safe }},
+        categoryRevenue: {{ category_revenue|safe }}
     };
-    
-    initializeDashboard(dashboardData);
 </script>
 {% endblock %}

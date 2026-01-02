@@ -6,7 +6,7 @@ from datetime import timedelta
 from .base import BaseAdminTemplateView, BaseAdminAPIView
 from ..services import DashboardAnalyticsService, SalesReportService
 from ..utils import DateRangeHelper, ChartDataFormatter
-
+from app.models import Order
 
 class DashboardHomeView(BaseAdminTemplateView):
     """Main dashboard home view with overview statistics"""
@@ -27,14 +27,30 @@ class DashboardHomeView(BaseAdminTemplateView):
         
         # Get dashboard statistics
         stats = DashboardAnalyticsService.get_dashboard_stats(start_date, end_date)
+
+        # Get chart data
+        sales_trend = DashboardAnalyticsService.get_sales_trend(30)
+        order_status = DashboardAnalyticsService.get_order_status_breakdown()
+        category_revenue = DashboardAnalyticsService.get_revenue_by_category(start_date, end_date)
+        
+        # Convert to JSON for JavaScript
+        import json
+        sales_trend_json = json.dumps(list(sales_trend), default=str)
+        order_status_json = json.dumps(order_status)
+        category_revenue_json = json.dumps(list(category_revenue), default=str)
         
         context.update({
             'stats': stats,
             'period': period,
             'start_date': start_date,
             'end_date': end_date,
+            'sales_trend': sales_trend_json,
+            'order_status': order_status_json,
+            'category_revenue': category_revenue_json,
         })
-        
+        # Get recent orders for activity feed
+        recent_orders = Order.objects.select_related('user').order_by('-placed_at')[:5]
+        context['recent_orders'] = recent_orders
         return context
 
 
