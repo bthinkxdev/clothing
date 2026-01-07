@@ -302,7 +302,12 @@ class CategoryListView(BaseAdminListView):
         return Category.objects.annotate(
             product_count=Count('products')
         ).order_by('sort_order', 'name')
-
+    
+    # method to count active categories
+    def get_context_data(self, **kwargs): 
+        context = super().get_context_data(**kwargs)
+        context['active_categories_count'] = Category.objects.filter(is_active=True).count()
+        return context
 
 class CategoryCreateView(BaseAdminCreateView):
     """Create category"""

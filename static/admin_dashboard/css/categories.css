@@ -491,7 +491,7 @@
 
 /* Form Styles */
 .category-form-page {
-    max-width: 900px;
+    width: 100%;
 }
 
 .form-card {

@@ -72,6 +72,7 @@ class ProductListView(BaseAdminListView):
         queryset = self.get_queryset()
         context['total_products'] = queryset.count()
         context['active_products'] = queryset.filter(is_active=True).count()
+        context['filter_options'] = self.get_filter_options() 
         
         return context
 
@@ -83,6 +84,7 @@ class ProductDetailView(BaseAdminDetailView):
     template_name = 'admin_dashboard/products/product_detail.html'
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
+    context_object_name = 'product'
     
     def get_breadcrumbs(self):
         return [
@@ -160,6 +162,13 @@ class ProductCreateView(BaseAdminCreateView):
         context = self.get_context_data()
         variant_formset = context['variant_formset']
         image_formset = context['image_formset']
+
+        # Save the product FIRST to get an ID
+        self.object = form.save()
+        
+        # Now set the product instance for formsets
+        variant_formset.instance = self.object
+        image_formset.instance = self.object
         
         if variant_formset.is_valid() and image_formset.is_valid():
             self.object = form.save()

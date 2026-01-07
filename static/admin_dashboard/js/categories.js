@@ -142,7 +142,7 @@ async function deleteCategory(categoryId) {
     try {
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
         
-        const response = await fetch(`/admin-dashboard/categories/${categoryId}/delete/`, {
+        const response = await fetch(`/dashboard/categories/${categoryId}/delete/`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrfToken,

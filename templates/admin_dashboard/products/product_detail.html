@@ -12,7 +12,7 @@
 <div class="product-detail-page">
     <div class="page-header">
         <div class="header-content">
-            <h1>{{ product.name }}</h1>
+            <h1 class="truncate-with-tooltip" data-max-length="30">{{ product.name }}</h1>
             <p>SKU: {{ product.sku }}</p>
         </div>
         <div class="header-actions">
@@ -53,7 +53,7 @@
             <h3>Product Information</h3>
             <div class="info-row">
                 <span class="info-label">Name:</span>
-                <span class="info-value">{{ product.name }}</span>
+                <span class="info-value truncate-with-tooltip" data-max-length="30">{{ product.name }}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Category:</span>
@@ -61,7 +61,7 @@
             </div>
             <div class="info-row">
                 <span class="info-label">Brand:</span>
-                <span class="info-value">{{ product.brand|default:"—" }}</span>
+                <span class="info-value truncate-with-tooltip" data-max-length="30">{{ product.brand|default:"—" }}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Tags:</span>
@@ -81,11 +81,11 @@
             <h3>SEO</h3>
             <div class="info-row">
                 <span class="info-label">Meta Title:</span>
-                <span class="info-value">{{ product.meta_title|default:"—" }}</span>
+                <span class="info-value truncate-with-tooltip" data-max-length="30">{{ product.meta_title|default:"—" }}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Meta Description:</span>
-                <span class="info-value">{{ product.meta_description|default:"—" }}</span>
+                <span class="info-value multi-line">{{ product.meta_description|default:"—" }}</span>
             </div>
         </div>
 

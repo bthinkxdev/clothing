@@ -66,3 +66,100 @@
     background: #3b82f6;
     color: white;
 }
+
+/* table layout styles - fix */
+.payment-management {
+    width: 100%;
+}
+
+.content-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    width: 100%;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto; 
+}
+
+.data-table thead {
+    background: var(--bg-tertiary);
+}
+
+.data-table th {
+    padding: 16px 20px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.data-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background var(--transition-fast);
+}
+
+.data-table tbody tr:hover {
+    background: var(--bg-tertiary);
+}
+
+.data-table td {
+    padding: 16px 20px;
+    font-size: 14px;
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.data-table th:nth-child(1), /* Transaction ID */
+.data-table td:nth-child(1) {
+    min-width: 180px;
+    word-break: break-all;
+}
+
+.data-table th:nth-child(2), /* Order */
+.data-table td:nth-child(2) {
+    min-width: 100px;
+}
+
+.data-table th:nth-child(3), /* Customer */
+.data-table td:nth-child(3) {
+    min-width: 150px;
+}
+
+.data-table th:nth-child(4), /* Amount */
+.data-table td:nth-child(4) {
+    min-width: 100px;
+}
+
+.data-table th:nth-child(5), /* Method */
+.data-table td:nth-child(5) {
+    min-width: 120px;
+}
+
+.data-table th:nth-child(6), /* Status */
+.data-table td:nth-child(6) {
+    min-width: 100px;
+}
+
+.data-table th:nth-child(7), /* Date */
+.data-table td:nth-child(7) {
+    min-width: 140px;
+}
+
+.data-table th:nth-child(8), /* Actions */
+.data-table td:nth-child(8) {
+    min-width: 80px;
+    text-align: center;
+}

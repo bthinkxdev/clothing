@@ -87,11 +87,27 @@ class CustomerDetailView(BaseAdminDetailView):
     context_object_name = 'customer'
     
     def get_breadcrumbs(self):
-        return [
-            {'title': 'Dashboard', 'url': reverse_lazy('admin_dashboard:home')},
-            {'title': 'Customers', 'url': reverse_lazy('admin_dashboard:customer_list')},
-            {'title': self.object.username, 'url': '#'},
-        ]
+        # for proper working of bred-crumbs from payments, orders, dashboard
+        referer = self.request.META.get('HTTP_REFERER', '')
+        
+        if '/payments/' in referer or 'payment' in referer:
+            return [
+                {'title': 'Dashboard', 'url': reverse_lazy('admin_dashboard:home')},
+                {'title': 'Payments', 'url': reverse_lazy('admin_dashboard:payment_list')},
+                {'title': self.object.username, 'url': '#'},
+            ]
+        elif '/orders/' in referer:
+            return [
+                {'title': 'Dashboard', 'url': reverse_lazy('admin_dashboard:home')},
+                {'title': 'Orders', 'url': reverse_lazy('admin_dashboard:order_list')},
+                {'title': self.object.username, 'url': '#'},
+            ]
+        else:
+            return [
+                {'title': 'Dashboard', 'url': reverse_lazy('admin_dashboard:home')},
+                {'title': 'Customers', 'url': reverse_lazy('admin_dashboard:customer_list')},
+                {'title': self.object.username, 'url': '#'},
+            ]
     
     def get_queryset(self):
         return User.objects.filter(role='customer')

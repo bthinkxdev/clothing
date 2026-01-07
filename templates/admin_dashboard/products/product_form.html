@@ -24,11 +24,45 @@
     </div>
 
     <div class="form-card">
-        <form method="post" enctype="multipart/form-data">
+
+            <form method="post" enctype="multipart/form-data" id="productForm">
             {% csrf_token %}
-            {% if form.non_field_errors %}
-            <div class="error-message">
-                {{ form.non_field_errors }}
+            
+            <!-- DETAILED ERROR DISPLAY -->
+            {% if form.errors or variant_formset.errors or image_formset.errors %}
+            <div class="alert alert-danger" style="background: #fee; border: 1px solid #f88; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                <h4 style="color: #c00; margin-top: 0;">❌ Please fix the following errors:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                        <li style="color: #c00;"><strong>{{ field }}:</strong> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    
+                    {% if variant_formset %}
+                        {% for vform in variant_formset %}
+                            {% if vform.errors %}
+                                {% for field, errors in vform.errors.items %}
+                                    {% for error in errors %}
+                                    <li style="color: #c00;"><strong>Variant {{ forloop.parentloop.counter }} - {{ field }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                    
+                    {% if image_formset %}
+                        {% for iform in image_formset %}
+                            {% if iform.errors %}
+                                {% for field, errors in iform.errors.items %}
+                                    {% for error in errors %}
+                                    <li style="color: #c00;"><strong>Image {{ forloop.parentloop.counter }} - {{ field }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </ul>
             </div>
             {% endif %}
 
@@ -136,7 +170,7 @@
                 <div class="checkbox-group">
                     {{ form.is_active }}
                     <label for="{{ form.is_active.id_for_label }}" class="checkbox-label">
-                        <i class="fas fa-toggle-on"></i> Active
+                        Active
                     </label>
                 </div>
             </div>
@@ -156,6 +190,7 @@
             <div class="formset-card">
                 {{ variant_formset.management_form }}
                 {% for vform in variant_formset %}
+                    {{ vform.id }}
                     <div class="form-grid compact-grid">
                         {% if vform.non_field_errors %}
                         <div class="error-message full-width">{{ vform.non_field_errors }}</div>
@@ -213,18 +248,29 @@
             </div>
             <div class="formset-card">
                 {{ image_formset.management_form }}
+                
                 {% for iform in image_formset %}
+                <div class="image-form-row">
+                    {{ iform.id }}  <!-- ADD THIS - Hidden ID field for editing -->
+                    
+                    {% if iform.non_field_errors %}
+                    <div class="error-message full-width">{{ iform.non_field_errors }}</div>
+                    {% endif %}
+                    
+                    <!-- Show existing image if it exists -->
+                    {% if iform.instance.pk and iform.instance.image %}
+                    <div class="existing-image-preview" style="margin-bottom: 10px;">
+                        <img src="{{ iform.instance.image.url }}" alt="{{ iform.instance.alt_text }}" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd; padding: 5px;">
+                        <p><small>Current: {{ iform.instance.image.name }}</small></p>
+                    </div>
+                    {% endif %}
+                    
                     <div class="form-grid compact-grid">
-                        {% if iform.non_field_errors %}
-                        <div class="error-message full-width">{{ iform.non_field_errors }}</div>
-                        {% endif %}
                         <div class="form-group">
-                            <label class="form-label" for="{{ iform.image.id_for_label }}">Image</label>
-                            <label class="upload-dropzone">
-                                <span class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></span>
-                                <span class="upload-text">Click or drop to upload</span>
-                                {{ iform.image }}
+                            <label class="form-label" for="{{ iform.image.id_for_label }}">
+                                {% if iform.instance.pk %}Change Image (optional){% else %}Upload Image{% endif %}
                             </label>
+                            {{ iform.image }}
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="{{ iform.alt_text.id_for_label }}">Alt text</label>
@@ -245,6 +291,8 @@
                         </div>
                         {% endif %}
                     </div>
+                    <hr style="margin: 20px 0;">
+                </div>
                 {% endfor %}
             </div>
             {% endif %}

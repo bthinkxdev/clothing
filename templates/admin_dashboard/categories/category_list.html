@@ -10,6 +10,7 @@
 
 {% block content %}
 <div class="category-management">
+    {% csrf_token %}
     <!-- Page Header -->
     <div class="page-header">
         <div class="header-content">
@@ -42,7 +43,7 @@
             </div>
             <div class="stat-info">
                 <span class="stat-label">Active Categories</span>
-                <h3>{{ categories|length }}</h3>
+                <h3>{{ active_categories_count }}</h3>
             </div>
         </div>
 

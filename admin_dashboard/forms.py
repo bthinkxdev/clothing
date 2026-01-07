@@ -72,8 +72,8 @@ class ProductForm(forms.ModelForm):
         
         # Check for duplicate slugs (excluding current instance)
         qs = Product.objects.filter(slug=slug)
-        if self.instance.pk:
-            qs = qs.exclude(pk=self.instance.pk)
+        if self.instance.pk:  # If editing (instance exists)
+            qs = qs.exclude(pk=self.instance.pk)  # Exclude the current product
         
         if qs.exists():
             raise forms.ValidationError('Product with this slug already exists.')
@@ -101,7 +101,30 @@ class ProductVariantForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_preorder': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-
+    
+    # for Handle Edits
+    def clean(self):
+        cleaned_data = super().clean()
+        product = self.instance.product if self.instance.pk else cleaned_data.get('product')
+        size = cleaned_data.get('size')
+        color = cleaned_data.get('color')
+        
+        if product and size and color:
+            # Check for duplicates excluding current instance
+            qs = ProductVariant.objects.filter(
+                product=product,
+                size=size,
+                color=color
+            )
+            if self.instance.pk:  # If editing
+                qs = qs.exclude(pk=self.instance.pk)
+            
+            if qs.exists():
+                raise forms.ValidationError(
+                    f'A variant with size "{size}" and color "{color}" already exists for this product.'
+                )
+        
+        return cleaned_data
 
 # Formset for managing multiple variants
 ProductVariantFormSet = inlineformset_factory(
