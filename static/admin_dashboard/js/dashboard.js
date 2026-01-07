@@ -10,15 +10,18 @@ function initializeDashboard(data) {
     initializeRevenueCategoryChart();
     
     // Period selector
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentPeriod = urlParams.get('period') || 'last_30_days';
-    periodSelector.value = currentPeriod;
+    const periodSelector = document.getElementById('periodSelector');
+    if (periodSelector) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentPeriod = urlParams.get('period') || 'last_30_days';
+        periodSelector.value = currentPeriod;
 
-    // When changed, reload the page with new period parameter
-    periodSelector.addEventListener('change', function() {
-        const selectedPeriod = this.value;
-        window.location.href = `${window.location.pathname}?period=${selectedPeriod}`;
-    });
+        // When changed, reload the page with new period parameter
+        periodSelector.addEventListener('change', function() {
+            const selectedPeriod = this.value;
+            window.location.href = `${window.location.pathname}?period=${selectedPeriod}`;
+        });
+    }
     
     // Tab buttons
     const tabButtons = document.querySelectorAll('.btn-tab');
@@ -35,6 +38,26 @@ function initializeDashboard(data) {
 
 // Sparkline Charts
 function initializeSparklines() {
+    const salesTrend = window.dashboardData?.salesTrend || [];
+    const customerTrend = window.dashboardData?.customerTrend || [];
+    const trendLabels = salesTrend.length ? buildTrendLabels(salesTrend) : [];
+    const customerLabels = customerTrend.length ? buildTrendLabels(customerTrend) : [];
+
+    const revenueSeries = salesTrend.map(item => Number(item.revenue) || 0);
+    const ordersSeries = salesTrend.map(item => Number(item.orders) || 0);
+    const avgOrderSeries = salesTrend.map(item => {
+        const orders = Number(item.orders) || 0;
+        const revenue = Number(item.revenue) || 0;
+        return orders > 0 ? Math.round(revenue / orders) : 0;
+    });
+    const customerSeries = customerTrend.map(item => Number(item.count) || 0);
+
+    const zeros = (length) => Array(length).fill(0);
+    const salesLabels = trendLabels.length ? trendLabels : generateDateLabels(30);
+    const salesLength = trendLabels.length || 30;
+    const customerLength = customerTrend.length ? customerTrend.length : salesLength;
+    const resolvedCustomerLabels = customerLabels.length ? customerLabels : salesLabels;
+
     const sparklineConfig = {
         type: 'line',
         options: {
@@ -64,9 +87,9 @@ function initializeSparklines() {
         charts.revenueSparkline = new Chart(revenueCtx, {
             ...sparklineConfig,
             data: {
-                labels: Array(30).fill(''),
+                labels: salesLabels,
                 datasets: [{
-                    data: generateSparklineData(30, 5000, 15000),
+                    data: revenueSeries.length ? revenueSeries : zeros(salesLength),
                     borderColor: 'rgba(255, 255, 255, 0.8)',
                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     fill: true
@@ -81,9 +104,9 @@ function initializeSparklines() {
         charts.ordersSparkline = new Chart(ordersCtx, {
             ...sparklineConfig,
             data: {
-                labels: Array(30).fill(''),
+                labels: salesLabels,
                 datasets: [{
-                    data: generateSparklineData(30, 50, 150),
+                    data: ordersSeries.length ? ordersSeries : zeros(salesLength),
                     borderColor: 'rgba(255, 255, 255, 0.8)',
                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     fill: true
@@ -98,9 +121,9 @@ function initializeSparklines() {
         charts.customersSparkline = new Chart(customersCtx, {
             ...sparklineConfig,
             data: {
-                labels: Array(30).fill(''),
+                labels: resolvedCustomerLabels,
                 datasets: [{
-                    data: generateSparklineData(30, 10, 50),
+                    data: customerSeries.length ? customerSeries : zeros(customerLength),
                     borderColor: 'rgba(255, 255, 255, 0.8)',
                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     fill: true
@@ -115,9 +138,9 @@ function initializeSparklines() {
         charts.avgOrderSparkline = new Chart(avgOrderCtx, {
             ...sparklineConfig,
             data: {
-                labels: Array(30).fill(''),
+                labels: salesLabels,
                 datasets: [{
-                    data: generateSparklineData(30, 800, 1500),
+                    data: avgOrderSeries.length ? avgOrderSeries : zeros(salesLength),
                     borderColor: 'rgba(255, 255, 255, 0.8)',
                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     fill: true
@@ -134,12 +157,12 @@ function initializeSalesChart() {
     
     // Get real data from backend
     const salesData = window.dashboardData?.salesTrend || [];
-    const labels = salesData.map(item => {
-        const date = new Date(item.date);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    });
+    const labels = buildTrendLabels(salesData);
     const revenueData = salesData.map(item => parseFloat(item.revenue) || 0);
     const ordersData = salesData.map(item => parseInt(item.orders) || 0);
+    const fallbackLength = labels.length || 30;
+    const fallbackLabels = labels.length ? labels : generateDateLabels(fallbackLength);
+    const zeros = (length) => Array(length).fill(0);
 
     const gradient1 = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
     gradient1.addColorStop(0, 'rgba(102, 126, 234, 0.4)');
@@ -152,11 +175,11 @@ function initializeSalesChart() {
     charts.salesChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels.length > 0 ? labels : generateDateLabels(30),
+            labels: fallbackLabels,
             datasets: [
                 {
                     label: 'Revenue',
-                    data: revenueData.length > 0 ? revenueData : generateSparklineData(30, 8000, 25000),
+                    data: revenueData.length > 0 ? revenueData : zeros(fallbackLength),
                     borderColor: '#667eea',
                     backgroundColor: gradient1,
                     borderWidth: 3,
@@ -170,7 +193,7 @@ function initializeSalesChart() {
                 },
                 {
                     label: 'Orders',
-                    data: ordersData.length > 0 ? ordersData : generateSparklineData(30, 50, 200),
+                    data: ordersData.length > 0 ? ordersData : zeros(fallbackLength),
                     borderColor: '#764ba2',
                     backgroundColor: gradient2,
                     borderWidth: 3,
@@ -295,13 +318,14 @@ function initializeOrderStatusChart() {
     const orderStatus = window.dashboardData?.orderStatus || {};
     const statusLabels = Object.keys(orderStatus);
     const statusData = Object.values(orderStatus);
+    const hasData = statusLabels.length > 0 && statusData.some(value => Number(value) > 0);
     
     charts.orderStatusChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: statusLabels.length > 0 ? statusLabels : ['Delivered', 'Shipped', 'Processing', 'Cancelled'],
+            labels: hasData ? statusLabels : ['No data'],
             datasets: [{
-                data: statusData.length > 0 ? statusData : [52, 21, 14, 13],
+                data: hasData ? statusData : [0],
                 backgroundColor: [
                     '#667eea',
                     '#764ba2',
@@ -336,7 +360,7 @@ function initializeOrderStatusChart() {
     });
     // Generate custom legend with real data
     const legendContainer = document.getElementById('orderStatusLegend');
-    if (legendContainer && statusLabels.length > 0) {
+    if (legendContainer && hasData) {
         const total = statusData.reduce((a, b) => a + b, 0);
         const colors = ['#667eea', '#764ba2', '#f59e0b', '#ef4444', '#10b981', '#8b5cf6'];
         
@@ -365,14 +389,30 @@ function initializeRevenueCategoryChart() {
     const categoryData = window.dashboardData?.categoryRevenue || [];
     const categoryLabels = categoryData.map(item => item.variant__product__category__name || 'Unknown');
     const categoryValues = categoryData.map(item => parseFloat(item.revenue) || 0);
+    const hasData = categoryValues.some(v => v > 0);
+    const chartCard = ctx.closest('.chart-card');
+    const cardBody = chartCard ? chartCard.querySelector('.card-body') : null;
+    // Ensure the chart has a bounded height to avoid unbounded growth
+    if (cardBody && !cardBody.style.height) {
+        cardBody.style.height = '360px';
+    }
+    if (!ctx.style.height) {
+        ctx.style.height = '280px';
+    }
+    if (!hasData && cardBody && !cardBody.querySelector('.no-revenue-data')) {
+        cardBody.insertAdjacentHTML(
+            'beforeend',
+            '<p class="text-muted text-center no-revenue-data" style="margin-top:12px;">No revenue data for this period</p>'
+        );
+    }
     
     charts.revenueCategoryChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: categoryLabels,
+            labels: hasData ? categoryLabels : ['No data'],
             datasets: [{
                 label: 'Revenue',
-                data: categoryValues,
+                data: hasData ? categoryValues : [0],
                 backgroundColor: [
                     'rgba(102, 126, 234, 0.8)',
                     'rgba(118, 75, 162, 0.8)',
@@ -399,7 +439,8 @@ function initializeRevenueCategoryChart() {
                     borderWidth: 1,
                     callbacks: {
                         label: function(context) {
-                            return '₹' + context.parsed.y.toLocaleString('en-IN');
+                            const val = Number(context.parsed.y || 0);
+                            return '₹' + val.toLocaleString('en-IN', {maximumFractionDigits: 2});
                         }
                     }
                 }
@@ -436,18 +477,67 @@ function initializeRevenueCategoryChart() {
     });
 }
 
+// Three-dot actions (kebab menus)
+function initializeChartMenus() {
+    const buttons = document.querySelectorAll('.chart-card .btn-icon');
+    buttons.forEach((btn) => {
+        let menu = btn.parentElement.querySelector('.chart-menu');
+        if (!menu) {
+            menu = document.createElement('div');
+            menu.className = 'chart-menu';
+            menu.style.position = 'absolute';
+            menu.style.top = '36px';
+            menu.style.right = '8px';
+            menu.style.background = '#fff';
+            menu.style.border = '1px solid #e5e7eb';
+            menu.style.borderRadius = '8px';
+            menu.style.boxShadow = '0 10px 30px rgba(0,0,0,0.08)';
+            menu.style.padding = '8px 0';
+            menu.style.display = 'none';
+            menu.style.zIndex = '10';
+            menu.innerHTML = `
+                <button class="chart-menu-item" data-action="refresh" style="display:block;width:100%;padding:8px 14px;background:none;border:none;text-align:left;font-size:13px;cursor:pointer;">Refresh</button>
+                <button class="chart-menu-item" data-action="download" style="display:block;width:100%;padding:8px 14px;background:none;border:none;text-align:left;font-size:13px;cursor:pointer;">Download (CSV)</button>
+            `;
+            btn.parentElement.style.position = 'relative';
+            btn.parentElement.appendChild(menu);
+        }
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        });
+
+        menu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const action = e.target.dataset.action;
+            if (action === 'refresh') {
+                window.location.reload();
+            }
+            if (action === 'download') {
+                // Placeholder hook for future export
+                alert('Download coming soon.'); // ensure button visibly works
+            }
+            menu.style.display = 'none';
+        });
+    });
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.chart-menu').forEach((menu) => {
+            menu.style.display = 'none';
+        });
+    });
+}
+
 // Helper Functions
-function generateSparklineData(count, min, max) {
-    const data = [];
-    let prev = (min + max) / 2;
-    
-    for (let i = 0; i < count; i++) {
-        const change = (Math.random() - 0.5) * (max - min) * 0.3;
-        prev = Math.max(min, Math.min(max, prev + change));
-        data.push(Math.round(prev));
-    }
-    
-    return data;
+function buildTrendLabels(trend) {
+    return trend.map(item => {
+        const date = new Date(item.date);
+        if (Number.isNaN(date.getTime())) {
+            return '';
+        }
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
 }
 
 function generateDateLabels(days) {
@@ -489,4 +579,5 @@ function updateSalesChart(days) {
 // Fixed the initialization
 document.addEventListener('DOMContentLoaded', function() {
     initializeDashboard();
+    initializeChartMenus();
 });

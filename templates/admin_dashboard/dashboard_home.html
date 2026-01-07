@@ -19,12 +19,12 @@
         
         <div class="quick-actions">
             <select class="period-selector" id="periodSelector">
-                <option value="today">Today</option>
-                <option value="yesterday">Yesterday</option>
-                <option value="last_7_days">Last 7 Days</option>
-                <option value="last_30_days" selected>Last 30 Days</option>
-                <option value="this_month">This Month</option>
-                <option value="this_year">This Year</option>
+                <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
+                <option value="yesterday" {% if period == 'yesterday' %}selected{% endif %}>Yesterday</option>
+                <option value="last_7_days" {% if period == 'last_7_days' %}selected{% endif %}>Last 7 Days</option>
+                <option value="last_30_days" {% if period == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+                <option value="this_month" {% if period == 'this_month' %}selected{% endif %}>This Month</option>
+                <option value="this_year" {% if period == 'this_year' %}selected{% endif %}>This Year</option>
             </select>
         </div>
     </div>
@@ -56,9 +56,9 @@
             <div class="stat-content">
                 <span class="stat-label">Total Orders</span>
                 <h2 class="stat-value">{{ stats.total_orders|floatformat:0 }}</h2>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>12.5%</span>
+                <div class="stat-change {% if stats.orders_change >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="fas fa-arrow-{% if stats.orders_change >= 0 %}up{% else %}down{% endif %}"></i>
+                    <span>{{ stats.orders_change|floatformat:1 }}%</span>
                     <span class="stat-period">vs last period</span>
                 </div>
             </div>
@@ -74,9 +74,9 @@
             <div class="stat-content">
                 <span class="stat-label">New Customers</span>
                 <h2 class="stat-value">{{ stats.new_customers }}</h2>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>8.2%</span>
+                <div class="stat-change {% if stats.new_customers_change >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="fas fa-arrow-{% if stats.new_customers_change >= 0 %}up{% else %}down{% endif %}"></i>
+                    <span>{{ stats.new_customers_change|floatformat:1 }}%</span>
                     <span class="stat-period">vs last period</span>
                 </div>
             </div>
@@ -92,9 +92,9 @@
             <div class="stat-content">
                 <span class="stat-label">Avg Order Value</span>
                 <h2 class="stat-value">₹{{ stats.avg_order_value|floatformat:2 }}</h2>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>5.4%</span>
+                <div class="stat-change {% if stats.avg_order_value_change >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="fas fa-arrow-{% if stats.avg_order_value_change >= 0 %}up{% else %}down{% endif %}"></i>
+                    <span>{{ stats.avg_order_value_change|floatformat:1 }}%</span>
                     <span class="stat-period">vs last period</span>
                 </div>
             </div>
@@ -190,9 +190,9 @@
                             <i class="fas fa-{% if method.method == 'cod' %}money-bill-wave{% elif method.method == 'wallet' %}wallet{% else %}credit-card{% endif %}"></i>
                         </div>
                         <div class="payment-info">
-                            <h4>{{ method.get_method_display }}</h4>
+                            <h4>{{ method.display }}</h4>
                             <div class="payment-bar">
-                                <div class="payment-progress" style="width: {{ method.percentage }}%"></div>
+                                <div class="payment-progress" style="width: {{ method.percentage|floatformat:1 }}%"></div>
                             </div>
                             <div class="payment-meta">
                                 <span>{{ method.count }} transactions</span>
@@ -200,6 +200,8 @@
                             </div>
                         </div>
                     </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No payment data available for this period</p>
                     {% endfor %}
                 </div>
             </div>
@@ -326,7 +328,8 @@
     window.dashboardData = {
         salesTrend: {{ sales_trend|safe }},
         orderStatus: {{ order_status|safe }},
-        categoryRevenue: {{ category_revenue|safe }}
+        categoryRevenue: {{ category_revenue|safe }},
+        customerTrend: {{ customer_trend|safe }}
     };
 </script>
 {% endblock %}

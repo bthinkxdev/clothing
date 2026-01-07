@@ -8,7 +8,6 @@ from django.db.models import (
 )
 from django.db.models.functions import TruncDate, TruncMonth, Coalesce
 from django.utils import timezone
-from django.core.cache import cache
 
 from app.models import (
     Order, OrderItem, Product, ProductVariant, User,
@@ -21,61 +20,69 @@ class DashboardAnalyticsService:
     
     @staticmethod
     def get_dashboard_stats(start_date: datetime = None, end_date: datetime = None) -> Dict:
-        """Get main dashboard statistics"""
+        """Get main dashboard statistics using the requested date range."""
         if not start_date:
             start_date = timezone.now() - timedelta(days=30)
         if not end_date:
             end_date = timezone.now()
-        
-        # Cache key
-        cache_key = f'dashboard_stats_{start_date.date()}_{end_date.date()}'
-        cached = cache.get(cache_key)
-        if cached:
-            return cached
-        
-        # Total Revenue
-        revenue_data = Order.objects.filter(
-            placed_at__range=[start_date, end_date],
-            status__in=['paid', 'processing', 'shipped', 'delivered']
-        ).aggregate(
+
+        period_delta = end_date - start_date
+
+        # Current period data
+        current_orders = Order.objects.filter(placed_at__range=[start_date, end_date])
+        # Count revenue for all non-cancelled orders so pending/processing also show up
+        revenue_orders = current_orders.exclude(status__in=['cancelled'])
+        revenue_data = revenue_orders.aggregate(
             total_revenue=Coalesce(Sum('total'), Decimal('0.00')),
-            total_orders=Count('id'),
-            avg_order_value=Coalesce(Avg('total'), Decimal('0.00'))
+            total_orders=Count('id')
         )
-        
-        # Previous period comparison
-        prev_start = start_date - (end_date - start_date)
-        prev_revenue = Order.objects.filter(
-            placed_at__range=[prev_start, start_date],
-            status__in=['paid', 'processing', 'shipped', 'delivered']
-        ).aggregate(
-            total=Coalesce(Sum('total'), Decimal('0.00'))
-        )['total']
-        
-        revenue_change = 0
-        if prev_revenue and prev_revenue > 0:
-            revenue_change = ((revenue_data['total_revenue'] - prev_revenue) / prev_revenue) * 100
-        
-        # New Customers
+
+        # Previous period for comparisons
+        prev_start = start_date - period_delta
+        prev_end = start_date
+        prev_orders = Order.objects.filter(placed_at__range=[prev_start, prev_end])
+        prev_revenue_orders = prev_orders.exclude(status__in=['cancelled'])
+
+        prev_revenue_data = prev_revenue_orders.aggregate(
+            total=Coalesce(Sum('total'), Decimal('0.00')),
+            total_orders=Count('id')
+        )
+
+        def _percent_change(current: float, previous: float) -> float:
+            if previous == 0:
+                return 100.0 if current > 0 else 0.0
+            return float(((current - previous) / previous) * 100)
+
+        revenue_change = _percent_change(float(revenue_data['total_revenue']), float(prev_revenue_data['total']))
+        orders_change = _percent_change(revenue_data['total_orders'], prev_revenue_data['total_orders'])
+
         new_customers = User.objects.filter(
             date_joined__range=[start_date, end_date],
             role='customer'
         ).count()
-        
-        # Pending Orders
-        pending_orders = Order.objects.filter(
-            status__in=['pending', 'paid']
+        prev_new_customers = User.objects.filter(
+            date_joined__range=[prev_start, prev_end],
+            role='customer'
         ).count()
-        
-        # Low Stock Products
+        new_customer_change = _percent_change(new_customers, prev_new_customers)
+
+        current_avg_order_value = float(revenue_data['total_revenue']) / revenue_data['total_orders'] if revenue_data['total_orders'] else 0.0
+        previous_avg_order_value = float(prev_revenue_data['total']) / prev_revenue_data['total_orders'] if prev_revenue_data['total_orders'] else 0.0
+        avg_order_value_change = _percent_change(
+            current_avg_order_value,
+            previous_avg_order_value
+        )
+
+        pending_orders = Order.objects.filter(status__in=['pending', 'paid']).count()
+
         low_stock_count = Inventory.objects.filter(
             quantity__lte=F('low_stock_threshold')
         ).count()
-        
-        # Top Products
+
         top_products = OrderItem.objects.filter(
-            order__placed_at__range=[start_date, end_date],
-            order__status__in=['paid', 'processing', 'shipped', 'delivered']
+            order__placed_at__range=[start_date, end_date]
+        ).exclude(
+            order__status__in=['cancelled']
         ).values(
             'variant__product__name',
             'variant__product__slug'
@@ -83,72 +90,149 @@ class DashboardAnalyticsService:
             total_sold=Sum('quantity'),
             revenue=Sum(F('quantity') * F('unit_price'))
         ).order_by('-total_sold')[:5]
-        
-        # Payment Methods Breakdown
-        payment_methods = Payment.objects.filter(
+
+        # Fallback: if there are no order items but there are orders, show an aggregate bucket
+        if not top_products.exists():
+            order_agg = Order.objects.filter(
+                placed_at__range=[start_date, end_date]
+            ).exclude(
+                status__in=['cancelled']
+            ).aggregate(
+                total_orders=Count('id'),
+                total_revenue=Coalesce(Sum('total'), Decimal('0.00'))
+            )
+            if order_agg['total_orders']:
+                top_products = [{
+                    'variant__product__name': 'All Orders',
+                    'variant__product__slug': '',
+                    'total_sold': order_agg['total_orders'],
+                    'revenue': float(order_agg['total_revenue'] or 0)
+                }]
+
+        payment_methods_qs = Payment.objects.filter(
             created_at__range=[start_date, end_date],
-            status='success'
+            status__in=['success', 'pending']
         ).values('method').annotate(
             count=Count('id'),
             total=Sum('amount')
         ).order_by('-total')
-        
+
+        total_payment_amount = sum(item['total'] or Decimal('0.00') for item in payment_methods_qs)
+        method_display_map = dict(Payment.PAYMENT_METHOD)
+        payment_methods = []
+        for item in payment_methods_qs:
+            amount = float(item['total'] or Decimal('0.00'))
+            percentage = float((item['total'] / total_payment_amount) * 100) if total_payment_amount else 0.0
+            payment_methods.append({
+                'method': item['method'],
+                'display': method_display_map.get(item['method'], item['method'].title()),
+                'count': item['count'],
+                'total': amount,
+                'percentage': percentage
+            })
+
         result = {
             'total_revenue': float(revenue_data['total_revenue']),
-            'total_orders': revenue_data['total_orders'],
-            'avg_order_value': float(revenue_data['avg_order_value']),
-            'revenue_change': float(revenue_change),
+            'total_orders': current_orders.count(),
+            'avg_order_value': current_avg_order_value,
+            'revenue_change': revenue_change,
+            'orders_change': orders_change,
             'new_customers': new_customers,
+            'new_customers_change': new_customer_change,
+            'avg_order_value_change': avg_order_value_change,
             'pending_orders': pending_orders,
             'low_stock_count': low_stock_count,
-            'top_products': list(top_products),
-            'payment_methods': list(payment_methods),
+            'top_products': [
+                {
+                    **product,
+                    'revenue': float(product['revenue']) if product.get('revenue') is not None else 0.0
+                } for product in top_products
+            ],
+            'payment_methods': payment_methods,
         }
-        
-        cache.set(cache_key, result, 300)  # Cache for 5 minutes
+
         return result
     
     @staticmethod
-    def get_sales_trend(days: int = 30) -> List[Dict]:
+    def get_sales_trend(days: int = 30, start_date: datetime = None, end_date: datetime = None) -> List[Dict]:
         """Get daily sales trend"""
-        end_date = timezone.now()
-        start_date = end_date - timedelta(days=days)
-        
+        if not end_date:
+            end_date = timezone.now()
+        if start_date:
+            start_date = start_date
+        else:
+            start_date = end_date - timedelta(days=days)
+
         sales_data = Order.objects.filter(
-            placed_at__range=[start_date, end_date],
-            status__in=['paid', 'processing', 'shipped', 'delivered']
+            placed_at__range=[start_date, end_date]
+        ).exclude(
+            status__in=['cancelled']
         ).annotate(
             date=TruncDate('placed_at')
         ).values('date').annotate(
             revenue=Sum('total'),
             orders=Count('id')
         ).order_by('date')
-        
+
         return list(sales_data)
     
     @staticmethod
     def get_revenue_by_category(start_date: datetime, end_date: datetime) -> List[Dict]:
         """Get revenue breakdown by category"""
         category_revenue = OrderItem.objects.filter(
-            order__placed_at__range=[start_date, end_date],
-            order__status__in=['paid', 'processing', 'shipped', 'delivered']
+            order__placed_at__range=[start_date, end_date]
+        ).exclude(
+            order__status__in=['cancelled']
         ).values(
             'variant__product__category__name'
         ).annotate(
             revenue=Sum(F('quantity') * F('unit_price')),
             items_sold=Sum('quantity')
         ).order_by('-revenue')[:10]
+
+        # Fallback: if there are orders but no order items (e.g., data seeded without line items),
+        # show a single aggregate bucket so the chart isn't empty.
+        if not category_revenue.exists():
+            total_revenue = Order.objects.filter(
+                placed_at__range=[start_date, end_date]
+            ).exclude(
+                status__in=['cancelled']
+            ).aggregate(total=Coalesce(Sum('total'), Decimal('0.00')))['total']
+            if total_revenue and total_revenue > 0:
+                return [{
+                    'variant__product__category__name': 'All Orders',
+                    'revenue': float(total_revenue),
+                    'items_sold': 0
+                }]
         
         return list(category_revenue)
     
     @staticmethod
-    def get_order_status_breakdown() -> Dict:
-        """Get order counts by status"""
-        status_counts = Order.objects.values('status').annotate(
+    def get_order_status_breakdown(start_date: datetime = None, end_date: datetime = None) -> Dict:
+        """Get order counts by status (date-filtered when provided)."""
+        orders = Order.objects.all()
+        if start_date and end_date:
+            orders = orders.filter(placed_at__range=[start_date, end_date])
+
+        status_counts = orders.values('status').annotate(
             count=Count('id')
         ).order_by('-count')
-        
+
         return {item['status']: item['count'] for item in status_counts}
+
+    @staticmethod
+    def get_customer_trend(start_date: datetime, end_date: datetime) -> List[Dict]:
+        """Get customer registrations per day for the range."""
+        customer_data = User.objects.filter(
+            role='customer',
+            date_joined__range=[start_date, end_date]
+        ).annotate(
+            date=TruncDate('date_joined')
+        ).values('date').annotate(
+            count=Count('id')
+        ).order_by('date')
+
+        return list(customer_data)
     
     @staticmethod
     def get_customer_lifetime_value() -> List[Dict]:

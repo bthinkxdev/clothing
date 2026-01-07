@@ -138,9 +138,10 @@ class EnhancedUserAdmin(admin.ModelAdmin):
     
     def wallet_display(self, obj):
         color = '#27ae60' if obj.wallet_balance > 0 else '#95a5a6'
+        amount = f"{Decimal(obj.wallet_balance or 0):,.2f}"
         return format_html(
-            '<strong style="color:{};font-size:14px;">₹{:,.2f}</strong>',
-            color, obj.wallet_balance
+            '<strong style="color:{};font-size:14px;">₹{}</strong>',
+            color, amount
         )
     wallet_display.short_description = '💰 Wallet'
     
@@ -278,16 +279,19 @@ class SuperOrderAdmin(admin.ModelAdmin):
     
     def amount_display(self, obj):
         """Display amount with beautiful styling"""
-        total = Decimal(obj.total) if obj.total is not None else Decimal('0')
-        subtotal = Decimal(obj.subtotal) if obj.subtotal is not None else Decimal('0')
-        discount = Decimal(obj.discount_amount) if obj.discount_amount is not None else Decimal('0')
+        total = Decimal(obj.total or 0)
+        subtotal = Decimal(obj.subtotal or 0)
+        discount = Decimal(obj.discount_amount or 0)
+        total_str = f"{total:,.2f}"
+        subtotal_str = f"{subtotal:,.2f}"
+        discount_str = f"{discount:,.2f}"
         return format_html(
             '<div style="text-align:center;">'
-            '<div style="font-size:20px;font-weight:bold;color:#27ae60;">₹{:,.2f}</div>'
-            '<small style="color:#7f8c8d;">Subtotal: ₹{:,.2f}</small><br>'
-            '<small style="color:#e74c3c;">Discount: ₹{:,.2f}</small>'
+            '<div style="font-size:20px;font-weight:bold;color:#27ae60;">₹{}</div>'
+            '<small style="color:#7f8c8d;">Subtotal: ₹{}</small><br>'
+            '<small style="color:#e74c3c;">Discount: ₹{}</small>'
             '</div>',
-            total, subtotal, discount
+            total_str, subtotal_str, discount_str
         )
     amount_display.short_description = '💰 Amount'
     
@@ -401,6 +405,16 @@ class SuperOrderAdmin(admin.ModelAdmin):
             for item in obj.items.all()
         ])
         
+        subtotal = Decimal(obj.subtotal or 0)
+        shipping = Decimal(obj.shipping_amount or 0)
+        tax = Decimal(obj.tax_amount or 0)
+        discount = Decimal(obj.discount_amount or 0)
+        total = Decimal(obj.total or 0)
+        subtotal_str = f"{subtotal:,.2f}"
+        shipping_str = f"{shipping:,.2f}"
+        tax_str = f"{tax:,.2f}"
+        discount_str = f"{discount:,.2f}"
+        total_str = f"{total:,.2f}"
         return format_html(
             '<div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);'
             'padding:20px;border-radius:15px;color:white;">'
@@ -417,20 +431,20 @@ class SuperOrderAdmin(admin.ModelAdmin):
             '</table>'
             '<div style="background:white;color:#2c3e50;padding:15px;margin-top:10px;border-radius:10px;">'
             '<div style="display:flex;justify-content:space-between;padding:5px 0;">'
-            '<span>Subtotal:</span><strong>₹{:,.2f}</strong></div>'
+            '<span>Subtotal:</span><strong>₹{}</strong></div>'
             '<div style="display:flex;justify-content:space-between;padding:5px 0;">'
-            '<span>Shipping:</span><strong>₹{:,.2f}</strong></div>'
+            '<span>Shipping:</span><strong>₹{}</strong></div>'
             '<div style="display:flex;justify-content:space-between;padding:5px 0;">'
-            '<span>Tax:</span><strong>₹{:,.2f}</strong></div>'
+            '<span>Tax:</span><strong>₹{}</strong></div>'
             '<div style="display:flex;justify-content:space-between;padding:5px 0;color:#e74c3c;">'
-            '<span>Discount:</span><strong>-₹{:,.2f}</strong></div>'
+            '<span>Discount:</span><strong>-₹{}</strong></div>'
             '<div style="display:flex;justify-content:space-between;padding:10px 0;'
             'border-top:2px solid #34495e;margin-top:10px;font-size:20px;">'
-            '<span>TOTAL:</span><strong style="color:#27ae60;">₹{:,.2f}</strong></div>'
+            '<span>TOTAL:</span><strong style="color:#27ae60;">₹{}</strong></div>'
             '</div></div>',
             items_html,
-            obj.subtotal, obj.shipping_amount, obj.tax_amount,
-            obj.discount_amount, obj.total
+            subtotal_str, shipping_str, tax_str,
+            discount_str, total_str
         )
     order_summary_card.short_description = 'Order Details'
     
@@ -547,10 +561,13 @@ class EnhancedProductAdmin(admin.ModelAdmin):
             min_price = min(v.price for v in variants)
             max_price = max(v.price for v in variants)
             if min_price == max_price:
-                return format_html('<strong style="color:#27ae60;font-size:14px;">₹{:,.2f}</strong>', min_price)
+                return format_html(
+                    '<strong style="color:#27ae60;font-size:14px;">₹{}</strong>',
+                    f"{min_price:,.2f}"
+                )
             return format_html(
-                '<strong style="color:#27ae60;font-size:14px;">₹{:,.2f} - ₹{:,.2f}</strong>',
-                min_price, max_price
+                '<strong style="color:#27ae60;font-size:14px;">₹{} - ₹{}</strong>',
+                f"{min_price:,.2f}", f"{max_price:,.2f}"
             )
         return '-'
     price_range.short_description = '💰 Price'
@@ -568,10 +585,11 @@ class EnhancedProductAdmin(admin.ModelAdmin):
     def rating_display(self, obj):
         avg = obj.avg_rating()
         stars = '⭐' * int(avg)
+        avg_display = f"{avg:.1f}"
         return format_html(
             '<div style="font-size:16px;">{}</div>'
-            '<small style="color:#7f8c8d;">{:.1f}/5</small>',
-            stars or '☆☆☆☆☆', avg
+            '<small style="color:#7f8c8d;">{}/5</small>',
+            stars or '☆☆☆☆☆', avg_display
         )
     rating_display.short_description = '⭐ Rating'
     

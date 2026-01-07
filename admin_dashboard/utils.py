@@ -372,30 +372,3 @@ class StatisticsHelper:
             return fallback
         return sum(values) / len(values)
 
-
-class CacheHelper:
-    """Helper for caching operations"""
-    
-    @staticmethod
-    def get_cache_key(prefix: str, **kwargs) -> str:
-        """Generate cache key from prefix and kwargs"""
-        key_parts = [prefix]
-        for k, v in sorted(kwargs.items()):
-            key_parts.append(f"{k}_{v}")
-        return ':'.join(key_parts)
-    
-    @staticmethod
-    def invalidate_dashboard_cache():
-        """Invalidate all dashboard-related cache"""
-        from django.core.cache import cache
-        
-        patterns = [
-            'dashboard_stats_*',
-            'sales_trend_*',
-            'revenue_chart_*',
-            'product_performance_*',
-        ]
-        
-        # Note: This is a simplified version
-        # For production, use Redis pattern matching
-        cache.clear()

@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
     TemplateView,
@@ -10,7 +11,7 @@ from django.views.generic import (
 )
 
 from ..forms import ProfileForm, AddressForm
-from ..models import User, Address, LoyaltyPoint, Order
+from ..models import User, Address, LoyaltyPoint, Order, Wishlist
 from .base import CommonContextMixin
 
 
@@ -26,6 +27,9 @@ class AccountDashboardView(LoginRequiredMixin, CommonContextMixin, TemplateView)
         context["recent_orders"] = Order.objects.filter(user=self.request.user)[:5]
         context["total_orders"] = Order.objects.filter(user=self.request.user).count()
         context["wallet_balance"] = self.request.user.wallet_balance
+        context["wishlist_count"] = Wishlist.objects.filter(user=self.request.user).aggregate(
+            total=Count("items")
+        ).get("total") or 0
 
         loyalty = LoyaltyPoint.objects.filter(user=self.request.user).first()
         context["loyalty_points"] = loyalty.points if loyalty else 0
