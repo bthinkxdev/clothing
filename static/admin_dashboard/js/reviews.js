@@ -22,28 +22,12 @@ function initializeReviewManagement() {
 }
 
 function filterReviews() {
-    const statusFilter = document.getElementById('statusFilter')?.value || '';
-
-    const cards = document.querySelectorAll('.review-card');
-
-    cards.forEach(card => {
-        const hasApproveBtn = card.querySelector('.approve-btn') !== null;
-        const isPending = hasApproveBtn;
-
-        let shouldShow = true;
-
-        if (statusFilter === 'pending') {
-            shouldShow = isPending;
-        } else if (statusFilter === 'approved') {
-            shouldShow = !isPending;
-        }
-
-        if (shouldShow) {
-            card.style.display = '';
-        } else {
-            card.style.display = 'none';
-        }
-    });
+    const statusFilter = document.getElementById('statusFilter')?.value || 'all';
+    
+    // Reload page with status parameter
+    const url = new URL(window.location);
+    url.searchParams.set('status', statusFilter);
+    window.location.href = url.toString();
 }
 
 async function handleApprove(e) {
@@ -51,9 +35,13 @@ async function handleApprove(e) {
     const reviewId = button.dataset.reviewId;
 
     try {
-        const csrfToken = getCookie('csrftoken');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        if (!csrfToken) {
+            showNotification('CSRF token not found', 'error');
+            return;
+        }
 
-        const response = await fetch(`/admin-dashboard/reviews/${reviewId}/approve/`, {
+        const response = await fetch(`/dashboard/reviews/${reviewId}/approve/`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrfToken,
@@ -69,10 +57,22 @@ async function handleApprove(e) {
 
             const approvedBadge = document.createElement('span');
             approvedBadge.className = 'status-badge status-active';
-            approvedBadge.textContent = 'Approved';
+            approvedBadge.innerHTML = '<i class="fas fa-check-circle"></i> Approved';
             footer.insertBefore(approvedBadge, footer.firstChild);
 
             showNotification('Review approved successfully', 'success');
+
+            // Update counts in real time
+            const pendingCountEl = document.querySelector('.stat-card:first-child h3');
+            const approvedCountEl = document.querySelector('.stat-card:last-child h3');
+            if (pendingCountEl) {
+                const currentCount = parseInt(pendingCountEl.textContent);
+                pendingCountEl.textContent = currentCount - 1;
+            }
+            if (approvedCountEl) {
+                const currentCount = parseInt(approvedCountEl.textContent);
+                approvedCountEl.textContent = currentCount + 1;
+            }
         } else {
             throw new Error('Failed to approve review');
         }
@@ -91,9 +91,13 @@ async function handleDelete(e) {
     }
 
     try {
-        const csrfToken = getCookie('csrftoken');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        if (!csrfToken) {
+            showNotification('CSRF token not found', 'error');
+            return;
+        }
 
-        const response = await fetch(`/admin-dashboard/reviews/${reviewId}/delete/`, {
+        const response = await fetch(`/dashboard/reviews/${reviewId}/delete/`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrfToken,
@@ -107,6 +111,21 @@ async function handleDelete(e) {
             setTimeout(() => card.remove(), 300);
 
             showNotification('Review deleted successfully', 'success');
+            // Update counts in real time
+            const statusFilter = document.getElementById('statusFilter')?.value || 'pending';
+            if (statusFilter === 'pending' || statusFilter === 'all') {
+                const pendingCountEl = document.querySelector('.stat-card:first-child h3');
+                if (pendingCountEl) {
+                    const currentCount = parseInt(pendingCountEl.textContent);
+                    pendingCountEl.textContent = currentCount - 1;
+                }
+            } else if (statusFilter === 'approved') {
+                const approvedCountEl = document.querySelector('.stat-card:last-child h3');
+                if (approvedCountEl) {
+                    const currentCount = parseInt(approvedCountEl.textContent);
+                    approvedCountEl.textContent = currentCount - 1;
+                }
+            }
         } else {
             throw new Error('Failed to delete review');
         }

@@ -35,9 +35,14 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ form.payment_status.id_for_label }}" class="form-label">Payment Status</label>
-                        {{ form.payment_status }}
-                        {% if form.payment_status.errors %}<div class="error-message">{{ form.payment_status.errors }}</div>{% endif %}
+                        <label for="{{ form.expected_delivery.id_for_label }}" class="form-label">Expected Delivery</label>
+                        {{ form.expected_delivery }}
+                        {% if form.expected_delivery.errors %}<div class="error-message">{{ form.expected_delivery.errors }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.courier.id_for_label }}" class="form-label">Courier</label>
+                        {{ form.courier }}
+                        {% if form.courier.errors %}<div class="error-message">{{ form.courier.errors }}</div>{% endif %}
                     </div>
 
                     <div class="form-group">

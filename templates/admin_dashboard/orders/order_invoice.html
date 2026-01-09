@@ -64,8 +64,8 @@
                             <td>{{ forloop.counter }}</td>
                             <td>{{ item.variant.product.name }} - {{ item.variant.name|default:item.variant.sku }}</td>
                             <td>{{ item.quantity }}</td>
-                            <td>₹{{ item.price }}</td>
-                            <td>₹{% widthratio item.price 1 item.quantity %}</td>
+                            <td>₹{{ item.unit_price }}</td>
+                            <td>₹{{ item.line_total }}</td>
                         </tr>
                         {% empty %}
                         <tr><td colspan="5" class="text-center">No items</td></tr>
@@ -81,7 +81,7 @@
                 </div>
                 <div class="summary-row">
                     <span>Discount</span>
-                    <span>- ₹{{ order.discount_total|default:"0.00" }}</span>
+                    <span>- ₹{{ order.discount_amount|default:"0.00" }}</span>
                 </div>
                 <div class="summary-row total">
                     <span>Grand Total</span>

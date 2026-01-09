@@ -131,7 +131,7 @@
                             <strong>{{ item.variant.product.name }}</strong><br>
                             <small>{{ item.variant.name|default:item.variant.sku }}</small>
                         </div>
-                        <span class="badge">{{ item.quantity }} x ₹{{ item.price }}</span>
+                        <span class="badge">{{ item.quantity }} x ₹{{ item.variant.get_price }}</span>
                     </li>
                     {% endfor %}
                 </ul>

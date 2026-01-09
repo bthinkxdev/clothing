@@ -10,6 +10,7 @@
 
 {% block content %}
 <div class="review-management">
+    {% csrf_token %}
     <div class="page-header">
         <div class="header-content">
             <h1><i class="fas fa-star"></i> Review Management</h1>
@@ -42,9 +43,9 @@
     <div class="filter-section">
         <div class="filter-group">
             <select class="filter-select" id="statusFilter">
-                <option value="pending" selected>Pending</option>
-                <option value="approved">Approved</option>
-                <option value="">All</option>
+                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="all" {% if request.GET.status == 'all' or not request.GET.status %}selected{% endif %}>All</option>
             </select>
         </div>
     </div>
@@ -72,7 +73,7 @@
             <div class="review-body">
                 <div class="review-product">
                     <i class="fas fa-box"></i>
-                    <a href="{% url 'admin_dashboard:product_detail' review.product.slug %}">
+                    <a href="{% url 'admin_dashboard:product_detail' review.product.slug %}?ref=reviews">
                         {{ review.product.name }}
                     </a>
                 </div>

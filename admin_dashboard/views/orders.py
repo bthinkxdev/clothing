@@ -1,5 +1,5 @@
 # admin_dashboard/views/orders.py
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404,redirect
 from django.urls import reverse_lazy
 from django.db.models import Q
 from django.http import HttpResponse
@@ -13,6 +13,7 @@ from app.models import Order, Payment
 from ..services import OrderManagementService
 from ..utils import FilterHelper, PaginationHelper
 from ..forms import OrderUpdateForm, OrderBulkUpdateForm
+from django.contrib import messages
 
 
 class OrderListView(BaseAdminListView):
@@ -48,6 +49,8 @@ class OrderListView(BaseAdminListView):
             )
         
         queryset = queryset.filter(**filters)
+        # distinct() to prevent duplicate orders when filtering by payment method
+        queryset = queryset.distinct()
         
         # Ordering
         order_by = self.request.GET.get('order_by', '-placed_at')
@@ -73,6 +76,9 @@ class OrderListView(BaseAdminListView):
         context['current_status'] = self.request.GET.get('status', '')
         context['current_payment_method'] = self.request.GET.get('payment_method', '')
         context['date_range'] = self.request.GET.get('date_range', 'last_30_days')
+
+         # Include filter options in context
+        context['filter_options'] = self.get_filter_options()
         
         return context
 
@@ -114,10 +120,8 @@ class OrderDetailView(BaseAdminDetailView):
             p.amount for p in order.payments.filter(status='success')
         )
         
-        # Order timeline (you can create OrderStatusChange model)
-        context['timeline'] = [
-            {'date': order.placed_at, 'status': 'Order Placed', 'description': 'Order was placed'},
-        ]
+        # Order timeline
+        context['timeline'] = OrderManagementService.get_order_timeline(str(self.object.id))
         
         return context
 

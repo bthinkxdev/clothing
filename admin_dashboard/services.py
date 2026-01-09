@@ -478,7 +478,40 @@ class OrderManagementService:
             'invoice_number': f'INV-{str(order.id)[:8].upper()}',
             'invoice_date': timezone.now(),
         }
-
+    
+    @staticmethod
+    def get_order_timeline(order_id: str) -> List[Dict]:
+        """Generate timeline events for an order"""
+        order = Order.objects.prefetch_related('payments').get(id=order_id)
+        
+        timeline = [
+            {
+                'date': order.placed_at,
+                'status': 'Order Placed',
+                'description': 'Order was placed'
+            }
+        ]
+        
+        # Add payment events
+        for payment in order.payments.all():
+            timeline.append({
+                'date': payment.created_at,
+                'status': f'Payment {payment.get_status_display()}',
+                'description': f'{payment.get_method_display()} payment - ₹{payment.amount}'
+            })
+        
+        # Add current status event if different from placed
+        if order.status != 'pending':
+            timeline.append({
+                'date': order.updated_at,
+                'status': order.get_status_display(),
+                'description': f'Order status updated to {order.get_status_display()}'
+            })
+        
+        # Sort by date (oldest to newest)
+        timeline.sort(key=lambda x: x['date'])
+        
+        return timeline
 
 class CustomerManagementService:
     """Service for customer management"""

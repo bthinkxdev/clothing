@@ -173,7 +173,7 @@ class FilterHelper:
         
         if payment_method := request.GET.get('payment_method'):
             filters['payments__method'] = payment_method
-            filters['payments__status'] = 'success'
+            # filters['payments__status'] = 'success'
         
         if customer_id := request.GET.get('customer'):
             filters['user_id'] = customer_id

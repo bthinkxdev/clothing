@@ -41,7 +41,13 @@
                         <td>#{{ order.id|stringformat:"s"|slice:":8" }}</td>
                         <td><span class="badge badge-pill">{{ order.status|capfirst }}</span></td>
                         <td>₹{{ order.total|default:"0.00" }}</td>
-                        <td>{{ order.payment_method|default:"-" }}</td>
+                        <td>
+                            {% if order.payments.exists %}
+                                {{ order.payments.first.get_method_display }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
                         <td>{{ order.placed_at|date:"M d, Y" }}</td>
                         <td class="table-actions">
                             <a href="{% url 'admin_dashboard:order_detail' order.id %}" class="btn-sm btn-outline"><i class="fas fa-eye"></i></a>

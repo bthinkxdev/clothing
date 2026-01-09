@@ -58,7 +58,7 @@
                         <td><code>{{ payment.id|slice:":8" }}</code></td>
                         <td>
                             <a href="{% url 'admin_dashboard:order_detail' payment.order.pk %}">
-                                #{{ payment.order.order_number }}
+                                #{{ payment.order.id|stringformat:"s"|slice:":8" }}
                             </a>
                         </td>
                         <td>

@@ -87,11 +87,19 @@ class ProductDetailView(BaseAdminDetailView):
     context_object_name = 'product'
     
     def get_breadcrumbs(self):
-        return [
+        breadcrumbs = [
             {'title': 'Dashboard', 'url': reverse_lazy('admin_dashboard:home')},
-            {'title': 'Products', 'url': reverse_lazy('admin_dashboard:product_list')},
-            {'title': self.object.name, 'url': '#'},
         ]
+        
+        # Check if coming from reviews page
+        if self.request.GET.get('ref') == 'reviews':
+            breadcrumbs.append({'title': 'Reviews', 'url': reverse_lazy('admin_dashboard:review_list')})
+        else:
+            breadcrumbs.append({'title': 'Products', 'url': reverse_lazy('admin_dashboard:product_list')})
+        
+        breadcrumbs.append({'title': self.object.name, 'url': '#'})
+        
+        return breadcrumbs
     
     def get_queryset(self):
         return super().get_queryset().select_related('category').prefetch_related(

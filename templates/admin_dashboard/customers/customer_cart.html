@@ -42,8 +42,8 @@
                             <td>{{ item.variant.product.name }}</td>
                             <td>{{ item.variant.name|default:item.variant.sku }}</td>
                             <td>{{ item.quantity }}</td>
-                            <td>₹{{ item.price }}</td>
-                            <td>₹{% widthratio item.price 1 item.quantity %}</td>
+                            <td>₹{{ item.variant.get_price|floatformat:2 }}</td>
+                            <td>₹{{ item.line_total|floatformat:2 }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

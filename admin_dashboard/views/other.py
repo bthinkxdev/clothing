@@ -356,7 +356,7 @@ class ReviewListView(BaseAdminListView):
         queryset = super().get_queryset().select_related('user', 'product')
         
         # Filter by approval status
-        status = self.request.GET.get('status', 'pending')
+        status = self.request.GET.get('status', 'all')  # 'pending' to 'all'
         if status == 'pending':
             queryset = queryset.filter(approved=False)
         elif status == 'approved':

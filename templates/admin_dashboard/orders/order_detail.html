@@ -49,7 +49,15 @@
                 </div>
                 <div class="info-item">
                     <span class="label">Payment Method</span>
-                    <span class="value">{{ order.payment_method|default:"-" }}</span>
+                    <span class="value">
+                        {% with payment=order.payments.first %}
+                            {% if payment %}
+                                {{ payment.get_method_display }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        {% endwith %}
+                    </span>
                 </div>
                 <div class="info-item">
                     <span class="label">Total Items</span>
@@ -106,8 +114,8 @@
                             {% for payment in payments %}
                             <tr>
                                 <td>{{ payment.id }}</td>
-                                <td>{{ payment.method|default:payment.payment_method }}</td>
-                                <td><span class="badge badge-pill">{{ payment.status|capfirst }}</span></td>
+                                <td>{{ payment.get_method_display }}</td>
+                                <td><span class="badge badge-pill">{{ payment.get_status_display }}</span></td>
                                 <td>₹{{ payment.amount|default:"0.00" }}</td>
                                 <td>{{ payment.created_at|date:"M d, Y H:i" }}</td>
                             </tr>
@@ -144,9 +152,9 @@
                         <tr>
                             <td>{{ item.variant.product.name }}</td>
                             <td>{{ item.variant.name|default:item.variant.sku }}</td>
-                            <td>₹{{ item.price }}</td>
+                            <td>₹{{ item.unit_price|floatformat:2 }}</td>
                             <td>{{ item.quantity }}</td>
-                            <td>₹{% widthratio item.price 1 item.quantity %}</td>
+                            <td>₹{% widthratio item.unit_price 1 item.quantity %}</td>
                         </tr>
                         {% empty %}
                         <tr>

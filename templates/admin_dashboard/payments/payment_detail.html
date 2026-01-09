@@ -58,7 +58,7 @@
                 <span class="info-label">Order Number:</span>
                 <span class="info-value">
                     <a href="{% url 'admin_dashboard:order_detail' payment.order.pk %}">
-                        #{{ payment.order.order_number }}
+                        #{{ payment.order.id|stringformat:"s"|slice:":8" }}
                     </a>
                 </span>
             </div>
