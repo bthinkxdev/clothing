@@ -216,26 +216,119 @@ class OrderInvoiceView(BaseAdminDetailView):
         return self.render_to_response(context)
     
     def generate_pdf_invoice(self, invoice_data):
-        """Generate PDF invoice (requires reportlab or weasyprint)"""
+        """Generate PDF invoice with ReportLab (pure Python, no GTK deps)"""
+        from io import BytesIO
+        from decimal import Decimal
+
         try:
-            from django.template.loader import render_to_string
-            from weasyprint import HTML
-            
-            html_string = render_to_string(
-                'admin_dashboard/orders/invoice_pdf.html',
-                invoice_data
+            from reportlab.lib import colors
+            from reportlab.lib.pagesizes import A4
+            from reportlab.lib.styles import getSampleStyleSheet
+            from reportlab.lib.units import mm
+            from reportlab.platypus import (
+                SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
             )
-            
-            pdf_file = HTML(string=html_string).write_pdf()
-            
-            response = HttpResponse(pdf_file, content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="invoice_{invoice_data["invoice_number"]}.pdf"'
-            
-            return response
-            
         except ImportError:
-            messages.error(self.request, 'PDF generation not available')
+            messages.error(self.request, 'PDF generation not available (install reportlab)')
             return redirect('admin_dashboard:order_detail', pk=self.object.pk)
+
+        def fmt_money(value):
+            try:
+                return f"₹{Decimal(value):,.2f}"
+            except Exception:
+                return f"₹{value}"
+
+        order = invoice_data.get('order')
+        items = list(invoice_data.get('items') or [])
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=18 * mm,
+            leftMargin=18 * mm,
+            topMargin=18 * mm,
+            bottomMargin=18 * mm,
+            title=f"Invoice {invoice_data.get('invoice_number')}"
+        )
+
+        styles = getSampleStyleSheet()
+        h1 = styles['Heading1']
+        h2 = styles['Heading2']
+        body = styles['BodyText']
+
+        elements = []
+
+        elements.append(Paragraph("Invoice", h1))
+        elements.append(Paragraph(invoice_data.get('invoice_number', ''), h2))
+        elements.append(Spacer(1, 6))
+        elements.append(Paragraph(f"Date: {invoice_data.get('invoice_date'):%Y-%m-%d}", body))
+        elements.append(Paragraph(f"Order ID: {order.id}", body))
+        elements.append(Paragraph(f"Customer: {order.user.username}", body))
+        elements.append(Paragraph(f"Email: {order.user.email}", body))
+
+        if order.address:
+            addr = order.address
+            address_lines = [
+                addr.full_name or '',
+                addr.line1 or '',
+                addr.line2 or '',
+                f"{addr.city or ''}, {addr.state or ''} {addr.postal_code or ''}",
+                addr.country or '',
+                f"Phone: {addr.phone}" if getattr(addr, 'phone', '') else ''
+            ]
+            address_lines = [line for line in address_lines if line and line.strip()]
+            elements.append(Paragraph("Shipping Address:", h2))
+            for line in address_lines:
+                elements.append(Paragraph(line, body))
+        elements.append(Spacer(1, 12))
+
+        # Items table
+        table_data = [["#", "Item", "Qty", "Unit Price", "Total"]]
+        for idx, item in enumerate(items, start=1):
+            product_name = getattr(item.variant.product, "name", str(item.variant))
+            qty = item.quantity
+            unit = fmt_money(item.unit_price)
+            line_total = fmt_money(item.line_total())
+            table_data.append([idx, product_name, qty, unit, line_total])
+
+        item_table = Table(table_data, hAlign='LEFT')
+        item_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
+            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ]))
+        elements.append(item_table)
+        elements.append(Spacer(1, 12))
+
+        # Totals summary
+        summary_rows = [
+            ["Subtotal", fmt_money(order.subtotal)],
+            ["Shipping", fmt_money(order.shipping_amount)],
+            ["Tax", fmt_money(order.tax_amount)],
+            ["Discount", f"-{fmt_money(order.discount_amount)}" if order.discount_amount else fmt_money(0)]
+        ]
+        summary_rows.append(["Total", fmt_money(order.total)])
+
+        summary_table = Table(summary_rows, colWidths=[80 * mm, 40 * mm], hAlign='RIGHT')
+        summary_table.setStyle(TableStyle([
+            ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('LINEABOVE', (0, -1), (-1, -1), 0.5, colors.black),
+        ]))
+        elements.append(summary_table)
+
+        doc.build(elements)
+
+        pdf = buffer.getvalue()
+        buffer.close()
+
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="invoice_{invoice_data.get("invoice_number")}.pdf"'
+        return response
 
 
 class OrderBulkUpdateView(BaseAdminAPIView):
