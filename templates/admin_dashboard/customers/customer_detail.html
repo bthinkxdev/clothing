@@ -19,8 +19,20 @@
             <a href="{% url 'admin_dashboard:customer_orders' customer.id %}" class="btn btn-primary"><i class="fas fa-shopping-bag"></i> Orders</a>
             <a href="{% url 'admin_dashboard:customer_cart' customer.id %}" class="btn btn-secondary"><i class="fas fa-shopping-cart"></i> Cart</a>
             <a href="{% url 'admin_dashboard:customer_wishlist' customer.id %}" class="btn btn-outline"><i class="fas fa-heart"></i> Wishlist</a>
+            <button type="button"
+                    class="btn btn-danger"
+                    data-action="toggle-customer-block"
+                    data-customer-id="{{ customer.id }}"
+                    data-blocked-text="Unblock"
+                    data-active-text="Block">
+                {% if customer.is_blocked %}Unblock{% else %}Block{% endif %}
+            </button>
         </div>
     </div>
+
+    <form id="customerActionsHelper" style="display:none;">
+        {% csrf_token %}
+    </form>
 
     <div class="stats-row">
         <div class="stat-card">
@@ -75,11 +87,11 @@
                     <span class="label">Status</span>
                     <span class="value">
                         {% if customer.is_blocked %}
-                        <span class="badge badge-danger">Blocked</span>
+                        <span class="badge badge-danger" data-customer-status>Blocked</span>
                         {% elif customer.is_active %}
-                        <span class="badge badge-success">Active</span>
+                        <span class="badge badge-success" data-customer-status>Active</span>
                         {% else %}
-                        <span class="badge">Inactive</span>
+                        <span class="badge" data-customer-status>Inactive</span>
                         {% endif %}
                     </span>
                 </div>

@@ -35,7 +35,7 @@
 
         selects.forEach(select => {
             select.addEventListener('change', () => {
-                filterTableRows(searchInput?.value, select.value);
+                filterTableRows(searchInput?.value, getSelectedStatus());
                 debouncedSubmit();
             });
         });

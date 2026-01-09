@@ -75,6 +75,8 @@ class CustomerListView(BaseAdminListView):
         context['total_customers'] = queryset.count()
         context['active_customers'] = queryset.filter(is_active=True, is_blocked=False).count()
         context['blocked_customers'] = queryset.filter(is_blocked=True).count()
+        # Ensure template has expected filter_options alias
+        context['filter_options'] = self.get_filter_options()
         
         return context
 
