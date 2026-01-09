@@ -1,7 +1,7 @@
 ﻿# admin_dashboard/views/other.py
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.db.models import Q, F, Count, Sum
+from django.db.models import Q, F, Count, Sum, ExpressionWrapper, IntegerField
 
 from .base import (
     BaseAdminListView, BaseAdminDetailView, BaseAdminCreateView,
@@ -33,19 +33,21 @@ class InventoryListView(BaseAdminListView):
         ]
     
     def get_queryset(self):
+        available_expr = ExpressionWrapper(F('quantity') - F('reserved'), output_field=IntegerField())
+
         queryset = super().get_queryset().select_related(
             'variant__product', 'variant'
-        )
+        ).annotate(available=available_expr)
         
         # Filters
         filter_type = self.request.GET.get('filter', 'all')
         
         if filter_type == 'low_stock':
-            queryset = queryset.filter(quantity__lte=F('low_stock_threshold'))
+            queryset = queryset.filter(available__gt=0, available__lte=F('low_stock_threshold'))
         elif filter_type == 'out_of_stock':
-            queryset = queryset.filter(quantity=0)
+            queryset = queryset.filter(available__lte=0)
         elif filter_type == 'in_stock':
-            queryset = queryset.filter(quantity__gt=0)
+            queryset = queryset.filter(available__gt=F('low_stock_threshold'))
         
         # Search
         search = self.request.GET.get('search', '')
@@ -56,7 +58,7 @@ class InventoryListView(BaseAdminListView):
             )
         
         # Ordering
-        order_by = self.request.GET.get('order_by', 'quantity')
+        order_by = self.request.GET.get('order_by', '-available')
         queryset = queryset.order_by(order_by)
         
         return queryset
@@ -66,11 +68,12 @@ class InventoryListView(BaseAdminListView):
         
         # Inventory summary
         from django.db.models import Sum
+        available_expr = ExpressionWrapper(F('quantity') - F('reserved'), output_field=IntegerField())
         
-        all_inventory = Inventory.objects.all()
+        all_inventory = Inventory.objects.all().annotate(available=available_expr)
         context['total_products'] = all_inventory.count()
-        context['low_stock_count'] = all_inventory.filter(quantity__lte=F('low_stock_threshold')).count()
-        context['out_of_stock_count'] = all_inventory.filter(quantity=0).count()
+        context['low_stock_count'] = all_inventory.filter(available__gt=0, available__lte=F('low_stock_threshold')).count()
+        context['out_of_stock_count'] = all_inventory.filter(available__lte=0).count()
         context['total_stock_value'] = InventoryManagementService.get_inventory_valuation()
         
         return context
@@ -107,9 +110,13 @@ class LowStockReportView(BaseAdminListView):
         ]
     
     def get_queryset(self):
-        return Inventory.objects.filter(
-            quantity__lte=F('low_stock_threshold')
-        ).select_related('variant__product').order_by('quantity')
+        available_expr = ExpressionWrapper(F('quantity') - F('reserved'), output_field=IntegerField())
+        return Inventory.objects.annotate(
+            available=available_expr
+        ).filter(
+            available__gt=0,
+            available__lte=F('low_stock_threshold')
+        ).select_related('variant__product').order_by('available', 'quantity')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

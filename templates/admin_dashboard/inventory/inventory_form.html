@@ -43,14 +43,6 @@
                     {% if form.low_stock_threshold.errors %}<div class="error-message">{{
                         form.low_stock_threshold.errors }}</div>{% endif %}
                 </div>
-
-                <div class="form-group">
-                    <label for="{{ form.reserved.id_for_label }}" class="form-label">
-                        <i class="fas fa-lock"></i> Reserved
-                    </label>
-                    {{ form.reserved }}
-                    <small class="form-help">Reserved quantity (readonly)</small>
-                </div>
             </div>
 
             <div class="form-actions">

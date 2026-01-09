@@ -6,6 +6,44 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'admin_dashboard/css/inventory.css' %}">
+<style>
+/* lightweight modal styles for inventory update */
+#inventoryModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+#inventoryModal.show {
+    display: flex;
+}
+#inventoryModal .modal-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.18);
+}
+#inventoryModal .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+#inventoryModal .modal-body .form-group {
+    margin-bottom: 14px;
+}
+#inventoryModal .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -72,12 +110,14 @@
         </div>
 
         <div class="filter-group">
+            {% with current_filter=request.GET.filter|default_if_none:'' %}
             <select class="filter-select" id="stockFilter">
-                <option value="">All Stock Levels</option>
-                <option value="in_stock">In Stock</option>
-                <option value="low_stock">Low Stock</option>
-                <option value="out_of_stock">Out of Stock</option>
+                <option value="" {% if not current_filter %}selected{% endif %}>All Stock Levels</option>
+                <option value="in_stock" {% if current_filter == 'in_stock' %}selected{% endif %}>In Stock</option>
+                <option value="low_stock" {% if current_filter == 'low_stock' %}selected{% endif %}>Low Stock</option>
+                <option value="out_of_stock" {% if current_filter == 'out_of_stock' %}selected{% endif %}>Out of Stock</option>
             </select>
+            {% endwith %}
         </div>
     </div>
 
@@ -89,9 +129,13 @@
                         <th>Product</th>
                         <th>SKU</th>
                         <th>Variant</th>
-                        <th>Quantity</th>
-                        <th>Reserved</th>
-                        <th>Available</th>
+                        <th class="sortable-header">
+                            <span>Available</span>
+                            <span class="sort-controls">
+                                <a href="?{% if request.GET.filter %}filter={{ request.GET.filter }}&{% endif %}order_by=-available" class="sort-btn" title="Sort high to low">&#9650;</a>
+                                <a href="?{% if request.GET.filter %}filter={{ request.GET.filter }}&{% endif %}order_by=available" class="sort-btn" title="Sort low to high">&#9660;</a>
+                            </span>
+                        </th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -110,27 +154,32 @@
                                 {{ item.variant.size|default:"—" }} / {{ item.variant.color|default:"—" }}
                             </span>
                         </td>
-                        <td><strong>{{ item.quantity }}</strong></td>
-                        <td class="text-muted">{{ item.reserved }}</td>
                         <td><strong>{{ item.available_stock }}</strong></td>
                         <td>
-                            {% if item.quantity == 0 %}
-                            <span class="stock-badge stock-out">Out of Stock</span>
-                            {% elif item.quantity <= item.low_stock_threshold %} <span class="stock-badge stock-low">Low
-                                Stock</span>
+                            {% with available=item.available_stock %}
+                                {% if available <= 0 %}
+                                    <span class="stock-badge stock-out">Out of Stock</span>
+                                {% elif available <= item.low_stock_threshold %}
+                                    <span class="stock-badge stock-low">Low Stock</span>
                                 {% else %}
-                                <span class="stock-badge stock-in">In Stock</span>
+                                    <span class="stock-badge stock-in">In Stock</span>
                                 {% endif %}
+                            {% endwith %}
                         </td>
                         <td>
-                            <a href="{% url 'admin_dashboard:inventory_update' item.pk %}" class="btn-icon btn-edit">
+                            <button type="button"
+                                class="btn-icon btn-edit open-inventory-modal"
+                                data-action="{% url 'admin_dashboard:inventory_update' item.pk %}"
+                                data-quantity="{{ item.quantity }}"
+                                data-threshold="{{ item.low_stock_threshold }}"
+                                data-name="{{ item.variant.product.name }}">
                                 <i class="fas fa-edit"></i>
-                            </a>
+                            </button>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center py-5">
+                    <tr class="empty-row">
+                        <td colspan="6" class="text-center py-5">
                             <p class="text-muted">No inventory items found</p>
                         </td>
                     </tr>
@@ -138,6 +187,39 @@
                 </tbody>
             </table>
         </div>
+    </div>
+</div>
+<!-- Inventory edit modal -->
+<div id="inventoryModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div>
+                <h3 class="mb-0"><i class="fas fa-edit"></i> Update Inventory</h3>
+                <div class="text-muted" id="inventoryModalSubtitle"></div>
+            </div>
+            <button type="button" class="btn btn-link p-0 inventory-modal-close" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="inventoryEditForm" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label required" for="inventoryQuantity">Quantity</label>
+                    <input type="number" name="quantity" id="inventoryQuantity" class="form-control" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="inventoryThreshold">Low Stock Threshold</label>
+                    <input type="number" name="low_stock_threshold" id="inventoryThreshold" class="form-control" min="0">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary inventory-modal-close">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

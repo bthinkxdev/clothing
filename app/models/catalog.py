@@ -132,7 +132,7 @@ class ProductVariant(models.Model):
     def available_stock(self) -> int:
         inv = getattr(self, "inventory", None)
         if inv:
-            return inv.quantity
+            return inv.available_stock
         return 0
 
 
@@ -144,6 +144,11 @@ class Inventory(models.Model):
 
     def __str__(self):
         return f"{self.variant.sku} - {self.quantity} in stock"
+
+    @property
+    def available_stock(self) -> int:
+        """Return non-negative available stock after reserved quantity."""
+        return max(self.quantity - self.reserved, 0)
 
     def is_low(self) -> bool:
         return self.quantity - self.reserved <= self.low_stock_threshold

@@ -165,11 +165,10 @@ class InventoryForm(forms.ModelForm):
     
     class Meta:
         model = Inventory
-        fields = ['quantity', 'low_stock_threshold', 'reserved']
+        fields = ['quantity', 'low_stock_threshold']
         widgets = {
             'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
             'low_stock_threshold': forms.NumberInput(attrs={'class': 'form-control'}),
-            'reserved': forms.NumberInput(attrs={'class': 'form-control', 'readonly': True}),
         }
     
     def clean_quantity(self):

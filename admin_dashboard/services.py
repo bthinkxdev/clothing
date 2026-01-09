@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
 from django.db.models import (
     Sum, Count, Avg, Q, F, FloatField, DecimalField,
-    ExpressionWrapper, Case, When, Value
+    ExpressionWrapper, Case, When, Value, IntegerField
 )
 from django.db.models.functions import TruncDate, TruncMonth, Coalesce
 from django.utils import timezone
@@ -75,8 +75,13 @@ class DashboardAnalyticsService:
 
         pending_orders = Order.objects.filter(status__in=['pending', 'paid']).count()
 
-        low_stock_count = Inventory.objects.filter(
-            quantity__lte=F('low_stock_threshold')
+        available_expr = ExpressionWrapper(F('quantity') - F('reserved'), output_field=IntegerField())
+
+        low_stock_count = Inventory.objects.annotate(
+            available=available_expr
+        ).filter(
+            available__gt=0,
+            available__lte=F('low_stock_threshold')
         ).count()
 
         top_products = OrderItem.objects.filter(
@@ -586,12 +591,14 @@ class InventoryManagementService:
     @staticmethod
     def get_low_stock_products(threshold: int = None) -> List[Dict]:
         """Get products with low stock"""
-        query = Inventory.objects.select_related('variant__product')
+        available_expr = ExpressionWrapper(F('quantity') - F('reserved'), output_field=IntegerField())
+
+        query = Inventory.objects.select_related('variant__product').annotate(available=available_expr)
         
-        if threshold:
-            query = query.filter(quantity__lte=threshold)
+        if threshold is not None:
+            query = query.filter(available__gt=0, available__lte=threshold)
         else:
-            query = query.filter(quantity__lte=F('low_stock_threshold'))
+            query = query.filter(available__gt=0, available__lte=F('low_stock_threshold'))
         
         low_stock = query.annotate(
             product_name=F('variant__product__name'),
@@ -600,8 +607,8 @@ class InventoryManagementService:
             color=F('variant__color')
         ).values(
             'id', 'product_name', 'sku', 'size', 'color',
-            'quantity', 'low_stock_threshold', 'reserved'
-        ).order_by('quantity')
+            'quantity', 'low_stock_threshold', 'reserved', 'available'
+        ).order_by('available', 'quantity')
         
         return list(low_stock)
     
