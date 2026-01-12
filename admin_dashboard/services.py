@@ -656,21 +656,30 @@ class CouponManagementService:
     @staticmethod
     def get_coupon_usage_stats(coupon_id: int) -> Dict:
         """Get usage statistics for a coupon"""
-        coupon = Coupon.objects.prefetch_related('usages').get(id=coupon_id)
+        coupon = Coupon.objects.prefetch_related('usages__order').get(id=coupon_id)
         
-        usages = coupon.usages.all()
+        # Filter usages that have orders
+        usages = coupon.usages.filter(order__isnull=False)
+        
+        # Calculate total discount given
         total_discount = usages.aggregate(
             total=Coalesce(Sum('order__discount_amount'), Decimal('0.00'))
+        )['total']
+        
+        # Calculate total revenue from orders with this coupon
+        total_revenue = usages.aggregate(
+            total=Coalesce(Sum('order__total'), Decimal('0.00'))
         )['total']
         
         unique_users = usages.values('user').distinct().count()
         
         return {
             'coupon': coupon,
-            'total_uses': usages.count(),
+            'total_uses': coupon.usages.count(),  # All usages
             'unique_users': unique_users,
             'total_discount_given': float(total_discount),
-            'remaining_uses': (coupon.max_usage - usages.count()) if coupon.max_usage else None
+            'total_revenue': float(total_revenue),
+            'remaining_uses': (coupon.max_usage - coupon.usages.count()) if coupon.max_usage else None
         }
     
     @staticmethod

@@ -10,6 +10,7 @@
 
 {% block content %}
 <div class="coupon-management">
+    {% csrf_token %}
     <!-- Page Header -->
     <div class="page-header">
         <div class="header-content">
@@ -56,10 +57,10 @@
 
         <div class="filter-group">
             <select class="filter-select" id="statusFilter">
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="expired">Expired</option>
-                <option value="inactive">Inactive</option>
+                <option value="" {% if request.GET.status == '' or not request.GET.status %}selected{% endif %}>All Status</option>
+                <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Expired</option>
+                <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
             </select>
         </div>
     </div>
@@ -75,7 +76,9 @@
                 </div>
                 <div class="coupon-toggle">
                     <label class="switch">
-                        <input type="checkbox" {% if coupon.active %}checked{% endif %} data-coupon-id="{{ coupon.id }}"
+                        <input type="checkbox" {% if coupon.active %}checked{% endif %} 
+                            data-coupon-id="{{ coupon.id }}"
+                            data-toggle-url="{% url 'admin_dashboard:coupon_toggle' coupon.id %}"
                             class="coupon-toggle-input">
                         <span class="slider"></span>
                     </label>
@@ -84,7 +87,7 @@
 
             <div class="coupon-body">
                 <div class="coupon-value">
-                    {% if coupon.coupon_type == 'percentage' %}
+                    {% if coupon.coupon_type == 'percent' %}
                     <span class="value-large">{{ coupon.value }}%</span>
                     <span class="value-label">OFF</span>
                     {% else %}

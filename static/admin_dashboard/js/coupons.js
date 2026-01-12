@@ -29,41 +29,39 @@ function filterCoupons() {
     const searchTerm = document.getElementById('couponSearch')?.value.toLowerCase() || '';
     const statusFilter = document.getElementById('statusFilter')?.value || '';
 
-    const cards = document.querySelectorAll('.coupon-card');
-
-    cards.forEach(card => {
-        const code = card.querySelector('.coupon-code span')?.textContent.toLowerCase() || '';
-        const description = card.querySelector('.coupon-description')?.textContent.toLowerCase() || '';
-        const isActive = card.querySelector('.coupon-toggle-input')?.checked;
-
-        const matchesSearch = code.includes(searchTerm) || description.includes(searchTerm);
-        let matchesStatus = true;
-
-        if (statusFilter === 'active') {
-            matchesStatus = isActive;
-        } else if (statusFilter === 'inactive') {
-            matchesStatus = !isActive;
-        }
-
-        if (matchesSearch && matchesStatus) {
-            card.style.display = '';
-        } else {
-            card.style.display = 'none';
-        }
-    });
+    const url = new URL(window.location.href);
+    
+    // Handle status filter
+    if (statusFilter && statusFilter !== '') {
+        url.searchParams.set('status', statusFilter);
+    } else {
+        // If "All Status" is selected, remove the status parameter
+        url.searchParams.delete('status');
+    }
+    
+    // Handle search
+    if (searchTerm) {
+        url.searchParams.set('search', searchTerm);
+    } else {
+        url.searchParams.delete('search');
+    }
+    
+    // Reload the page with updated parameters
+    window.location.href = url.toString();
 }
 
 // Handle coupon toggle
 async function handleCouponToggle(e) {
     const input = e.target;
     const couponId = input.dataset.couponId;
+    const toggleUrl = input.dataset.toggleUrl;  
     const isActive = input.checked;
 
     try {
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
             getCookie('csrftoken');
 
-        const response = await fetch(`/admin-dashboard/coupons/${couponId}/toggle/`, {
+        const response = await fetch(toggleUrl, {  // use toggleUrl
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrfToken,
@@ -74,6 +72,8 @@ async function handleCouponToggle(e) {
         if (response.ok) {
             const data = await response.json();
             showNotification(data.message || 'Coupon status updated', 'success');
+            // Update active coupon count
+            updateActiveCouponCount(isActive);
         } else {
             throw new Error('Failed to toggle coupon');
         }
@@ -157,4 +157,18 @@ if (couponForm) {
             return false;
         }
     });
+}
+
+// Update active coupon count
+function updateActiveCouponCount(isActive) {
+    const activeCountElement = document.querySelector('.stat-card:nth-child(2) h3');
+    if (activeCountElement) {
+        let currentCount = parseInt(activeCountElement.textContent);
+        if (isActive) {
+            currentCount += 1;  // Toggled on
+        } else {
+            currentCount -= 1;  // Toggled off
+        }
+        activeCountElement.textContent = currentCount;
+    }
 }

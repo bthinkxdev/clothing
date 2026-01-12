@@ -46,7 +46,7 @@
             <div class="info-row">
                 <span class="info-label">Value:</span>
                 <span class="info-value discount-value">
-                    {% if coupon.coupon_type == 'percentage' %}
+                    {% if coupon.coupon_type == 'percent' %}
                     {{ coupon.value }}%
                     {% else %}
                     ₹{{ coupon.value }}
@@ -86,7 +86,7 @@
                 </div>
                 <div class="stat-content">
                     <span class="stat-label">Total Uses</span>
-                    <h3>{{ total_uses }}</h3>
+                    <h3>{{ total_uses|default:"0" }}</h3>
                 </div>
             </div>
 
@@ -96,7 +96,7 @@
                 </div>
                 <div class="stat-content">
                     <span class="stat-label">Total Discount Given</span>
-                    <h3>₹{{ total_discount|floatformat:2 }}</h3>
+                    <h3>₹{{ total_discount_given|floatformat:2 }}</h3>
                 </div>
             </div>
 
@@ -137,13 +137,21 @@
                                 {{ usage.user.get_full_name|default:usage.user.username }}
                             </a>
                         </td>
-                        <td>
-                            <a href="{% url 'admin_dashboard:order_detail' usage.order.pk %}">
-                                #{{ usage.order.order_number }}
-                            </a>
+                          <td>
+                                {% if usage.order %}
+                                    <a href="{% url 'admin_dashboard:order_detail' usage.order.pk %}">
+                                        #{{ usage.order.id|stringformat:"s"|slice:":8" }}
+                                    </a>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        <td class="text-success">
+                            {% if usage.order %}-₹{{ usage.order.discount_amount|floatformat:2 }}{% else %}N/A{% endif %}
                         </td>
-                        <td class="text-success">-₹{{ usage.discount_amount|floatformat:2 }}</td>
-                        <td>₹{{ usage.order.total_amount|floatformat:2 }}</td>
+                        <td>
+                            {% if usage.order %}₹{{ usage.order.total|floatformat:2 }}{% else %}N/A{% endif %}
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
