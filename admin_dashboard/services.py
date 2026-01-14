@@ -13,7 +13,8 @@ from app.models import (
     Order, OrderItem, Product, ProductVariant, User,
     Payment, Category, Inventory, Cart, Wishlist, Coupon, Review
 )
-
+import openpyxl
+from io import BytesIO
 
 class DashboardAnalyticsService:
     """Service for dashboard analytics and statistics"""
@@ -72,6 +73,46 @@ class DashboardAnalyticsService:
             current_avg_order_value,
             previous_avg_order_value
         )
+        # Customer Retention Rate (customers who ordered in both periods)
+        current_customers = set(current_orders.values_list('user_id', flat=True))
+        prev_customers = set(prev_orders.values_list('user_id', flat=True))
+        repeat_customers = current_customers.intersection(prev_customers)
+        retention_rate = (len(repeat_customers) / len(prev_customers) * 100) if prev_customers else 0
+        
+        prev_prev_start = prev_start - period_delta
+        prev_prev_orders = Order.objects.filter(placed_at__range=[prev_prev_start, prev_start])
+        prev_prev_customers = set(prev_prev_orders.values_list('user_id', flat=True))
+        prev_repeat = prev_customers.intersection(prev_prev_customers)
+        prev_retention_rate = (len(prev_repeat) / len(prev_prev_customers) * 100) if prev_prev_customers else 0
+        retention_change = _percent_change(retention_rate, prev_retention_rate)
+        
+        # Average Response Time (using order processing time as proxy)
+        avg_processing_time = current_orders.filter(
+            status__in=['processing', 'shipped', 'delivered']
+        ).annotate(
+            processing_time=F('updated_at') - F('placed_at')
+        ).aggregate(avg_time=Avg('processing_time'))['avg_time']
+        
+        avg_response_hours = (avg_processing_time.total_seconds() / 3600) if avg_processing_time else 0
+        
+        # Cart Abandonment Rate
+        from app.models import Cart
+        active_carts = Cart.objects.filter(
+            updated_at__range=[start_date, end_date],
+            is_active=True
+        ).count()
+        completed_orders = current_orders.exclude(status__in=['cancelled']).count()
+        total_carts = active_carts + completed_orders
+        abandonment_rate = (active_carts / total_carts * 100) if total_carts else 0
+        
+        prev_active_carts = Cart.objects.filter(
+            updated_at__range=[prev_start, prev_end],
+            is_active=True
+        ).count()
+        prev_completed = prev_orders.exclude(status__in=['cancelled']).count()
+        prev_total_carts = prev_active_carts + prev_completed
+        prev_abandonment = (prev_active_carts / prev_total_carts * 100) if prev_total_carts else 0
+        abandonment_change = abs(_percent_change(abandonment_rate, prev_abandonment))
 
         pending_orders = Order.objects.filter(status__in=['pending', 'paid']).count()
 
@@ -154,6 +195,12 @@ class DashboardAnalyticsService:
                 } for product in top_products
             ],
             'payment_methods': payment_methods,
+            # Coustomer rettention, Avg response time, Abandonment Rate
+            'retention_rate': retention_rate,
+            'retention_change': retention_change,
+            'avg_response_hours': avg_response_hours,
+            'cart_abandonment_rate': abandonment_rate,
+            'abandonment_change': abandonment_change,
         }
 
         return result
@@ -262,6 +309,65 @@ class DashboardAnalyticsService:
             'order_count': customer.order_count,
             'avg_order_value': float(customer.total_spent / customer.order_count) if customer.order_count > 0 else 0
         } for customer in top_customers]
+    
+    @staticmethod
+    def get_sales_by_region(start_date, end_date):
+        """Get sales grouped by state/region from order addresses"""
+        from django.db.models import Sum, Count, Q
+        from datetime import timedelta
+        from app.models import Order
+        
+        # Query orders with addresses, group by state
+        sales_by_region = Order.objects.filter(
+            placed_at__gte=start_date,
+            placed_at__lte=end_date,
+            address__isnull=False,
+            status__in=['paid', 'processing', 'shipped', 'delivered']
+        ).values(
+            'address__state'
+        ).annotate(
+            total_revenue=Sum('total'),
+            order_count=Count('id')
+        ).order_by('-total_revenue')[:10]  # Top 10 states
+        
+        # Calculate previous period for growth comparison
+        period_duration = (end_date - start_date).days
+        previous_start = start_date - timedelta(days=period_duration)
+        previous_end = start_date
+        
+        result = []
+        max_revenue = float(sales_by_region[0]['total_revenue']) if sales_by_region else 1
+        
+        for region in sales_by_region:
+            state_name = region['address__state']
+            if not state_name:
+                continue
+                
+            current_revenue = float(region['total_revenue'])
+            
+            # Get previous period revenue for this state
+            previous_revenue = Order.objects.filter(
+                placed_at__gte=previous_start,
+                placed_at__lt=previous_end,
+                address__state=state_name,
+                status__in=['paid', 'processing', 'shipped', 'delivered']
+            ).aggregate(total=Sum('total'))['total'] or 0
+            
+            # Calculate growth percentage
+            if previous_revenue > 0:
+                growth = ((current_revenue - float(previous_revenue)) / float(previous_revenue)) * 100
+            else:
+                growth = 100.0 if current_revenue > 0 else 0.0
+            
+            result.append({
+                'state': state_name,
+                'revenue': current_revenue,
+                'order_count': region['order_count'],
+                'percentage': (current_revenue / max_revenue * 100) if max_revenue > 0 else 0,
+                'growth': round(growth, 1)
+            })
+        
+        return result
 
 
 class SalesReportService:
@@ -421,7 +527,52 @@ class SalesReportService:
             ])
         
         return output.getvalue()
-
+    
+    @staticmethod
+    def export_sales_report_excel(start_date: datetime, end_date: datetime):
+        """Generate Excel export of sales report"""
+          
+        # Create workbook
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Sales Report"
+        
+        # Headers
+        headers = ['Order ID', 'Date', 'Customer', 'Status', 'Items', 'Subtotal', 'Discount', 'Shipping', 'Tax', 'Total', 'Payment Method']
+        ws.append(headers)
+        
+        # Data
+        orders = Order.objects.filter(
+            placed_at__range=[start_date, end_date]
+        ).select_related('user').prefetch_related('items', 'payments')
+        
+        for order in orders:
+            payment_method = order.payments.first().get_method_display() if order.payments.exists() else 'N/A'
+            ws.append([
+                str(order.id),
+                order.placed_at.strftime('%Y-%m-%d %H:%M'),
+                order.user.username,
+                order.get_status_display(),
+                order.items.count(),
+                float(order.subtotal),
+                float(order.discount_amount),
+                float(order.shipping_amount),
+                float(order.tax_amount),
+                float(order.total),
+                payment_method
+            ])
+        
+        # Style headers
+        for col in range(1, len(headers) + 1):
+            cell = ws.cell(1, col)
+            cell.font = openpyxl.styles.Font(bold=True)
+        
+        # Save to bytes
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        return output.getvalue()
 
 class OrderManagementService:
     """Service for order management operations"""

@@ -38,15 +38,22 @@
                 <span class="metric-label">Conversion Rate</span>
                 <i class="fas fa-percentage metric-icon"></i>
             </div>
-            <div class="metric-value">3.47%</div>
+            <div class="metric-value">
+                {% if stats.total_orders > 0 %}
+                    {{ stats.total_orders|floatformat:2 }}
+                {% else %}
+                    0.00
+                {% endif %}%
+            </div>
             <div class="metric-footer">
-                <span class="metric-change positive">
-                    <i class="fas fa-arrow-up"></i> 0.23%
+                <span class="metric-change {% if stats.orders_change >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="fas fa-arrow-{% if stats.orders_change >= 0 %}up{% else %}down{% endif %}"></i> 
+                    {{ stats.orders_change|floatformat:2 }}%
                 </span>
                 <span class="metric-period">vs last period</span>
             </div>
             <div class="metric-progress">
-                <div class="progress-bar" style="width: 65%"></div>
+                <div class="progress-bar" style="width: {% widthratio stats.total_orders 100 100 %}%"></div>
             </div>
         </div>
         
@@ -55,15 +62,16 @@
                 <span class="metric-label">Customer Retention</span>
                 <i class="fas fa-users metric-icon"></i>
             </div>
-            <div class="metric-value">68.2%</div>
+            <div class="metric-value">{{ stats.retention_rate|floatformat:1 }}%</div>
             <div class="metric-footer">
-                <span class="metric-change positive">
-                    <i class="fas fa-arrow-up"></i> 5.1%
+                <span class="metric-change {% if stats.retention_change >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="fas fa-arrow-{% if stats.retention_change >= 0 %}up{% else %}down{% endif %}"></i> 
+                    {{ stats.retention_change|floatformat:1 }}%
                 </span>
                 <span class="metric-period">vs last period</span>
             </div>
             <div class="metric-progress">
-                <div class="progress-bar" style="width: 68%"></div>
+                <div class="progress-bar" style="width: {{ stats.retention_rate|floatformat:0 }}%"></div>
             </div>
         </div>
         
@@ -72,10 +80,10 @@
                 <span class="metric-label">Avg Response Time</span>
                 <i class="fas fa-clock metric-icon"></i>
             </div>
-            <div class="metric-value">2.4h</div>
+            <div class="metric-value">{{ stats.avg_response_hours|floatformat:1 }}h</div>
             <div class="metric-footer">
-                <span class="metric-change negative">
-                    <i class="fas fa-arrow-down"></i> 0.5h
+                <span class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i> Better
                 </span>
                 <span class="metric-period">vs last period</span>
             </div>
@@ -89,15 +97,16 @@
                 <span class="metric-label">Cart Abandonment</span>
                 <i class="fas fa-shopping-cart metric-icon"></i>
             </div>
-            <div class="metric-value">24.8%</div>
+            <div class="metric-value">{{ stats.cart_abandonment_rate|floatformat:1 }}%</div>
             <div class="metric-footer">
-                <span class="metric-change positive">
-                    <i class="fas fa-arrow-down"></i> 3.2%
+                <span class="metric-change {% if stats.abandonment_change <= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="fas fa-arrow-{% if stats.abandonment_change <= 0 %}down{% else %}up{% endif %}"></i> 
+                    {% comment %} {{ stats.abandonment_change|abs|floatformat:1 }}% {% endcomment %}
                 </span>
                 <span class="metric-period">vs last period</span>
             </div>
             <div class="metric-progress">
-                <div class="progress-bar bg-success" style="width: 75%"></div>
+                <div class="progress-bar bg-success" style="width: {% widthratio stats.cart_abandonment_rate 100 100 %}%"></div>
             </div>
         </div>
     </div>
@@ -120,7 +129,7 @@
         </div>
         
         <!-- Traffic Sources -->
-        <div class="chart-card">
+        {% comment %} <div class="chart-card">
             <div class="card-header">
                 <h3>Traffic Sources</h3>
             </div>
@@ -149,7 +158,7 @@
                     <span class="traffic-value">12%</span>
                 </div>
             </div>
-        </div>
+        </div> {% endcomment %}
         
         <!-- Customer Demographics -->
         <div class="chart-card">
@@ -177,76 +186,8 @@
                 <h3>Sales by Region</h3>
             </div>
             <div class="card-body">
-                <div class="region-stats">
-                    <div class="region-item">
-                        <div class="region-header">
-                            <span class="region-name">Maharashtra</span>
-                            <span class="region-value">₹1,245,890</span>
-                        </div>
-                        <div class="region-bar">
-                            <div class="region-progress" style="width: 85%"></div>
-                        </div>
-                        <div class="region-meta">
-                            <span>2,450 orders</span>
-                            <span class="region-growth positive">+12.5%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="region-item">
-                        <div class="region-header">
-                            <span class="region-name">Karnataka</span>
-                            <span class="region-value">₹985,420</span>
-                        </div>
-                        <div class="region-bar">
-                            <div class="region-progress" style="width: 68%"></div>
-                        </div>
-                        <div class="region-meta">
-                            <span>1,890 orders</span>
-                            <span class="region-growth positive">+8.2%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="region-item">
-                        <div class="region-header">
-                            <span class="region-name">Delhi NCR</span>
-                            <span class="region-value">₹875,320</span>
-                        </div>
-                        <div class="region-bar">
-                            <div class="region-progress" style="width: 60%"></div>
-                        </div>
-                        <div class="region-meta">
-                            <span>1,654 orders</span>
-                            <span class="region-growth positive">+15.8%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="region-item">
-                        <div class="region-header">
-                            <span class="region-name">Tamil Nadu</span>
-                            <span class="region-value">₹765,890</span>
-                        </div>
-                        <div class="region-bar">
-                            <div class="region-progress" style="width: 52%"></div>
-                        </div>
-                        <div class="region-meta">
-                            <span>1,432 orders</span>
-                            <span class="region-growth positive">+6.4%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="region-item">
-                        <div class="region-header">
-                            <span class="region-name">Gujarat</span>
-                            <span class="region-value">₹654,210</span>
-                        </div>
-                        <div class="region-bar">
-                            <div class="region-progress" style="width: 45%"></div>
-                        </div>
-                        <div class="region-meta">
-                            <span>1,245 orders</span>
-                            <span class="region-growth negative">-2.3%</span>
-                        </div>
-                    </div>
+                <div class="region-stats" id="regionStats">
+                    <!-- Will be populated by JavaScript -->
                 </div>
             </div>
         </div>
@@ -257,17 +198,8 @@
                 <h3>Top Customers (LTV)</h3>
             </div>
             <div class="card-body">
-                <div class="customer-ltv-list">
-                    {% for customer in customer_ltv|slice:":10" %}
-                    <div class="ltv-item">
-                        <div class="ltv-rank">{{ forloop.counter }}</div>
-                        <div class="ltv-info">
-                            <h4>{{ customer.username }}</h4>
-                            <span>{{ customer.order_count }} orders</span>
-                        </div>
-                        <div class="ltv-value">₹{{ customer.total_spent|floatformat:2 }}</div>
-                    </div>
-                    {% endfor %}
+                <div class="customer-ltv-list" id="customerLtvList">
+                    <!-- Will be populated by JavaScript -->
                 </div>
             </div>
         </div>
@@ -315,6 +247,76 @@
 {% block extra_js %}
 <script src="{% static 'admin_dashboard/js/analytics.js' %}"></script>
 <script>
+    window.analyticsData = {
+        salesTrend: {{ sales_trend_json|safe }},
+        categoryRevenue: {{ category_revenue_json|safe }},
+        customerLtv: {{ customer_ltv_json|safe }},
+        orderStatus: {{ order_status_json|safe }},
+        salesByRegion: {{ sales_by_region_json|safe }},  
+        period: '{{ period }}',
+        stats: {
+            totalRevenue: {{ stats.total_revenue }},
+            totalOrders: {{ stats.total_orders }},
+            avgOrderValue: {{ stats.avg_order_value }},
+            retentionRate: {{ stats.retention_rate }},
+            avgResponseHours: {{ stats.avg_response_hours }},
+            cartAbandonmentRate: {{ stats.cart_abandonment_rate }}
+        }
+    };
+    
+    // Populate Sales by Region
+    document.addEventListener('DOMContentLoaded', function() {
+        // Existing Customer LTV code...
+        const ltvContainer = document.getElementById('customerLtvList');
+        const customers = window.analyticsData.customerLtv || [];
+        
+        if (customers.length === 0) {
+            ltvContainer.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">No customer data available</p>';
+        } else {
+            ltvContainer.innerHTML = customers.map((customer, index) => `
+                <div class="ltv-item">
+                    <div class="ltv-rank">${index + 1}</div>
+                    <div class="ltv-info">
+                        <h4>${customer.username}</h4>
+                        <span>${customer.order_count} orders</span>
+                    </div>
+                    <div class="ltv-value">₹${parseFloat(customer.total_spent).toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+        
+        // Populate Sales by Region
+        const regionContainer = document.getElementById('regionStats');
+        const regions = window.analyticsData.salesByRegion || [];
+        
+        if (regions.length === 0) {
+            regionContainer.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">No regional sales data available</p>';
+        } else {
+            regionContainer.innerHTML = regions.map((region) => {
+                const growthClass = region.growth >= 0 ? 'positive' : 'negative';
+                const growthIcon = region.growth >= 0 ? 'up' : 'down';
+                
+                return `
+                    <div class="region-item">
+                        <div class="region-header">
+                            <span class="region-name">${region.state}</span>
+                            <span class="region-value">₹${parseFloat(region.revenue).toLocaleString('en-IN', {maximumFractionDigits: 0})}</span>
+                        </div>
+                        <div class="region-bar">
+                            <div class="region-progress" style="width: ${region.percentage}%"></div>
+                        </div>
+                        <div class="region-meta">
+                            <span>${region.order_count.toLocaleString()} orders</span>
+                            <span class="region-growth ${growthClass}">
+                                ${region.growth >= 0 ? '+' : ''}${region.growth}%
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    });
+    
     initializeAnalytics();
 </script>
 {% endblock %}

@@ -72,8 +72,8 @@
             </div>
             <div class="summary-content">
                 <span class="summary-label">Total Revenue</span>
-                <h2>₹{{ report.overall.total_revenue|floatformat:2 }}</h2>
-                <span class="summary-meta">{{ report.overall.total_orders }} orders</span>
+                <h2>₹{{ raw_report.overall.total_revenue|floatformat:2 }}</h2>
+                <span class="summary-meta">{{ raw_report.overall.total_orders }} orders</span>
             </div>
         </div>
         
@@ -83,7 +83,7 @@
             </div>
             <div class="summary-content">
                 <span class="summary-label">Items Sold</span>
-                <h2>{{ report.overall.total_items_sold|floatformat:0 }}</h2>
+                <h2>{{ raw_report.overall.total_items_sold|floatformat:0 }}</h2>
                 <span class="summary-meta">Across all products</span>
             </div>
         </div>
@@ -94,7 +94,7 @@
             </div>
             <div class="summary-content">
                 <span class="summary-label">Avg Order Value</span>
-                <h2>₹{{ report.overall.avg_order_value|floatformat:2 }}</h2>
+                <h2>₹{{ raw_report.overall.avg_order_value|floatformat:2 }}</h2>
                 <span class="summary-meta">Per transaction</span>
             </div>
         </div>
@@ -105,7 +105,7 @@
             </div>
             <div class="summary-content">
                 <span class="summary-label">Total Discount</span>
-                <h2>₹{{ report.overall.total_discount|floatformat:2 }}</h2>
+                <h2>₹{{ raw_report.overall.total_discount|floatformat:2 }}</h2>
                 <span class="summary-meta">Coupons & offers</span>
             </div>
         </div>
@@ -136,18 +136,18 @@
                     <div class="comparison-stats">
                         <div class="stat-row">
                             <span>Orders:</span>
-                            <strong>{{ report.cod_vs_online.cod.count }}</strong>
+                            <strong>{{ raw_report.cod_vs_online.cod.count }}</strong>
                         </div>
                         <div class="stat-row">
                             <span>Revenue:</span>
-                            <strong>₹{{ report.cod_vs_online.cod.revenue|floatformat:2 }}</strong>
+                            <strong>₹{{ raw_report.cod_vs_online.cod.revenue|floatformat:2 }}</strong>
                         </div>
                     </div>
                     <div class="comparison-bar">
-                        <div class="bar-fill bg-success" style="width: {% widthratio report.cod_vs_online.cod.revenue report.overall.total_revenue 100 %}%"></div>
+                        <div class="bar-fill bg-success" style="width: {% widthratio raw_report.cod_vs_online.cod.revenue raw_report.overall.total_revenue 100 %}%"></div>
                     </div>
                     <div class="comparison-percentage">
-                        {% widthratio report.cod_vs_online.cod.revenue report.overall.total_revenue 100 %}%
+                        {% widthratio raw_report.cod_vs_online.cod.revenue raw_report.overall.total_revenue 100 %}%
                     </div>
                 </div>
                 
@@ -159,18 +159,18 @@
                     <div class="comparison-stats">
                         <div class="stat-row">
                             <span>Orders:</span>
-                            <strong>{{ report.cod_vs_online.online.count }}</strong>
+                            <strong>{{ raw_report.cod_vs_online.online.count }}</strong>
                         </div>
                         <div class="stat-row">
                             <span>Revenue:</span>
-                            <strong>₹{{ report.cod_vs_online.online.revenue|floatformat:2 }}</strong>
+                            <strong>₹{{ raw_report.cod_vs_online.online.revenue|floatformat:2 }}</strong>
                         </div>
                     </div>
                     <div class="comparison-bar">
-                        <div class="bar-fill bg-primary" style="width: {% widthratio report.cod_vs_online.online.revenue report.overall.total_revenue 100 %}%"></div>
+                        <div class="bar-fill bg-primary" style="width: {% widthratio raw_report.cod_vs_online.online.revenue raw_report.overall.total_revenue 100 %}%"></div>
                     </div>
                     <div class="comparison-percentage">
-                        {% widthratio report.cod_vs_online.online.revenue report.overall.total_revenue 100 %}%
+                        {% widthratio raw_report.cod_vs_online.online.revenue raw_report.overall.total_revenue 100 %}%
                     </div>
                 </div>
             </div>
@@ -188,15 +188,15 @@
                             <i class="fas fa-times-circle"></i>
                         </div>
                         <div class="cancel-info">
-                            <h4>{{ report.cancellations.count }}</h4>
+                            <h4>{{ raw_report.cancellations.count }}</h4>
                             <span>Cancelled Orders</span>
                         </div>
-                        <div class="cancel-amount">₹{{ report.cancellations.amount|floatformat:2 }}</div>
+                        <div class="cancel-amount">₹{{ raw_report.cancellations.amount|floatformat:2 }}</div>
                     </div>
                     
                     <div class="cancel-rate">
                         <span>Cancellation Rate:</span>
-                        <strong>{% widthratio report.cancellations.count report.overall.total_orders 100 %}%</strong>
+                        <strong>{% widthratio raw_report.cancellations.count raw_report.overall.total_orders 100 %}%</strong>
                     </div>
                 </div>
             </div>
@@ -254,7 +254,7 @@
 {% block extra_js %}
 <script src="{% static 'admin_dashboard/js/reports.js' %}"></script>
 <script>
-    const reportData = {{ report|safe }};
+    const reportData = JSON.parse('{{ report|escapejs }}');
     initializeSalesReport(reportData);
     
     // Period selector change

@@ -7,6 +7,7 @@ from .base import BaseAdminTemplateView, BaseAdminAPIView
 from ..services import DashboardAnalyticsService, SalesReportService
 from ..utils import DateRangeHelper, ChartDataFormatter
 from app.models import Order
+import json
 
 class DashboardHomeView(BaseAdminTemplateView):
     """Main dashboard home view with overview statistics"""
@@ -43,7 +44,6 @@ class DashboardHomeView(BaseAdminTemplateView):
         customer_trend = DashboardAnalyticsService.get_customer_trend(start_date, end_date)
         
         # Convert to JSON for JavaScript
-        import json
         sales_trend_json = json.dumps(list(sales_trend), default=str)
         order_status_json = json.dumps(order_status)
         category_revenue_json = json.dumps(list(category_revenue), default=str)
@@ -86,18 +86,29 @@ class AnalyticsDashboardView(BaseAdminTemplateView):
         
         # Get analytics data
         stats = DashboardAnalyticsService.get_dashboard_stats(start_date, end_date)
-        sales_trend = DashboardAnalyticsService.get_sales_trend(30)
-        category_revenue = DashboardAnalyticsService.get_revenue_by_category(start_date, end_date)
-        order_status = DashboardAnalyticsService.get_order_status_breakdown()
-        customer_ltv = DashboardAnalyticsService.get_customer_lifetime_value()
         
+        # Get chart data with date range
+        period_days = max(1, (end_date - start_date).days + 1)
+        sales_trend = DashboardAnalyticsService.get_sales_trend(
+            days=period_days,
+            start_date=start_date,
+            end_date=end_date
+        )
+        category_revenue = DashboardAnalyticsService.get_revenue_by_category(start_date, end_date)
+        customer_ltv = DashboardAnalyticsService.get_customer_lifetime_value()
+        order_status = DashboardAnalyticsService.get_order_status_breakdown(start_date, end_date)
+        sales_by_region = DashboardAnalyticsService.get_sales_by_region(start_date, end_date)
+        # Convert to JSON for JavaScript
         context.update({
             'stats': stats,
-            'sales_trend': sales_trend,
-            'category_revenue': category_revenue,
-            'order_status': order_status,
-            'customer_ltv': customer_ltv,
+            'sales_trend_json': json.dumps(list(sales_trend), default=str),
+            'category_revenue_json': json.dumps(list(category_revenue), default=str),
+            'customer_ltv_json': json.dumps(customer_ltv[:10], default=str),
+            'sales_by_region_json': json.dumps(sales_by_region, default=str), 
+            'order_status_json': json.dumps(order_status),
             'period': period,
+            'start_date': start_date,
+            'end_date': end_date,
         })
         
         return context
@@ -134,7 +145,8 @@ class SalesReportView(BaseAdminTemplateView):
         product_performance = SalesReportService.get_product_performance_report(start_date, end_date)
         
         context.update({
-            'report': report,
+            'report': json.dumps(report, default=str),
+            'raw_report': report,
             'product_performance': product_performance,
             'start_date': start_date,
             'end_date': end_date,
@@ -169,7 +181,16 @@ class SalesReportExportView(BaseAdminAPIView):
             response = HttpResponse(csv_content, content_type='text/csv')
             response['Content-Disposition'] = f'attachment; filename="sales_report_{start_date.date()}_{end_date.date()}.csv"'
             return response
-        
+
+        elif format_type == 'excel':
+            excel_content = SalesReportService.export_sales_report_excel(start_date, end_date)
+            response = HttpResponse(
+                excel_content,
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = f'attachment; filename="sales_report_{start_date.date()}_{end_date.date()}.xlsx"'
+            return response
+
         else:
             return self.error_response('Invalid format type')
 

@@ -82,6 +82,41 @@
                 </div>
             </div>
         </div>
+        {% if order.coupon %}
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-ticket-alt"></i> Coupon Applied</h3>
+            </div>
+            <div class="card-body info-grid">
+                <div class="info-item">
+                    <span class="label">Coupon Code</span>
+                    <span class="value"><strong>{{ order.coupon.code }}</strong></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Discount Type</span>
+                    <span class="value">{{ order.coupon.get_coupon_type_display }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Discount Value</span>
+                    <span class="value">
+                        {% if order.coupon.coupon_type == 'percent' %}
+                            {{ order.coupon.value }}%
+                        {% else %}
+                            ₹{{ order.coupon.value }}
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Discount Applied</span>
+                    <span class="value">₹{{ order.discount_amount|default:"0.00" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Description</span>
+                    <span class="value">{{ order.coupon.description|default:"-" }}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <div class="card">
             <div class="card-header">
