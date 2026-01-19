@@ -35,18 +35,19 @@ function filterProducts() {
     cards.forEach(card => {
         const name = card.querySelector('.product-body h3')?.textContent.toLowerCase() || '';
         const category = card.querySelector('.product-category')?.textContent.toLowerCase() || '';
+        const categoryId = card.dataset.categoryId || '';
         const isInactive = card.querySelector('.inactive-badge') !== null;
 
         const matchesSearch = name.includes(searchTerm) || category.includes(searchTerm);
+        const matchesCategory = !categoryFilter || categoryId === categoryFilter;
         let matchesStatus = true;
-
         if (statusFilter === 'active') {
             matchesStatus = !isInactive;
         } else if (statusFilter === 'inactive') {
             matchesStatus = isInactive;
         }
 
-        if (matchesSearch && matchesStatus) {
+        if (matchesSearch && matchesCategory && matchesStatus) {
             card.style.display = '';
         } else {
             card.style.display = 'none';

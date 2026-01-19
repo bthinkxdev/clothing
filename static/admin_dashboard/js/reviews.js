@@ -73,6 +73,9 @@ async function handleApprove(e) {
                 const currentCount = parseInt(approvedCountEl.textContent);
                 approvedCountEl.textContent = currentCount + 1;
             }
+            
+            // Update sidebar badge
+            updateSidebarBadge(-1);
         } else {
             throw new Error('Failed to approve review');
         }
@@ -107,24 +110,31 @@ async function handleDelete(e) {
 
         if (response.ok) {
             const card = button.closest('.review-card');
+            const isApproved = card.querySelector('.status-badge.status-active') !== null;
+            
             card.style.opacity = '0';
             setTimeout(() => card.remove(), 300);
 
             showNotification('Review deleted successfully', 'success');
-            // Update counts in real time
-            const statusFilter = document.getElementById('statusFilter')?.value || 'pending';
-            if (statusFilter === 'pending' || statusFilter === 'all') {
-                const pendingCountEl = document.querySelector('.stat-card:first-child h3');
-                if (pendingCountEl) {
-                    const currentCount = parseInt(pendingCountEl.textContent);
-                    pendingCountEl.textContent = currentCount - 1;
-                }
-            } else if (statusFilter === 'approved') {
+            
+            // Update counts in real time based on review status
+            if (isApproved) {
                 const approvedCountEl = document.querySelector('.stat-card:last-child h3');
                 if (approvedCountEl) {
                     const currentCount = parseInt(approvedCountEl.textContent);
                     approvedCountEl.textContent = currentCount - 1;
                 }
+            } else {
+                const pendingCountEl = document.querySelector('.stat-card:first-child h3');
+                if (pendingCountEl) {
+                    const currentCount = parseInt(pendingCountEl.textContent);
+                    pendingCountEl.textContent = currentCount - 1;
+                }
+            }
+
+            // Update sidebar badge if deleting pending review
+            if (!isApproved) {
+                updateSidebarBadge(-1);
             }
         } else {
             throw new Error('Failed to delete review');
@@ -183,4 +193,26 @@ function showNotification(message, type = 'info') {
         notification.style.opacity = '0';
         setTimeout(() => notification.remove(), 300);
     }, 5000);
+}
+
+function updateSidebarBadge(change) {
+    const reviewLinks = document.querySelectorAll('.admin-sidebar .nav-item');
+    let badge = null;
+    
+    reviewLinks.forEach(link => {
+        if (link.textContent.includes('Reviews')) {
+            badge = link.querySelector('.badge');
+        }
+    });
+    
+    if (badge) {
+        const currentCount = parseInt(badge.textContent) || 0;
+        const newCount = currentCount + change;
+        
+        if (newCount > 0) {
+            badge.textContent = newCount;
+        } else {
+            badge.remove();
+        }
+    }
 }

@@ -129,7 +129,7 @@
 
 .search-box-large i {
     position: absolute;
-    left: 16px;
+    left: 25px;  
     top: 50%;
     transform: translateY(-50%);
     color: var(--ios-gray);
@@ -808,37 +808,342 @@ a:focus-visible {
 }
 
 /* ============================================
-   Print Styles
+   PRINT STYLES - ENHANCED FOR LOW STOCK REPORT
    ============================================ */
 
 @media print {
+    /* Hide ALL navigation and UI elements */
+    nav,
+    .navbar,
+    .sidebar,
+    .breadcrumb,
+    .breadcrumbs,
     .page-header .header-actions,
+    .header-actions,
+    .header-content .btn,
     .filter-section,
     .btn-icon,
+    button,
+    .btn,
     .btn-sm,
-    .form-actions {
+    .btn-primary,
+    .btn-secondary,
+    .btn-warning,
+    input[type="search"],
+    .search-box-large,
+    .filter-group,
+    .user-info,
+    .user-menu,
+    .user-avatar,
+    [class*="user-"],
+    [class*="avatar"],
+    /* THIS IS THE KEY - Hide the AD icon */
+    header,
+    .top-nav,
+    .main-header,
+    .header-content .btn,
+    .filter-section,
+    .btn-icon,
+    button,
+    .btn,
+    .btn-sm,
+    .btn-primary,
+    .btn-secondary,
+    .btn-warning,
+    input[type="search"],
+    .search-box-large,
+    .filter-group,
+    .user-info,
+    [class*="hamburger"],
+    [class*="menu-"],
+    [class*="mobile-"],
+    .form-actions,
+    /* Hide Action column completely */
+    .data-table th:last-child,
+    .data-table td:last-child,
+    /* Hide large empty state icons */
+    .empty-state i {
         display: none !important;
     }
     
-    .content-card,
-    .form-card {
-        box-shadow: none;
-        border: 1px solid #ddd;
-        page-break-inside: avoid;
+    /* Remove ALL backgrounds and shadows for clean print */
+    *,
+    *::before,
+    *::after {
+        background: white !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
     }
     
-    .stats-row {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+    /* REMOVE all badge styling - plain text only */
+    .stock-badge,
+    .variant-badge {
+        background: none !important;
+        border: none !important;
+        color: #000 !important;
+        padding: 0 !important;
+        font-size: 10pt !important;
+        font-weight: normal !important;
     }
     
+    /* Remove badge icons/symbols */
+    .stock-badge::before,
+    .stock-in::before,
+    .stock-low::before,
+    .stock-out::before {
+        content: '' !important;
+        display: none !important;
+    }
+    
+    /* Plain text colors only */
+    .stock-out {
+        color: #cc0000 !important;
+        font-weight: bold !important;
+    }
+    
+    .stock-low {
+        color: #996600 !important;
+        font-weight: bold !important;
+    }
+    
+    .stock-in {
+        color: #2D7A3E !important;
+        font-weight: normal !important;
+    }
+    
+    /* Code/SKU - plain text */
+    code {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        font-family: 'Courier New', monospace !important;
+        font-size: 10pt !important;
+        color: #000 !important;
+        font-weight: normal !important;
+    }
+    
+    /* Critical status colors */
+    .stock-out,
+    .text-danger,
     .critical-row {
-        border-left: 3px solid #000;
+        background: #ffe6e6 !important;
+        color: #cc0000 !important;
+        font-weight: bold !important;
+    }
+    
+    .stock-out::before {
+        content: '✕ ' !important;
+        color: #cc0000 !important;
+    }
+    
+    .stock-low,
+    .text-warning {
+        background: #fff9e6 !important;
+        color: #996600 !important;
+    }
+    
+    .stock-low::before {
+        content: '▲ ' !important;
+        color: #996600 !important;
+    }
+    
+    .stock-in {
+        background: #e6f9e6 !important;
+        color: #2D7A3E !important;
+    }
+    
+    .stock-in::before {
+        content: '● ' !important;
+        color: #2D7A3E !important;
+    }
+    
+    /* Reset page layout - full width */
+    @page {
+        margin: 0.5in;
+        size: A4;
     }
     
     body {
-        background: white;
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 11pt !important;
+        line-height: 1.4 !important;
+        color: #000 !important;
+    }
+    
+    /* Container resets */
+    .low-stock-report,
+    .inventory-management,
+    .content-card,
+    .main-content,
+    .container,
+    .container-fluid {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+    }
+    
+    /* Style report header for print */
+    .page-header {
+        border-bottom: 2px solid #000 !important;
+        padding: 15px 0 10px 0 !important;
+        margin-bottom: 20px !important;
+        page-break-after: avoid;
+        display: block !important;
+    }
+    
+    .page-header h1,
+    .header-content h1 {
+        font-size: 20pt !important;
+        color: #000 !important;
+        margin: 0 0 5px 0 !important;
+        font-weight: bold !important;
+        display: block !important;
+    }
+    
+    .page-header h1 i {
+        display: none !important;
+    }
+    
+    .page-header p,
+    .header-content p {
+        font-size: 11pt !important;
+        color: #666 !important;
+        margin: 0 !important;
+    }
+    
+    /* Table styles optimized for print */
+    .table-responsive {
+        overflow: visible !important;
+        border-radius: 0 !important;
+    }
+    
+    .data-table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+        page-break-inside: auto;
+        margin-top: 10px !important;
+        border: 1px solid #999 !important;
+    }
+    
+    .data-table tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    .data-table thead {
+        display: table-header-group;
+    }
+    
+    .data-table tfoot {
+        display: table-footer-group;
+    }
+    
+    .data-table th {
+        background: #f5f5f5 !important;
+        border: 1px solid #333 !important;
+        padding: 8px 6px !important;
+        font-size: 9pt !important;
+        color: #000 !important;
+        font-weight: bold !important;
+        text-align: left !important;
+    }
+    
+    .data-table td {
+        border: 1px solid #999 !important;
+        padding: 8px 6px !important;
+        font-size: 10pt !important;
+        color: #000 !important;
+    }
+    
+    .data-table tbody tr:hover {
+        background: white !important;
+    }
+    
+    /* Strong/bold text in tables */
+    .data-table td strong {
+        font-weight: bold !important;
+        color: #000 !important;
+    }
+    
+    /* Code elements (SKU) */
+    .data-table code {
+        background: #f5f5f5 !important;
+        padding: 2px 6px !important;
+        border: 1px solid #ddd !important;
+        border-radius: 3px !important;
+        font-family: 'Courier New', monospace !important;
+        font-size: 9pt !important;
+        color: #000 !important;
+    }
+    
+    /* Add print date/time at top */
+    .page-header::after {
+        content: "Generated: " attr(data-print-date);
+        display: block;
+        font-size: 9pt;
+        color: #999;
+        margin-top: 8px;
+        font-style: italic;
+    }
+    
+    /* Ensure no page breaks in critical rows */
+    .critical-row {
+        page-break-inside: avoid !important;
+        border-left: 3px solid #cc0000 !important;
+    }
+    
+    /* Empty state styling for print */
+    .empty-state {
+        padding: 40px 20px !important;
+        text-align: center !important;
+    }
+    
+    .empty-state h3 {
+        font-size: 14pt !important;
+        color: #000 !important;
+        margin: 10px 0 !important;
+    }
+    
+    .empty-state p {
+        font-size: 11pt !important;
+        color: #666 !important;
+    }
+    
+    /* Stats cards hidden in print */
+    .stats-row,
+    .stat-card {
+        display: none !important;
+    }
+    
+    /* Forms hidden in print */
+    .form-card {
+        display: none !important;
+    }
+    
+    /* Links - no URL display */
+    a[href]::after {
+        content: "" !important;
+    }
+    
+    /* Hide any remaining unnecessary elements */
+    .tooltip,
+    .popover,
+    .modal,
+    .dropdown-menu {
+        display: none !important;
+    }
+    
+    /* Page numbering footer */
+    @page {
+        @bottom-right {
+            content: "Page " counter(page) " of " counter(pages);
+            font-size: 9pt;
+            color: #666;
+        }
     }
 }
 

@@ -66,7 +66,9 @@ class ProductForm(forms.ModelForm):
             'meta_title': forms.TextInput(attrs={'class': 'form-control'}),
             'meta_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
-    
+    def __init__(self, *args, **kwargs):  
+        super().__init__(*args, **kwargs)
+        self.fields['category'].queryset = Category.objects.filter(is_active=True)
     def clean_slug(self):
         slug = self.cleaned_data.get('slug')
         

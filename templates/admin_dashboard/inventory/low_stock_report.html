@@ -10,7 +10,7 @@
 
 {% block content %}
 <div class="low-stock-report">
-    <div class="page-header">
+    <div class="page-header" data-print-date="">
         <div class="header-content">
             <h1><i class="fas fa-exclamation-triangle"></i> Low Stock Report</h1>
             <p>Products that need restocking</p>
@@ -91,4 +91,21 @@
 
 {% block extra_js %}
 <script src="{% static 'admin_dashboard/js/inventory.js' %}"></script>
+<script>
+// Set print date for the report
+document.addEventListener('DOMContentLoaded', function() {
+    const pageHeader = document.querySelector('.page-header');
+    if (pageHeader) {
+        const now = new Date();
+        const formattedDate = now.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        pageHeader.setAttribute('data-print-date', formattedDate);
+    }
+});
+</script>
 {% endblock %}

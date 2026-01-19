@@ -256,6 +256,7 @@
 
 .card-body {
     position: relative;
+    min-height: 300px;
 }
 
 .chart-legend {
@@ -597,4 +598,15 @@
         align-items: flex-start;
         gap: 16px;
     }
+}
+
+.card-body canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.chart-card.large .card-body {
+    height: 400px;
+    overflow: hidden;
 }
