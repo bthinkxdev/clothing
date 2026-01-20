@@ -107,7 +107,7 @@
 
 .search-box-large i {
     position: absolute;
-    left: 16px;
+    left: 25px;  
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);

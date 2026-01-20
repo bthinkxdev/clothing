@@ -964,50 +964,167 @@
    ============================================ */
 
 @media print {
+    /* Hide unnecessary elements */
     .report-header .report-actions,
     .filter-bar,
     .search-input,
-    .btn-icon {
+    .btn-icon,
+    .chart-card,
+    .comparison-cards,
+    nav,
+    .sidebar,
+    .hamburger-menu,
+    .breadcrumb,
+    header,
+    footer,
+    button,
+    .btn,
+    .btn-outline,
+    .btn-primary {
         display: none !important;
     }
     
+    /* Clean header */
     .report-header {
-        border: 1px solid #ddd;
+        border: 1px solid #000;
         box-shadow: none;
         page-break-after: avoid;
+        padding: 20px;
+        margin-bottom: 20px;
     }
     
-    .summary-cards,
-    .comparison-cards {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+    .report-header h1 {
+        font-size: 24px;
+        color: #000;
     }
     
-    .summary-card,
-    .comparison-card,
-    .chart-card,
-    .table-card {
+    .report-header h1 i {
+        display: none;
+    }
+    
+    /* Summary cards in table format */
+    .summary-cards {
+        display: table;
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+    
+    .summary-card {
+        display: table-cell;
+        width: 25%;
+        border: 1px solid #000;
+        padding: 15px;
         box-shadow: none;
-        border: 1px solid #ddd;
         page-break-inside: avoid;
     }
     
-    .chart-card {
-        page-break-before: always;
+    .summary-card::before {
+        display: none;
+    }
+    
+    .summary-icon {
+        display: none !important;
+    }
+    
+    .summary-content {
+        text-align: center;
+    }
+    
+    .summary-label {
+        font-size: 11px;
+        color: #000;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+    
+    .summary-content h2 {
+        font-size: 20px;
+        color: #000;
+        margin: 5px 0;
+    }
+    
+    .summary-meta {
+        font-size: 10px;
+        color: #666;
+    }
+    
+    /* Table styling */
+    .table-card {
+        box-shadow: none;
+        border: 1px solid #000;
+        page-break-inside: avoid;
+        margin-top: 20px;
+    }
+    
+    .table-card .card-header {
+        background: #f5f5f5;
+        border-bottom: 2px solid #000;
+        padding: 15px;
+    }
+    
+    .table-card .card-header h3 {
+        font-size: 16px;
+        color: #000;
+    }
+    
+    .table-card .card-header h3 i {
+        display: none;
+    }
+    
+    .data-table {
+        font-size: 11px;
     }
     
     .data-table th,
     .data-table td {
-        padding: 8px 10px;
-        font-size: 12px;
+        padding: 8px;
+        border: 1px solid #000;
+        color: #000;
+    }
+    
+    .data-table th {
+        background: #f5f5f5;
+        font-weight: bold;
     }
     
     .rank-badge {
+        background: #000;
+        color: #fff;
         box-shadow: none;
+        font-size: 11px;
+        width: 24px;
+        height: 24px;
+    }
+    
+    .badge {
+        border: 1px solid #000;
+        background: #fff;
+        color: #000;
+    }
+    
+    /* Remove animations and gradients */
+    * {
+        animation: none !important;
+        transition: none !important;
+        background-image: none !important;
     }
     
     body {
         background: white;
+        color: #000;
+    }
+    
+    /* Page setup */
+    @page {
+        margin: 1.5cm;
+        size: A4 landscape;
+    }
+    .breadcrumb,
+    nav.breadcrumb,
+    .report-header + * > .breadcrumb,
+    [class*="breadcrumb"] {
+        display: none !important;
     }
 }
 

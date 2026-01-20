@@ -123,7 +123,7 @@
 
 .search-box-large i {
     position: absolute;
-    left: 16px;
+    left: 25px;  
     top: 50%;
     transform: translateY(-50%);
     color: var(--ios-gray);
@@ -409,7 +409,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 0;
+    padding: 16px 0 16px 16px; 
     border-bottom: 1px solid var(--ios-separator);
     gap: 16px;
     transition: var(--ios-transition);

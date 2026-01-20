@@ -301,7 +301,7 @@
                 <h4>Pending Orders</h4>
                 <p>You have {{ stats.pending_orders }} order(s) waiting for processing</p>
             </div>
-            <a href="{% url 'admin_dashboard:order_list' %}?status=pending" class="btn-alert">View Orders</a>
+            <a href="{% url 'admin_dashboard:order_list' %}?status=pending&status=paid" class="btn-alert">View Orders</a>
         </div>
         {% endif %}
         

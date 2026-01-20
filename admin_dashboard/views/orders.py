@@ -269,15 +269,31 @@ class OrderInvoiceView(BaseAdminDetailView):
             from reportlab.platypus import (
                 SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
             )
+            from reportlab.pdfbase import pdfmetrics
+            from reportlab.pdfbase.ttfonts import TTFont
         except ImportError:
             messages.error(self.request, 'PDF generation not available (install reportlab)')
             return redirect('admin_dashboard:order_detail', pk=self.object.pk)
 
+        # Register a font that supports Indian Rupee symbol
+        try:
+            pdfmetrics.registerFont(TTFont('DejaVuSans', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'))
+            font_name = 'DejaVuSans'
+        except:
+            # Fallback: use Rs. instead of ₹ symbol with default fonts
+            font_name = 'Helvetica'
+
         def fmt_money(value):
             try:
-                return f"₹{Decimal(value):,.2f}"
+                if font_name == 'DejaVuSans':
+                    return f"₹{Decimal(value):,.2f}"
+                else:
+                    return f"Rs. {Decimal(value):,.2f}"
             except Exception:
-                return f"₹{value}"
+                if font_name == 'DejaVuSans':
+                    return f"₹{value}"
+                else:
+                    return f"Rs. {value}"
 
         order = invoice_data.get('order')
         items = list(invoice_data.get('items') or [])
@@ -294,9 +310,16 @@ class OrderInvoiceView(BaseAdminDetailView):
         )
 
         styles = getSampleStyleSheet()
+        
+        # Update styles to use the registered font
         h1 = styles['Heading1']
+        h1.fontName = font_name
+        
         h2 = styles['Heading2']
+        h2.fontName = font_name
+        
         body = styles['BodyText']
+        body.fontName = font_name
 
         elements = []
 
@@ -339,7 +362,7 @@ class OrderInvoiceView(BaseAdminDetailView):
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
             ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 0), (-1, -1), font_name), 
             ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
         ]))
         elements.append(item_table)
@@ -357,7 +380,7 @@ class OrderInvoiceView(BaseAdminDetailView):
         summary_table = Table(summary_rows, colWidths=[80 * mm, 40 * mm], hAlign='RIGHT')
         summary_table.setStyle(TableStyle([
             ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 0), (-1, -1), font_name),  # Apply font to summary table
             ('LINEABOVE', (0, -1), (-1, -1), 0.5, colors.black),
         ]))
         elements.append(summary_table)
