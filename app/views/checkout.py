@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.db.models import F
 from django.http import JsonResponse
@@ -12,12 +13,15 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, FormView
 
+from razorpay.errors import BadRequestError
+
 from ..forms import AddressForm
 from ..models import Cart, Address, Coupon, Order, OrderItem, Payment
 from ..utils import (
     calculate_tax,
     check_pincode_serviceability,
     get_razorpay_client,
+    is_razorpay_configured,
 )
 from .base import CommonContextMixin
 
@@ -171,24 +175,35 @@ class CheckoutPaymentView(LoginRequiredMixin, CommonContextMixin, TemplateView):
         return Decimal("50.00")
 
     def get_payment_methods(self, address, cart):
-        methods = [
-            {
-                "id": "razorpay",
-                "name": "Razorpay (Card/UPI/Net Banking)",
-                "icon": "razorpay",
-            },
-            {"id": "wallet", "name": "Wallet", "icon": "wallet"},
-        ]
-
-        if check_pincode_serviceability(address.postal_code, "cod"):
+        methods = []
+        if is_razorpay_configured():
             methods.append(
                 {
-                    "id": "cod",
-                    "name": "Cash on Delivery",
-                    "icon": "cod",
-                    "extra_charge": Decimal("40.00"),
+                    "id": "razorpay",
+                    "name": "Razorpay (Card/UPI/Net Banking)",
+                    "icon": "razorpay",
                 }
             )
+
+        methods.append({"id": "wallet", "name": "Wallet", "icon": "wallet"})
+        # if check_pincode_serviceability(address.postal_code, "cod"):
+        #         methods.append(
+        #             {
+        #                 "id": "cod",
+        #                 "name": "Cash on Delivery",
+        #                 "icon": "cod",
+        #                 "extra_charge": Decimal("40.00"),
+        #             }
+        #         )
+        # COD always available (can add pincode check later if needed)
+        methods.append(
+            {
+                "id": "cod",
+                "name": "Cash on Delivery",
+                "icon": "cod",
+                "extra_charge": Decimal("40.00"),
+            }
+        )
 
         return methods
 
@@ -230,6 +245,13 @@ class OrderCreateView(LoginRequiredMixin, View):
             messages.error(request, "Please complete all checkout steps.")
             return redirect("checkout_address")
 
+        if payment_method == "razorpay" and not is_razorpay_configured():
+            messages.error(
+                request,
+                "Razorpay payments are not configured for this environment. Please choose another payment method.",
+            )
+            return redirect("checkout_payment")
+
         cart = get_object_or_404(Cart, user=request.user, is_active=True)
         address = get_object_or_404(Address, id=address_id, user=request.user)
 
@@ -242,6 +264,11 @@ class OrderCreateView(LoginRequiredMixin, View):
         shipping_cost = Decimal("50.00") if shipping_id == "standard" else Decimal("150.00")
         tax = calculate_tax(cart)
         discount = Decimal("0.00")
+        
+        # Add COD charges if COD is selected
+        cod_charge = Decimal("0.00")
+        if payment_method == "cod":
+            cod_charge = Decimal("40.00")
 
         coupon = None
         coupon_code = request.session.get("applied_coupon")
@@ -250,7 +277,7 @@ class OrderCreateView(LoginRequiredMixin, View):
             if coupon:
                 discount = coupon.discount_amount(subtotal)
 
-        total = subtotal + shipping_cost + tax - discount
+        total = subtotal + shipping_cost + tax + cod_charge - discount
 
         order = Order.objects.create(
             user=request.user,
@@ -285,10 +312,18 @@ class OrderCreateView(LoginRequiredMixin, View):
                 order=order, amount=total, method="razorpay", status="initiated"
             )
 
-            client = get_razorpay_client()
-            razorpay_order = client.order.create(
-                {"amount": int(total * 100), "currency": "INR", "receipt": str(order.id)}
-            )
+            try:
+                client = get_razorpay_client()
+                razorpay_order = client.order.create(
+                    {"amount": int(total * 100), "currency": "INR", "receipt": str(order.id)}
+                )
+            except (ImproperlyConfigured, BadRequestError) as exc:
+                transaction.set_rollback(True)
+                messages.error(
+                    request,
+                    "Razorpay payments are temporarily unavailable. Please choose another method.",
+                )
+                return redirect("checkout_payment")
 
             payment.reference = razorpay_order["id"]
             payment.save()

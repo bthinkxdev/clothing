@@ -196,6 +196,10 @@ SOCIALACCOUNT_PROVIDERS = {
 RAZORPAY_KEY_ID = 'your_key_id'
 RAZORPAY_KEY_SECRET = 'your_key_secret'
 
+# Delivery configuration
+SERVICEABLE_PINCODES = []
+COD_SERVICEABLE_PINCODES = ['110001', '400001']
+
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'

@@ -3,7 +3,9 @@ import random
 import razorpay
 from decimal import Decimal
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import send_mail
+from django.db.models import F
 from django.template.loader import render_to_string
 from .models import Cart, Wishlist
 
@@ -77,25 +79,41 @@ def calculate_tax(cart):
 
 def check_pincode_serviceability(pincode, service_type='standard'):
     """
-    Check if delivery is available for pincode
-    Returns True/False
+    Check if delivery is available for pincode.
+    Returns True/False.
     """
     # TODO: Integrate with courier API
-    # For now, assume all pincodes are serviceable
-    serviceable_pincodes = ['110001', '400001', '560001', '600001']  # Example
-    
-    if service_type == 'cod':
-        # COD might not be available for all pincodes
-        cod_pincodes = ['110001', '400001']
+    # For now, assume all pincodes are serviceable except where explicitly restricted
+    serviceable_pincodes = getattr(settings, "SERVICEABLE_PINCODES", [])
+
+    if service_type == "cod":
+        cod_pincodes = getattr(settings, "COD_SERVICEABLE_PINCODES", [])
+        if not cod_pincodes:
+            return True
         return pincode in cod_pincodes
-    
-    return True
+
+    if not serviceable_pincodes:
+        return True
+
+    return pincode in serviceable_pincodes
+
+
+def is_razorpay_configured():
+    """
+    Return True if Razorpay credentials are not the default placeholders.
+    """
+    key = getattr(settings, "RAZORPAY_KEY_ID", "")
+    secret = getattr(settings, "RAZORPAY_KEY_SECRET", "")
+    invalid_placeholders = {"", None, "your_key_id", "your_key_secret"}
+    return key not in invalid_placeholders and secret not in invalid_placeholders
 
 
 def get_razorpay_client():
     """
     Initialize and return Razorpay client
     """
+    if not is_razorpay_configured():
+        raise ImproperlyConfigured("Razorpay API credentials are missing or still use placeholders.")
     client = razorpay.Client(auth=(
         settings.RAZORPAY_KEY_ID,
         settings.RAZORPAY_KEY_SECRET
@@ -259,7 +277,7 @@ def check_low_stock_alerts():
     from .models import Inventory
     
     low_stock_items = Inventory.objects.filter(
-        quantity__lte=models.F('low_stock_threshold')
+        quantity__lte=F('low_stock_threshold')
     ).select_related('variant__product')
     
     if low_stock_items.exists():

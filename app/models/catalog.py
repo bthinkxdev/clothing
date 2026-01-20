@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models, transaction
 from django.db.models import F
+from django.db.models.expressions import CombinedExpression
 from django.urls import reverse
 from django.utils.text import slugify
 
@@ -167,7 +168,23 @@ class Inventory(models.Model):
         return max(self.quantity - self.reserved, 0)
 
     def is_low(self) -> bool:
-        return self.quantity - self.reserved <= self.low_stock_threshold
+        quantity = self.quantity
+        reserved = self.reserved
+        threshold = self.low_stock_threshold
+
+        if isinstance(quantity, CombinedExpression) or isinstance(reserved, CombinedExpression):
+            current = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values("quantity", "reserved", "low_stock_threshold")
+                .first()
+            )
+            if current:
+                quantity = current["quantity"]
+                reserved = current["reserved"]
+                threshold = current["low_stock_threshold"]
+
+        return quantity - reserved <= threshold
 
     def reserve(self, qty: int) -> bool:
         if qty <= 0:

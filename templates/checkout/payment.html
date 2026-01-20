@@ -14,7 +14,7 @@
     <div class="checkout-grid">
         <div class="card">
             <h2>Payment Method</h2>
-            <form method="post">
+            <form method="post" action="{% url 'order_create' %}">
                 {% csrf_token %}
                 <div class="shipping-options">
                     {% for method in payment_methods %}
@@ -37,7 +37,10 @@
                     <div class="summary-row"><span>Shipping</span><span>₹{{ shipping }}</span></div>
                     <div class="summary-row"><span>Tax</span><span>₹{{ tax }}</span></div>
                     <div class="summary-row"><span>Discount</span><span>- ₹{{ discount }}</span></div>
-                    <div class="summary-row total"><span>Total</span><span>₹{{ total }}</span></div>
+                    <div class="summary-row" id="cod-charge-row" style="display: none;">
+                        <span>COD Charges</span><span id="cod-charge-amount">₹40.00</span>
+                    </div>
+                    <div class="summary-row total"><span>Total</span><span id="total-amount">₹{{ total }}</span></div>
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="margin-top:12px;">Pay Now</button>
@@ -61,4 +64,34 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethodInputs = document.querySelectorAll('input[name="payment_method"]');
+    const codChargeRow = document.getElementById('cod-charge-row');
+    const totalAmountSpan = document.getElementById('total-amount');
+    
+    const baseTotal = {{ total }};
+    const codCharge = 40.00;
+    
+    function updateTotal() {
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+        if (selectedMethod && selectedMethod.value === 'cod') {
+            codChargeRow.style.display = '';
+            const newTotal = baseTotal + codCharge;
+            totalAmountSpan.textContent = '₹' + newTotal.toFixed(2);
+        } else {
+            codChargeRow.style.display = 'none';
+            totalAmountSpan.textContent = '₹' + baseTotal.toFixed(2);
+        }
+    }
+    
+    paymentMethodInputs.forEach(input => {
+        input.addEventListener('change', updateTotal);
+    });
+    
+    // Initial update
+    updateTotal();
+});
+</script>
 {% endblock %}
