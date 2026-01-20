@@ -9,7 +9,7 @@ from .base import (
 )
 from app.models import User, Order, Cart, Wishlist
 from ..services import CustomerManagementService
-from ..utils import FilterHelper
+from ..utils import FilterHelper, PermissionHelper
 
 
 class CustomerListView(BaseAdminListView):
@@ -32,6 +32,11 @@ class CustomerListView(BaseAdminListView):
             total_spent=Sum('orders__total', filter=Q(orders__status__in=['paid', 'processing', 'shipped', 'delivered'])),
             avg_order_value=Avg('orders__total', filter=Q(orders__status__in=['paid', 'processing', 'shipped', 'delivered']))
         )
+        if PermissionHelper.is_vendor(self.request.user):
+            vendor = PermissionHelper.get_vendor(self.request.user)
+            queryset = queryset.filter(
+                orders__in=vendor.vendor_orders.all()
+            ).distinct()
         
         # Search
         search = self.request.GET.get('search', '')
@@ -72,6 +77,9 @@ class CustomerListView(BaseAdminListView):
         
         # Summary stats
         queryset = User.objects.filter(role='customer')
+        if PermissionHelper.is_vendor(self.request.user):
+            vendor = PermissionHelper.get_vendor(self.request.user)
+            queryset = queryset.filter(orders__in=vendor.vendor_orders.all()).distinct()
         context['total_customers'] = queryset.count()
         context['active_customers'] = queryset.filter(is_active=True, is_blocked=False).count()
         context['blocked_customers'] = queryset.filter(is_blocked=True).count()
@@ -112,13 +120,18 @@ class CustomerDetailView(BaseAdminDetailView):
             ]
     
     def get_queryset(self):
-        return User.objects.filter(role='customer')
+        queryset = User.objects.filter(role='customer')
+        if PermissionHelper.is_vendor(self.request.user):
+            vendor = PermissionHelper.get_vendor(self.request.user)
+            queryset = queryset.filter(orders__in=vendor.vendor_orders.all()).distinct()
+        return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
         # Get comprehensive customer info
-        customer_info = CustomerManagementService.get_customer_detailed_info(self.object.id)
+        vendor = PermissionHelper.get_vendor(self.request.user) if PermissionHelper.is_vendor(self.request.user) else None
+        customer_info = CustomerManagementService.get_customer_detailed_info(self.object.id, vendor=vendor)
         context.update(customer_info)
         
         return context
@@ -143,9 +156,15 @@ class CustomerOrdersView(BaseAdminListView):
     
     def get_queryset(self):
         customer_id = self.kwargs['pk']
-        return Order.objects.filter(user_id=customer_id).select_related(
+        queryset = Order.objects.filter(user_id=customer_id).select_related(
             'address', 'coupon'
         ).prefetch_related('items', 'payments').order_by('-placed_at')
+        if PermissionHelper.is_vendor(self.request.user):
+            vendor = PermissionHelper.get_vendor(self.request.user)
+            queryset = queryset.filter(
+                Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+            ).distinct()
+        return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -183,10 +202,14 @@ class CustomerCartView(BaseAdminDetailView):
         cart = self.object.carts.filter(is_active=True).first()
         
         if cart:
-            cart_items = cart.items.select_related(
+            cart_items_qs = cart.items.select_related(
                 'variant__product', 'variant__inventory'
-            ).all()
-            cart_total = cart.total()
+            )
+            if PermissionHelper.is_vendor(self.request.user):
+                vendor = PermissionHelper.get_vendor(self.request.user)
+                cart_items_qs = cart_items_qs.filter(variant__product__vendor=vendor)
+            cart_items = list(cart_items_qs)
+            cart_total = sum(item.variant.price * item.quantity for item in cart_items)
         else:
             cart_items = []
             cart_total = Decimal('0.00')
@@ -221,11 +244,15 @@ class CustomerWishlistView(BaseAdminDetailView):
         wishlist = self.object.wishlists.first()
         
         if wishlist:
-            wishlist_items = wishlist.items.select_related(
+            wishlist_items_qs = wishlist.items.select_related(
                 'variant__product', 'variant'
             ).prefetch_related(
                 'variant__product__images'
-            ).all()
+            )
+            if PermissionHelper.is_vendor(self.request.user):
+                vendor = PermissionHelper.get_vendor(self.request.user)
+                wishlist_items_qs = wishlist_items_qs.filter(variant__product__vendor=vendor)
+            wishlist_items = list(wishlist_items_qs)
         else:
             wishlist_items = []
         

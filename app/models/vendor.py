@@ -22,6 +22,7 @@ __all__ = [
     "VendorDocument",
     "VendorShippingRate",
     "VendorApprovalLog",
+    "VendorSettings",
 ]
 
 
@@ -460,4 +461,62 @@ class VendorApprovalLog(models.Model):
 
     def __str__(self):
         return f"{self.vendor.store_name} - {self.action} - {self.performed_at}"
+
+
+class VendorSettings(models.Model):
+    """
+    Vendor-level configurable settings kept separate from the core Vendor record
+    to avoid bloat and allow easy extension.
+    """
+
+    vendor = models.OneToOneField(Vendor, on_delete=models.CASCADE, related_name="settings")
+
+    # Business / store details
+    display_name = models.CharField(max_length=255, blank=True)
+    logo = models.ImageField(upload_to="vendors/settings/logos/%Y/%m/", null=True, blank=True)
+    support_email = models.EmailField(blank=True)
+    support_phone = models.CharField(max_length=20, blank=True)
+    address_line1 = models.CharField(max_length=255, blank=True)
+    address_line2 = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+    country = models.CharField(max_length=100, default="India")
+
+    # Tax / billing settings
+    gst_number = models.CharField(max_length=15, blank=True)
+    tax_id = models.CharField(max_length=64, blank=True)
+    invoice_prefix = models.CharField(max_length=10, default="INV")
+    default_currency = models.CharField(max_length=10, default="INR")
+    tax_inclusive_prices = models.BooleanField(default=True)
+    charge_tax_on_shipping = models.BooleanField(default=True)
+
+    # Order & stock preferences
+    default_processing_time_days = models.PositiveIntegerField(default=2)
+    allow_backorders = models.BooleanField(default=False)
+    auto_cancel_unpaid_minutes = models.PositiveIntegerField(
+        default=0,
+        help_text="Set to 0 to disable auto-cancel of unpaid orders."
+    )
+    auto_restock_on_cancel = models.BooleanField(default=True)
+    low_stock_threshold = models.PositiveIntegerField(default=5)
+
+    # Notification preferences
+    notify_new_order_email = models.BooleanField(default=True)
+    notify_new_order_sms = models.BooleanField(default=False)
+    notify_low_stock_email = models.BooleanField(default=True)
+    notify_payout_email = models.BooleanField(default=True)
+
+    # Account toggle
+    is_enabled = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Vendor Settings"
+        verbose_name_plural = "Vendor Settings"
+
+    def __str__(self):
+        return f"Settings for {self.vendor.store_name}"
 

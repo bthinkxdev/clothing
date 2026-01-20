@@ -74,6 +74,8 @@ from .other import (
 from .theme import theme_settings
 # Auth
 from .auth import AdminLoginView, AdminLogoutView
+# Vendor settings
+from .vendor_settings import VendorSettingsUpdateView
 
 __all__ = [
     # Auth
@@ -147,6 +149,9 @@ __all__ = [
     # Payments
     'PaymentListView',
     'PaymentDetailView',
+
+    # Vendor settings
+    'VendorSettingsUpdateView',
 
     # Theme Management (merged)
     'theme_settings',

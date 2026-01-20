@@ -11,7 +11,7 @@ from .base import (
 )
 from app.models import Order, Payment
 from ..services import OrderManagementService
-from ..utils import FilterHelper, PaginationHelper
+from ..utils import FilterHelper, PaginationHelper, PermissionHelper
 from ..forms import OrderUpdateForm, OrderBulkUpdateForm
 from django.contrib import messages
 
@@ -23,6 +23,7 @@ class OrderListView(BaseAdminListView):
     template_name = 'admin_dashboard/orders/order_list.html'
     context_object_name = 'orders'
     paginate_by = 25
+    vendor_field = None
     
     def get_breadcrumbs(self):
         return [
@@ -31,9 +32,15 @@ class OrderListView(BaseAdminListView):
         ]
     
     def get_queryset(self):
-        queryset = super().get_queryset().select_related(
+        queryset = Order.objects.select_related(
             'user', 'address', 'coupon'
         ).prefetch_related('items', 'payments')
+
+        if PermissionHelper.is_vendor(self.request.user):
+            vendor = PermissionHelper.get_vendor(self.request.user)
+            queryset = queryset.filter(
+                Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+            ).distinct()
         
         # Apply filters
         filters = FilterHelper.build_order_filters(self.request)
@@ -89,6 +96,7 @@ class OrderDetailView(BaseAdminDetailView):
     model = Order
     template_name = 'admin_dashboard/orders/order_detail.html'
     context_object_name = 'order'
+    vendor_field = None
     
     def get_breadcrumbs(self):
         return [
@@ -98,12 +106,18 @@ class OrderDetailView(BaseAdminDetailView):
         ]
     
     def get_queryset(self):
-        return super().get_queryset().select_related(
+        queryset = Order.objects.select_related(
             'user', 'address', 'coupon'
         ).prefetch_related(
             'items__variant__product__images',
             'payments'
         )
+        if PermissionHelper.is_vendor(self.request.user):
+            vendor = PermissionHelper.get_vendor(self.request.user)
+            queryset = queryset.filter(
+                Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+            ).distinct()
+        return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -132,6 +146,7 @@ class OrderUpdateView(BaseAdminUpdateView):
     model = Order
     form_class = OrderUpdateForm
     template_name = 'admin_dashboard/orders/order_update.html'
+    vendor_field = None
     
     def get_breadcrumbs(self):
         return [
@@ -143,6 +158,15 @@ class OrderUpdateView(BaseAdminUpdateView):
     
     def get_success_url(self):
         return reverse_lazy('admin_dashboard:order_detail', kwargs={'pk': self.object.pk})
+    
+    def get_queryset(self):
+        queryset = Order.objects.all()
+        if PermissionHelper.is_vendor(self.request.user):
+            vendor = PermissionHelper.get_vendor(self.request.user)
+            queryset = queryset.filter(
+                Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+            ).distinct()
+        return queryset
     
     def form_valid(self, form):
         # Handle status change
@@ -170,7 +194,13 @@ class OrderCancelView(BaseAdminAPIView):
     
     def post(self, request, pk, *args, **kwargs):
         try:
-            order = Order.objects.get(pk=pk)
+            queryset = Order.objects.all()
+            if PermissionHelper.is_vendor(request.user):
+                vendor = PermissionHelper.get_vendor(request.user)
+                queryset = queryset.filter(
+                    Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+                ).distinct()
+            order = queryset.get(pk=pk)
             
             # Check if order can be cancelled
             if order.status in ['delivered', 'cancelled', 'refunded']:
@@ -199,6 +229,17 @@ class OrderInvoiceView(BaseAdminDetailView):
     
     model = Order
     template_name = 'admin_dashboard/orders/order_invoice.html'
+    vendor_field = None
+
+    def get_queryset(self):
+        queryset = Order.objects.select_related("user", "address", "coupon")
+        if PermissionHelper.is_vendor(self.request.user):
+            vendor = PermissionHelper.get_vendor(self.request.user)
+            queryset = queryset.filter(
+                Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+            ).distinct()
+        return queryset
+    vendor_field = None
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -347,8 +388,17 @@ class OrderBulkUpdateView(BaseAdminAPIView):
                 return self.error_response('No orders selected')
             
             if action == 'update_status' and new_status:
+                scoped_ids = order_ids
+                if PermissionHelper.is_vendor(request.user):
+                    vendor = PermissionHelper.get_vendor(request.user)
+                    scoped_ids = list(
+                        Order.objects.filter(
+                            Q(vendor=vendor) | Q(items__variant__product__vendor=vendor),
+                            id__in=order_ids,
+                        ).values_list("id", flat=True)
+                    )
                 count = OrderManagementService.bulk_update_order_status(
-                    order_ids,
+                    scoped_ids,
                     new_status
                 )
                 return self.success_response(

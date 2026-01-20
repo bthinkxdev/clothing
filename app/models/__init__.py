@@ -11,6 +11,7 @@ from .vendor import (
     VendorDocument,
     VendorShippingRate,
     VendorApprovalLog,
+    VendorSettings,
 )
 from .theme import DesignPattern, SiteTheme
 from .catalog import Category, Product, ProductImage, ProductVariant, Inventory
@@ -43,6 +44,7 @@ __all__ = [
     "VendorDocument",
     "VendorShippingRate",
     "VendorApprovalLog",
+    "VendorSettings",
     "DesignPattern",
     "SiteTheme",
     "Category",

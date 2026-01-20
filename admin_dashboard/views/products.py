@@ -2,6 +2,7 @@
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.db.models import Q, Sum, Count
+from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 
 from .base import (
@@ -9,7 +10,7 @@ from .base import (
     BaseAdminUpdateView, BaseAdminDeleteView, BaseAdminAPIView
 )
 from app.models import Product, ProductVariant, ProductImage, Category, Inventory
-from ..utils import FilterHelper
+from ..utils import FilterHelper, PermissionHelper
 from ..forms import ProductForm, ProductVariantFormSet, ProductImageFormSet
 
 
@@ -20,6 +21,7 @@ class ProductListView(BaseAdminListView):
     template_name = 'admin_dashboard/products/product_list.html'
     context_object_name = 'products'
     paginate_by = 20
+    vendor_field = "vendor"
     
     def get_breadcrumbs(self):
         return [
@@ -58,7 +60,10 @@ class ProductListView(BaseAdminListView):
         return queryset
     
     def get_filter_options(self):
-        categories = Category.objects.filter(is_active=True)
+        categories = PermissionHelper.scope_queryset_for_user(
+            Category.objects.filter(is_active=True),
+            self.request.user,
+        )
         brands = Product.objects.values_list('brand', flat=True).distinct().exclude(brand='')
         
         return {
@@ -146,6 +151,7 @@ class ProductCreateView(BaseAdminCreateView):
     form_class = ProductForm
     template_name = 'admin_dashboard/products/product_form.html'
     success_url = reverse_lazy('admin_dashboard:product_list')
+    vendor_field = "vendor"
     
     def get_breadcrumbs(self):
         return [
@@ -166,10 +172,21 @@ class ProductCreateView(BaseAdminCreateView):
         
         return context
     
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['category'].queryset = PermissionHelper.scope_queryset_for_user(
+            Category.objects.filter(is_active=True),
+            self.request.user,
+        )
+        return form
+
     def form_valid(self, form):
         context = self.get_context_data()
         variant_formset = context['variant_formset']
         image_formset = context['image_formset']
+
+        if PermissionHelper.is_vendor(self.request.user):
+            form.instance.vendor = PermissionHelper.get_vendor(self.request.user)
 
         # Save the product FIRST to get an ID
         self.object = form.save()
@@ -207,6 +224,7 @@ class ProductUpdateView(BaseAdminUpdateView):
     template_name = 'admin_dashboard/products/product_form.html'
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
+    vendor_field = "vendor"
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -217,6 +235,14 @@ class ProductUpdateView(BaseAdminUpdateView):
             context['variant_formset'] = ProductVariantFormSet(instance=self.object)
             context['image_formset'] = ProductImageFormSet(instance=self.object)
         return context
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['category'].queryset = PermissionHelper.scope_queryset_for_user(
+            Category.objects.filter(is_active=True),
+            self.request.user,
+        )
+        return form
     
     def get_breadcrumbs(self):
         return [
@@ -233,6 +259,13 @@ class ProductUpdateView(BaseAdminUpdateView):
         context = self.get_context_data()
         variant_formset = context['variant_formset']
         image_formset = context['image_formset']
+
+        # Prevent vendor from changing ownership
+        if PermissionHelper.is_vendor(self.request.user):
+            vendor = PermissionHelper.get_vendor(self.request.user)
+            if self.object.vendor and self.object.vendor != vendor:
+                raise PermissionDenied("Cannot modify another vendor's product.")
+            form.instance.vendor = vendor
         
         if variant_formset.is_valid() and image_formset.is_valid():
             self.object = form.save()
@@ -331,7 +364,10 @@ class ProductBulkUpdateView(BaseAdminAPIView):
             if not product_ids:
                 return self.error_response('No products selected')
             
-            products = Product.objects.filter(id__in=product_ids)
+            products = PermissionHelper.scope_queryset_for_user(
+                Product.objects.filter(id__in=product_ids),
+                request.user,
+            )
             
             if action == 'activate':
                 products.update(is_active=True)

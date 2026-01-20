@@ -1,0 +1,691 @@
+{% extends "admin_dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Vendor Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+  .settings-page {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 2rem 0;
+  }
+
+  .settings-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .settings-header h2 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+  }
+
+  .settings-header p {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+  }
+
+  .settings-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.3s ease;
+  }
+
+  .settings-section:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+  }
+
+  .section-header i {
+    font-size: 1.5rem;
+    color: #667eea;
+    margin-right: 0.75rem;
+    width: 32px;
+    text-align: center;
+  }
+
+  .section-header h5 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2d3748;
+  }
+
+  .section-header .section-desc {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #718096;
+    margin-left: 2.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: #4a5568;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    display: block;
+  }
+
+  .form-control, .form-select {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.65rem 0.875rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .form-check {
+    padding: 1rem;
+    background: #f7fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+  }
+
+  .form-check:hover {
+    background: #edf2f7;
+    border-color: #cbd5e0;
+  }
+
+  .form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.125rem;
+    cursor: pointer;
+  }
+
+  .form-check-input:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+  }
+
+  .form-check-label {
+    font-weight: 500;
+    color: #4a5568;
+    margin-left: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .form-text {
+    font-size: 0.8rem;
+    color: #718096;
+    margin-top: 0.35rem;
+    display: block;
+  }
+
+  .logo-preview {
+    margin-top: 0.75rem;
+    padding: 1rem;
+    background: #f7fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+  }
+
+  .logo-preview img {
+    max-width: 100%;
+    max-height: 150px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    object-fit: contain;
+  }
+
+  .logo-preview .img-thumbnail {
+    padding: 0.5rem;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+  }
+
+  .settings-actions {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    bottom: 1rem;
+    z-index: 100;
+  }
+
+  .btn-save-settings {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 8px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+  }
+
+  .btn-save-settings:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-cancel {
+    color: #718096;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .btn-cancel:hover {
+    color: #4a5568;
+  }
+
+  .alert {
+    border-radius: 8px;
+    border: none;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .alert-danger {
+    background: #fee;
+    color: #c53030;
+  }
+
+  .input-group-text {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-right: none;
+    color: #718096;
+  }
+
+  .input-group .form-control {
+    border-left: none;
+  }
+
+  @media (max-width: 768px) {
+    .settings-header {
+      padding: 1.5rem;
+    }
+
+    .settings-section {
+      padding: 1.5rem;
+    }
+
+    .settings-actions {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .settings-actions .btn-save-settings {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-page">
+  <div class="container-fluid px-4">
+    <!-- Page Header -->
+    <div class="settings-header">
+      <h2><i class="fas fa-cog me-2"></i>Vendor Settings</h2>
+      <p>Manage your store's operational and business preferences</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-circle me-2"></i>
+          {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Store Details Section -->
+      <div class="settings-section">
+        <div class="section-header">
+          <i class="fas fa-store"></i>
+          <div>
+            <h5>Store Details</h5>
+            <p class="section-desc">Configure your store's basic information and branding</p>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.display_name.id_for_label }}" class="form-label">
+                <i class="fas fa-tag me-1"></i> {{ form.display_name.label }}
+              </label>
+              {{ form.display_name }}
+              {% if form.display_name.errors %}
+                <div class="text-danger small mt-1">{{ form.display_name.errors }}</div>
+              {% endif %}
+              {% if form.display_name.help_text %}
+                <small class="form-text">{{ form.display_name.help_text }}</small>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.logo.id_for_label }}" class="form-label">
+                <i class="fas fa-image me-1"></i> {{ form.logo.label }}
+              </label>
+              {% if form.instance.logo %}
+                <div class="logo-preview mb-3">
+                  <p class="mb-2 small text-muted"><strong>Current Logo:</strong></p>
+                  <img src="{{ form.instance.logo.url }}" alt="Store Logo" class="img-thumbnail">
+                </div>
+              {% endif %}
+              {{ form.logo }}
+              {% if form.logo.errors %}
+                <div class="text-danger small mt-1">{{ form.logo.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.support_email.id_for_label }}" class="form-label">
+                <i class="fas fa-envelope me-1"></i> {{ form.support_email.label }}
+              </label>
+              {{ form.support_email }}
+              {% if form.support_email.errors %}
+                <div class="text-danger small mt-1">{{ form.support_email.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.support_phone.id_for_label }}" class="form-label">
+                <i class="fas fa-phone me-1"></i> {{ form.support_phone.label }}
+              </label>
+              {{ form.support_phone }}
+              {% if form.support_phone.errors %}
+                <div class="text-danger small mt-1">{{ form.support_phone.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.address_line1.id_for_label }}" class="form-label">
+                <i class="fas fa-map-marker-alt me-1"></i> {{ form.address_line1.label }}
+              </label>
+              {{ form.address_line1 }}
+              {% if form.address_line1.errors %}
+                <div class="text-danger small mt-1">{{ form.address_line1.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.address_line2.id_for_label }}" class="form-label">
+                {{ form.address_line2.label }}
+              </label>
+              {{ form.address_line2 }}
+              {% if form.address_line2.errors %}
+                <div class="text-danger small mt-1">{{ form.address_line2.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="{{ form.city.id_for_label }}" class="form-label">
+                <i class="fas fa-city me-1"></i> {{ form.city.label }}
+              </label>
+              {{ form.city }}
+              {% if form.city.errors %}
+                <div class="text-danger small mt-1">{{ form.city.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="{{ form.state.id_for_label }}" class="form-label">
+                {{ form.state.label }}
+              </label>
+              {{ form.state }}
+              {% if form.state.errors %}
+                <div class="text-danger small mt-1">{{ form.state.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="{{ form.postal_code.id_for_label }}" class="form-label">
+                {{ form.postal_code.label }}
+              </label>
+              {{ form.postal_code }}
+              {% if form.postal_code.errors %}
+                <div class="text-danger small mt-1">{{ form.postal_code.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-12">
+            <div class="form-group">
+              <label for="{{ form.country.id_for_label }}" class="form-label">
+                <i class="fas fa-globe me-1"></i> {{ form.country.label }}
+              </label>
+              {{ form.country }}
+              {% if form.country.errors %}
+                <div class="text-danger small mt-1">{{ form.country.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tax & Billing Section -->
+      <div class="settings-section">
+        <div class="section-header">
+          <i class="fas fa-receipt"></i>
+          <div>
+            <h5>Tax & Billing</h5>
+            <p class="section-desc">Configure tax settings and invoice preferences</p>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.gst_number.id_for_label }}" class="form-label">
+                <i class="fas fa-file-invoice me-1"></i> {{ form.gst_number.label }}
+              </label>
+              {{ form.gst_number }}
+              {% if form.gst_number.errors %}
+                <div class="text-danger small mt-1">{{ form.gst_number.errors }}</div>
+              {% endif %}
+              {% if form.gst_number.help_text %}
+                <small class="form-text">{{ form.gst_number.help_text }}</small>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.tax_id.id_for_label }}" class="form-label">
+                <i class="fas fa-id-card me-1"></i> {{ form.tax_id.label }}
+              </label>
+              {{ form.tax_id }}
+              {% if form.tax_id.errors %}
+                <div class="text-danger small mt-1">{{ form.tax_id.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.invoice_prefix.id_for_label }}" class="form-label">
+                <i class="fas fa-hashtag me-1"></i> {{ form.invoice_prefix.label }}
+              </label>
+              {{ form.invoice_prefix }}
+              {% if form.invoice_prefix.errors %}
+                <div class="text-danger small mt-1">{{ form.invoice_prefix.errors }}</div>
+              {% endif %}
+              {% if form.invoice_prefix.help_text %}
+                <small class="form-text">{{ form.invoice_prefix.help_text }}</small>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.default_currency.id_for_label }}" class="form-label">
+                <i class="fas fa-dollar-sign me-1"></i> {{ form.default_currency.label }}
+              </label>
+              {{ form.default_currency }}
+              {% if form.default_currency.errors %}
+                <div class="text-danger small mt-1">{{ form.default_currency.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-check">
+              {{ form.tax_inclusive_prices }}
+              <label class="form-check-label" for="{{ form.tax_inclusive_prices.id_for_label }}">
+                <i class="fas fa-percentage me-1"></i> {{ form.tax_inclusive_prices.label }}
+              </label>
+              {% if form.tax_inclusive_prices.errors %}
+                <div class="text-danger small mt-1">{{ form.tax_inclusive_prices.errors }}</div>
+              {% endif %}
+              <small class="form-text d-block">Prices include tax</small>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-check">
+              {{ form.charge_tax_on_shipping }}
+              <label class="form-check-label" for="{{ form.charge_tax_on_shipping.id_for_label }}">
+                <i class="fas fa-shipping-fast me-1"></i> {{ form.charge_tax_on_shipping.label }}
+              </label>
+              {% if form.charge_tax_on_shipping.errors %}
+                <div class="text-danger small mt-1">{{ form.charge_tax_on_shipping.errors }}</div>
+              {% endif %}
+              <small class="form-text d-block">Apply tax to shipping charges</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order & Stock Preferences Section -->
+      <div class="settings-section">
+        <div class="section-header">
+          <i class="fas fa-boxes"></i>
+          <div>
+            <h5>Order & Stock Preferences</h5>
+            <p class="section-desc">Configure order processing and inventory management</p>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="{{ form.default_processing_time_days.id_for_label }}" class="form-label">
+                <i class="fas fa-clock me-1"></i> {{ form.default_processing_time_days.label }}
+              </label>
+              {{ form.default_processing_time_days }}
+              {% if form.default_processing_time_days.errors %}
+                <div class="text-danger small mt-1">{{ form.default_processing_time_days.errors }}</div>
+              {% endif %}
+              <small class="form-text">Days to process an order</small>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="{{ form.auto_cancel_unpaid_minutes.id_for_label }}" class="form-label">
+                <i class="fas fa-times-circle me-1"></i> {{ form.auto_cancel_unpaid_minutes.label }}
+              </label>
+              {{ form.auto_cancel_unpaid_minutes }}
+              {% if form.auto_cancel_unpaid_minutes.errors %}
+                <div class="text-danger small mt-1">{{ form.auto_cancel_unpaid_minutes.errors }}</div>
+              {% endif %}
+              {% if form.auto_cancel_unpaid_minutes.help_text %}
+                <small class="form-text">{{ form.auto_cancel_unpaid_minutes.help_text }}</small>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="{{ form.low_stock_threshold.id_for_label }}" class="form-label">
+                <i class="fas fa-exclamation-triangle me-1"></i> {{ form.low_stock_threshold.label }}
+              </label>
+              {{ form.low_stock_threshold }}
+              {% if form.low_stock_threshold.errors %}
+                <div class="text-danger small mt-1">{{ form.low_stock_threshold.errors }}</div>
+              {% endif %}
+              <small class="form-text">Alert when stock falls below this</small>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-check">
+              {{ form.allow_backorders }}
+              <label class="form-check-label" for="{{ form.allow_backorders.id_for_label }}">
+                <i class="fas fa-box me-1"></i> {{ form.allow_backorders.label }}
+              </label>
+              {% if form.allow_backorders.errors %}
+                <div class="text-danger small mt-1">{{ form.allow_backorders.errors }}</div>
+              {% endif %}
+              <small class="form-text d-block">Allow orders when out of stock</small>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-check">
+              {{ form.auto_restock_on_cancel }}
+              <label class="form-check-label" for="{{ form.auto_restock_on_cancel.id_for_label }}">
+                <i class="fas fa-redo me-1"></i> {{ form.auto_restock_on_cancel.label }}
+              </label>
+              {% if form.auto_restock_on_cancel.errors %}
+                <div class="text-danger small mt-1">{{ form.auto_restock_on_cancel.errors }}</div>
+              {% endif %}
+              <small class="form-text d-block">Restore stock when order is cancelled</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notification Preferences Section -->
+      <div class="settings-section">
+        <div class="section-header">
+          <i class="fas fa-bell"></i>
+          <div>
+            <h5>Notification Preferences</h5>
+            <p class="section-desc">Choose how you want to receive notifications</p>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="form-check">
+              {{ form.notify_new_order_email }}
+              <label class="form-check-label" for="{{ form.notify_new_order_email.id_for_label }}">
+                <i class="fas fa-shopping-cart me-1"></i> {{ form.notify_new_order_email.label }}
+              </label>
+              {% if form.notify_new_order_email.errors %}
+                <div class="text-danger small mt-1">{{ form.notify_new_order_email.errors }}</div>
+              {% endif %}
+              <small class="form-text d-block">Receive email for new orders</small>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-check">
+              {{ form.notify_new_order_sms }}
+              <label class="form-check-label" for="{{ form.notify_new_order_sms.id_for_label }}">
+                <i class="fas fa-sms me-1"></i> {{ form.notify_new_order_sms.label }}
+              </label>
+              {% if form.notify_new_order_sms.errors %}
+                <div class="text-danger small mt-1">{{ form.notify_new_order_sms.errors }}</div>
+              {% endif %}
+              <small class="form-text d-block">Receive SMS for new orders</small>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-check">
+              {{ form.notify_low_stock_email }}
+              <label class="form-check-label" for="{{ form.notify_low_stock_email.id_for_label }}">
+                <i class="fas fa-box-open me-1"></i> {{ form.notify_low_stock_email.label }}
+              </label>
+              {% if form.notify_low_stock_email.errors %}
+                <div class="text-danger small mt-1">{{ form.notify_low_stock_email.errors }}</div>
+              {% endif %}
+              <small class="form-text d-block">Alert when stock is low</small>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-check">
+              {{ form.notify_payout_email }}
+              <label class="form-check-label" for="{{ form.notify_payout_email.id_for_label }}">
+                <i class="fas fa-money-bill-wave me-1"></i> {{ form.notify_payout_email.label }}
+              </label>
+              {% if form.notify_payout_email.errors %}
+                <div class="text-danger small mt-1">{{ form.notify_payout_email.errors }}</div>
+              {% endif %}
+              <small class="form-text d-block">Notify for payout transactions</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Status Section -->
+      <div class="settings-section">
+        <div class="section-header">
+          <i class="fas fa-toggle-on"></i>
+          <div>
+            <h5>Account Status</h5>
+            <p class="section-desc">Control your store's active status</p>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-check">
+              {{ form.is_enabled }}
+              <label class="form-check-label" for="{{ form.is_enabled.id_for_label }}">
+                <strong>{{ form.is_enabled.label }}</strong>
+              </label>
+              {% if form.is_enabled.errors %}
+                <div class="text-danger small mt-1">{{ form.is_enabled.errors }}</div>
+              {% endif %}
+              <small class="form-text d-block">When disabled, your store will not accept new orders</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="settings-actions">
+        <a href="{% url 'admin_dashboard:home' %}" class="btn-cancel">
+          <i class="fas fa-times me-1"></i> Cancel
+        </a>
+        <button type="submit" class="btn btn-primary btn-save-settings">
+          <i class="fas fa-save me-2"></i> Save Settings
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

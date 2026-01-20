@@ -11,6 +11,7 @@ from app.models import (
     Inventory, Coupon, Category, Review, Payment
 )
 from ..services import InventoryManagementService, CouponManagementService
+from ..utils import PermissionHelper
 from ..forms import InventoryForm, CouponForm, CategoryForm
 
 
@@ -25,6 +26,7 @@ class InventoryListView(BaseAdminListView):
     template_name = 'admin_dashboard/inventory/inventory_list.html'
     context_object_name = 'inventory_items'
     paginate_by = 50
+    vendor_field = "vendor"
     
     def get_breadcrumbs(self):
         return [
@@ -70,11 +72,15 @@ class InventoryListView(BaseAdminListView):
         from django.db.models import Sum
         available_expr = ExpressionWrapper(F('quantity') - F('reserved'), output_field=IntegerField())
         
-        all_inventory = Inventory.objects.all().annotate(available=available_expr)
+        all_inventory = self.apply_vendor_scope(
+            Inventory.objects.all().annotate(available=available_expr)
+        )
         context['total_products'] = all_inventory.count()
         context['low_stock_count'] = all_inventory.filter(available__gt=0, available__lte=F('low_stock_threshold')).count()
         context['out_of_stock_count'] = all_inventory.filter(available__lte=0).count()
-        context['total_stock_value'] = InventoryManagementService.get_inventory_valuation()
+        context['total_stock_value'] = InventoryManagementService.get_inventory_valuation(
+            vendor=PermissionHelper.get_vendor(self.request.user) if PermissionHelper.is_vendor(self.request.user) else None
+        )
         
         return context
 
@@ -86,6 +92,7 @@ class InventoryUpdateView(BaseAdminUpdateView):
     form_class = InventoryForm
     template_name = 'admin_dashboard/inventory/inventory_form.html'
     success_url = reverse_lazy('admin_dashboard:inventory_list')
+    vendor_field = "vendor"
     
     def get_breadcrumbs(self):
         return [
@@ -101,6 +108,7 @@ class LowStockReportView(BaseAdminListView):
     model = Inventory
     template_name = 'admin_dashboard/inventory/low_stock_report.html'
     context_object_name = 'low_stock_items'
+    vendor_field = "vendor"
     
     def get_breadcrumbs(self):
         return [
@@ -111,18 +119,21 @@ class LowStockReportView(BaseAdminListView):
     
     def get_queryset(self):
         available_expr = ExpressionWrapper(F('quantity') - F('reserved'), output_field=IntegerField())
-        return Inventory.objects.annotate(
+        return self.apply_vendor_scope(
+            Inventory.objects.annotate(
             available=available_expr
         ).filter(
             available__gt=0,
             available__lte=F('low_stock_threshold')
         ).select_related('variant__product').order_by('available', 'quantity')
+        )
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
         # Get structured data
-        context['low_stock_data'] = InventoryManagementService.get_low_stock_products()
+        vendor = PermissionHelper.get_vendor(self.request.user) if PermissionHelper.is_vendor(self.request.user) else None
+        context['low_stock_data'] = InventoryManagementService.get_low_stock_products(vendor=vendor)
         
         return context
 
@@ -136,8 +147,9 @@ class InventoryBulkUpdateView(BaseAdminAPIView):
         try:
             data = json.loads(request.body)
             updates = data.get('updates', [])
-            
-            count = InventoryManagementService.bulk_update_inventory(updates)
+
+            vendor = PermissionHelper.get_vendor(request.user) if PermissionHelper.is_vendor(request.user) else None
+            count = InventoryManagementService.bulk_update_inventory(updates, vendor=vendor)
             
             return self.success_response(
                 message=f'{count} inventory items updated'
@@ -158,6 +170,7 @@ class CouponListView(BaseAdminListView):
     template_name = 'admin_dashboard/coupons/coupon_list.html'
     context_object_name = 'coupons'
     paginate_by = 25
+    vendor_field = "vendor"
     
     def get_breadcrumbs(self):
         return [
@@ -191,8 +204,9 @@ class CouponListView(BaseAdminListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        context['total_coupons'] = Coupon.objects.count()
-        context['active_coupons'] = Coupon.objects.filter(active=True).count()
+        scoped = PermissionHelper.scope_queryset_for_user(Coupon.objects.all(), self.request.user)
+        context['total_coupons'] = scoped.count()
+        context['active_coupons'] = scoped.filter(active=True).count()
         
         return context
 
@@ -203,6 +217,7 @@ class CouponDetailView(BaseAdminDetailView):
     model = Coupon
     template_name = 'admin_dashboard/coupons/coupon_detail.html'
     context_object_name = 'coupon'
+    vendor_field = "vendor"
     
     def get_breadcrumbs(self):
         return [
@@ -233,6 +248,23 @@ class CouponCreateView(BaseAdminCreateView):
     form_class = CouponForm
     template_name = 'admin_dashboard/coupons/coupon_form.html'
     success_url = reverse_lazy('admin_dashboard:coupon_list')
+    vendor_field = "vendor"
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['applicable_products'].queryset = PermissionHelper.scope_queryset_for_user(
+            form.fields['applicable_products'].queryset,
+            self.request.user,
+        )
+        form.fields['applicable_categories'].queryset = PermissionHelper.scope_queryset_for_user(
+            form.fields['applicable_categories'].queryset,
+            self.request.user,
+        )
+        return form
+
+    def form_valid(self, form):
+        if PermissionHelper.is_vendor(self.request.user):
+            form.instance.vendor = PermissionHelper.get_vendor(self.request.user)
+        return super().form_valid(form)
     
     def get_breadcrumbs(self):
         return [
@@ -248,6 +280,7 @@ class CouponUpdateView(BaseAdminUpdateView):
     model = Coupon
     form_class = CouponForm
     template_name = 'admin_dashboard/coupons/coupon_form.html'
+    vendor_field = "vendor"
     
     def get_breadcrumbs(self):
         return [
@@ -260,12 +293,30 @@ class CouponUpdateView(BaseAdminUpdateView):
     def get_success_url(self):
         return reverse_lazy('admin_dashboard:coupon_detail', kwargs={'pk': self.object.pk})
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['applicable_products'].queryset = PermissionHelper.scope_queryset_for_user(
+            form.fields['applicable_products'].queryset,
+            self.request.user,
+        )
+        form.fields['applicable_categories'].queryset = PermissionHelper.scope_queryset_for_user(
+            form.fields['applicable_categories'].queryset,
+            self.request.user,
+        )
+        return form
+
+    def form_valid(self, form):
+        if PermissionHelper.is_vendor(self.request.user):
+            form.instance.vendor = PermissionHelper.get_vendor(self.request.user)
+        return super().form_valid(form)
+
 
 class CouponDeleteView(BaseAdminDeleteView):
     """Delete coupon"""
     
     model = Coupon
     success_url = reverse_lazy('admin_dashboard:coupon_list')
+    vendor_field = "vendor"
 
 
 class CouponToggleView(BaseAdminAPIView):
@@ -298,6 +349,7 @@ class CategoryListView(BaseAdminListView):
     model = Category
     template_name = 'admin_dashboard/categories/category_list.html'
     context_object_name = 'categories'
+    vendor_field = "vendor"
     
     def get_breadcrumbs(self):
         return [
@@ -306,14 +358,17 @@ class CategoryListView(BaseAdminListView):
         ]
     
     def get_queryset(self):
-        return Category.objects.annotate(
-            product_count=Count('products')
-        ).order_by('sort_order', 'name')
+        return self.apply_vendor_scope(
+            Category.objects.annotate(
+                product_count=Count('products')
+            ).order_by('sort_order', 'name')
+        )
     
     # method to count active categories
     def get_context_data(self, **kwargs): 
         context = super().get_context_data(**kwargs)
-        context['active_categories_count'] = Category.objects.filter(is_active=True).count()
+        scoped = PermissionHelper.scope_queryset_for_user(Category.objects.all(), self.request.user)
+        context['active_categories_count'] = scoped.filter(is_active=True).count()
         return context
 
 class CategoryCreateView(BaseAdminCreateView):
@@ -323,6 +378,20 @@ class CategoryCreateView(BaseAdminCreateView):
     form_class = CategoryForm
     template_name = 'admin_dashboard/categories/category_form.html'
     success_url = reverse_lazy('admin_dashboard:category_list')
+    vendor_field = "vendor"
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['parent'].queryset = PermissionHelper.scope_queryset_for_user(
+            Category.objects.all(),
+            self.request.user,
+        )
+        return form
+
+    def form_valid(self, form):
+        if PermissionHelper.is_vendor(self.request.user):
+            form.instance.vendor = PermissionHelper.get_vendor(self.request.user)
+        return super().form_valid(form)
 
 
 class CategoryUpdateView(BaseAdminUpdateView):
@@ -332,6 +401,20 @@ class CategoryUpdateView(BaseAdminUpdateView):
     form_class = CategoryForm
     template_name = 'admin_dashboard/categories/category_form.html'
     success_url = reverse_lazy('admin_dashboard:category_list')
+    vendor_field = "vendor"
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['parent'].queryset = PermissionHelper.scope_queryset_for_user(
+            Category.objects.exclude(pk=self.object.pk),
+            self.request.user,
+        )
+        return form
+
+    def form_valid(self, form):
+        if PermissionHelper.is_vendor(self.request.user):
+            form.instance.vendor = PermissionHelper.get_vendor(self.request.user)
+        return super().form_valid(form)
 
 
 class CategoryDeleteView(BaseAdminDeleteView):
@@ -339,6 +422,7 @@ class CategoryDeleteView(BaseAdminDeleteView):
     
     model = Category
     success_url = reverse_lazy('admin_dashboard:category_list')
+    vendor_field = "vendor"
 
 
 # =====================================
@@ -352,6 +436,7 @@ class ReviewListView(BaseAdminListView):
     template_name = 'admin_dashboard/reviews/review_list.html'
     context_object_name = 'reviews'
     paginate_by = 25
+    vendor_field = None
     
     def get_breadcrumbs(self):
         return [
@@ -360,7 +445,10 @@ class ReviewListView(BaseAdminListView):
         ]
     
     def get_queryset(self):
-        queryset = super().get_queryset().select_related('user', 'product')
+        queryset = Review.objects.select_related('user', 'product')
+        if PermissionHelper.is_vendor(self.request.user):
+            vendor = PermissionHelper.get_vendor(self.request.user)
+            queryset = queryset.filter(product__vendor=vendor)
         
         # Filter by approval status
         status = self.request.GET.get('status', 'all')  # 'pending' to 'all'
@@ -374,8 +462,9 @@ class ReviewListView(BaseAdminListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        context['pending_count'] = Review.objects.filter(approved=False).count()
-        context['approved_count'] = Review.objects.filter(approved=True).count()
+        scoped = self.get_queryset()
+        context['pending_count'] = scoped.filter(approved=False).count()
+        context['approved_count'] = scoped.filter(approved=True).count()
         
         return context
 
@@ -413,6 +502,7 @@ class PaymentListView(BaseAdminListView):
     template_name = 'admin_dashboard/payments/payment_list.html'
     context_object_name = 'payments'
     paginate_by = 25
+    vendor_field = None
     
     def get_breadcrumbs(self):
         return [
@@ -421,7 +511,12 @@ class PaymentListView(BaseAdminListView):
         ]
     
     def get_queryset(self):
-        queryset = super().get_queryset().select_related('order__user')
+        queryset = Payment.objects.select_related('order__user')
+        if PermissionHelper.is_vendor(self.request.user):
+            vendor = PermissionHelper.get_vendor(self.request.user)
+            queryset = queryset.filter(
+                Q(order__vendor=vendor) | Q(order__items__variant__product__vendor=vendor)
+            ).distinct()
         
         # Filter by status
         status = self.request.GET.get('status', '')
@@ -448,6 +543,7 @@ class PaymentDetailView(BaseAdminDetailView):
     model = Payment
     template_name = 'admin_dashboard/payments/payment_detail.html'
     context_object_name = 'payment'
+    vendor_field = None
     
     def get_breadcrumbs(self):
         return [
@@ -457,5 +553,11 @@ class PaymentDetailView(BaseAdminDetailView):
         ]
     
     def get_queryset(self):
-        return super().get_queryset().select_related('order__user', 'order__address')
+        queryset = Payment.objects.select_related('order__user', 'order__address')
+        if PermissionHelper.is_vendor(self.request.user):
+            vendor = PermissionHelper.get_vendor(self.request.user)
+            queryset = queryset.filter(
+                Q(order__vendor=vendor) | Q(order__items__variant__product__vendor=vendor)
+            ).distinct()
+        return queryset
 

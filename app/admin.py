@@ -17,7 +17,8 @@ from .models import (
     Coupon, CouponUsage, GiftCard, LoyaltyPoint,
     Order, OrderItem, Payment,
     Review, Banner, NewsletterSubscriber, Referral,
-    ProductView, AbandonedCartSnapshot, ShippingZone, SiteTheme
+    ProductView, AbandonedCartSnapshot, ShippingZone, SiteTheme,
+    Vendor, VendorSettings,
 )
 
 
@@ -1028,6 +1029,88 @@ custom_admin_site.register(Referral)
 custom_admin_site.register(ProductView)
 custom_admin_site.register(AbandonedCartSnapshot)
 custom_admin_site.register(ShippingZone)
+# Vendor registrations
+class VendorSettingsInline(admin.StackedInline):
+    model = VendorSettings
+    can_delete = False
+    extra = 0
+    fieldsets = (
+        ("Store", {
+            "fields": (
+                "display_name",
+                "logo",
+                "support_email",
+                "support_phone",
+                "is_enabled",
+            )
+        }),
+        ("Tax & Billing", {
+            "fields": (
+                "gst_number",
+                "tax_id",
+                "invoice_prefix",
+                "default_currency",
+                "tax_inclusive_prices",
+                "charge_tax_on_shipping",
+            )
+        }),
+        ("Order & Stock", {
+            "fields": (
+                "default_processing_time_days",
+                "allow_backorders",
+                "auto_cancel_unpaid_minutes",
+                "auto_restock_on_cancel",
+                "low_stock_threshold",
+            )
+        }),
+        ("Notifications", {
+            "fields": (
+                "notify_new_order_email",
+                "notify_new_order_sms",
+                "notify_low_stock_email",
+                "notify_payout_email",
+            )
+        }),
+    )
+
+
+@admin.register(Vendor, site=custom_admin_site)
+class VendorAdmin(admin.ModelAdmin):
+    list_display = (
+        "store_name",
+        "owner_email",
+        "status",
+        "is_enabled",
+        "is_featured",
+        "is_verified",
+        "created_at",
+    )
+    list_filter = ("status", "is_featured", "is_verified", "created_at")
+    search_fields = ("store_name", "owner_email", "owner_phone", "store_slug")
+    inlines = [VendorSettingsInline]
+    readonly_fields = ("created_at", "updated_at", "approved_at", "rejected_at")
+
+    def is_enabled(self, obj):
+        settings = getattr(obj, "settings", None)
+        return getattr(settings, "is_enabled", True)
+    is_enabled.boolean = True
+    is_enabled.short_description = "Enabled"
+
+
+@admin.register(VendorSettings, site=custom_admin_site)
+class VendorSettingsAdmin(admin.ModelAdmin):
+    list_display = (
+        "vendor",
+        "is_enabled",
+        "default_currency",
+        "invoice_prefix",
+        "notify_new_order_email",
+        "notify_low_stock_email",
+        "updated_at",
+    )
+    search_fields = ("vendor__store_name", "vendor__owner_email")
+    list_filter = ("is_enabled", "default_currency", "notify_new_order_email", "notify_low_stock_email")
+    readonly_fields = ("created_at", "updated_at")
 # Register django-allauth models with custom admin site
 try:
     from allauth.account.models import EmailAddress

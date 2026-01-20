@@ -11,16 +11,39 @@ from django.utils import timezone
 
 from app.models import (
     Order, OrderItem, Product, ProductVariant, User,
-    Payment, Category, Inventory, Cart, Wishlist, Coupon, Review
+    Payment, Category, Inventory, Cart, Wishlist, Coupon, Review, Vendor
 )
 import openpyxl
 from io import BytesIO
+
+
+def _vendor_orders(vendor: Vendor = None):
+    qs = Order.objects.all()
+    if vendor:
+        qs = qs.filter(
+            Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+        ).distinct()
+    return qs
+
+
+def _vendor_products(vendor: Vendor = None):
+    qs = Product.objects.all()
+    if vendor:
+        qs = qs.filter(vendor=vendor)
+    return qs
+
+
+def _vendor_inventory(vendor: Vendor = None):
+    qs = Inventory.objects.select_related('variant__product')
+    if vendor:
+        qs = qs.filter(Q(vendor=vendor) | Q(variant__product__vendor=vendor)).distinct()
+    return qs
 
 class DashboardAnalyticsService:
     """Service for dashboard analytics and statistics"""
     
     @staticmethod
-    def get_dashboard_stats(start_date: datetime = None, end_date: datetime = None) -> Dict:
+    def get_dashboard_stats(start_date: datetime = None, end_date: datetime = None, vendor: Vendor = None) -> Dict:
         """Get main dashboard statistics using the requested date range."""
         if not start_date:
             start_date = timezone.now() - timedelta(days=30)
@@ -30,7 +53,7 @@ class DashboardAnalyticsService:
         period_delta = end_date - start_date
 
         # Current period data
-        current_orders = Order.objects.filter(placed_at__range=[start_date, end_date])
+        current_orders = _vendor_orders(vendor).filter(placed_at__range=[start_date, end_date])
         # Count revenue for all non-cancelled orders so pending/processing also show up
         revenue_orders = current_orders.exclude(status__in=['cancelled'])
         revenue_data = revenue_orders.aggregate(
@@ -41,7 +64,7 @@ class DashboardAnalyticsService:
         # Previous period for comparisons
         prev_start = start_date - period_delta
         prev_end = start_date
-        prev_orders = Order.objects.filter(placed_at__range=[prev_start, prev_end])
+        prev_orders = _vendor_orders(vendor).filter(placed_at__range=[prev_start, prev_end])
         prev_revenue_orders = prev_orders.exclude(status__in=['cancelled'])
 
         prev_revenue_data = prev_revenue_orders.aggregate(
@@ -114,11 +137,11 @@ class DashboardAnalyticsService:
         prev_abandonment = (prev_active_carts / prev_total_carts * 100) if prev_total_carts else 0
         abandonment_change = abs(_percent_change(abandonment_rate, prev_abandonment))
 
-        pending_orders = Order.objects.filter(status__in=['pending', 'paid']).count()
+        pending_orders = _vendor_orders(vendor).filter(status__in=['pending', 'paid']).count()
 
         available_expr = ExpressionWrapper(F('quantity') - F('reserved'), output_field=IntegerField())
 
-        low_stock_count = Inventory.objects.annotate(
+        low_stock_count = _vendor_inventory(vendor).annotate(
             available=available_expr
         ).filter(
             available__gt=0,
@@ -126,6 +149,7 @@ class DashboardAnalyticsService:
         ).count()
 
         top_products = OrderItem.objects.filter(
+            order__in=_vendor_orders(vendor),
             order__placed_at__range=[start_date, end_date]
         ).exclude(
             order__status__in=['cancelled']
@@ -139,7 +163,7 @@ class DashboardAnalyticsService:
 
         # Fallback: if there are no order items but there are orders, show an aggregate bucket
         if not top_products.exists():
-            order_agg = Order.objects.filter(
+            order_agg = _vendor_orders(vendor).filter(
                 placed_at__range=[start_date, end_date]
             ).exclude(
                 status__in=['cancelled']
@@ -157,7 +181,8 @@ class DashboardAnalyticsService:
 
         payment_methods_qs = Payment.objects.filter(
             created_at__range=[start_date, end_date],
-            status__in=['success', 'pending']
+            status__in=['success', 'pending'],
+            order__in=_vendor_orders(vendor),
         ).values('method').annotate(
             count=Count('id'),
             total=Sum('amount')
@@ -206,7 +231,7 @@ class DashboardAnalyticsService:
         return result
     
     @staticmethod
-    def get_sales_trend(days: int = 30, start_date: datetime = None, end_date: datetime = None) -> List[Dict]:
+    def get_sales_trend(days: int = 30, start_date: datetime = None, end_date: datetime = None, vendor: Vendor = None) -> List[Dict]:
         """Get daily sales trend"""
         if not end_date:
             end_date = timezone.now()
@@ -215,7 +240,7 @@ class DashboardAnalyticsService:
         else:
             start_date = end_date - timedelta(days=days)
 
-        sales_data = Order.objects.filter(
+        sales_data = _vendor_orders(vendor).filter(
             placed_at__range=[start_date, end_date]
         ).exclude(
             status__in=['cancelled']
@@ -229,9 +254,10 @@ class DashboardAnalyticsService:
         return list(sales_data)
     
     @staticmethod
-    def get_revenue_by_category(start_date: datetime, end_date: datetime) -> List[Dict]:
+    def get_revenue_by_category(start_date: datetime, end_date: datetime, vendor: Vendor = None) -> List[Dict]:
         """Get revenue breakdown by category"""
         category_revenue = OrderItem.objects.filter(
+            order__in=_vendor_orders(vendor),
             order__placed_at__range=[start_date, end_date]
         ).exclude(
             order__status__in=['cancelled']
@@ -245,7 +271,7 @@ class DashboardAnalyticsService:
         # Fallback: if there are orders but no order items (e.g., data seeded without line items),
         # show a single aggregate bucket so the chart isn't empty.
         if not category_revenue.exists():
-            total_revenue = Order.objects.filter(
+            total_revenue = _vendor_orders(vendor).filter(
                 placed_at__range=[start_date, end_date]
             ).exclude(
                 status__in=['cancelled']
@@ -260,9 +286,9 @@ class DashboardAnalyticsService:
         return list(category_revenue)
     
     @staticmethod
-    def get_order_status_breakdown(start_date: datetime = None, end_date: datetime = None) -> Dict:
+    def get_order_status_breakdown(start_date: datetime = None, end_date: datetime = None, vendor: Vendor = None) -> Dict:
         """Get order counts by status (date-filtered when provided)."""
-        orders = Order.objects.all()
+        orders = _vendor_orders(vendor)
         if start_date and end_date:
             orders = orders.filter(placed_at__range=[start_date, end_date])
 
@@ -273,12 +299,18 @@ class DashboardAnalyticsService:
         return {item['status']: item['count'] for item in status_counts}
 
     @staticmethod
-    def get_customer_trend(start_date: datetime, end_date: datetime) -> List[Dict]:
+    def get_customer_trend(start_date: datetime, end_date: datetime, vendor: Vendor = None) -> List[Dict]:
         """Get customer registrations per day for the range."""
-        customer_data = User.objects.filter(
+        customers = User.objects.filter(
             role='customer',
             date_joined__range=[start_date, end_date]
-        ).annotate(
+        )
+        if vendor:
+            customers = customers.filter(
+                orders__in=_vendor_orders(vendor)
+            ).distinct()
+
+        customer_data = customers.annotate(
             date=TruncDate('date_joined')
         ).values('date').annotate(
             count=Count('id')
@@ -287,16 +319,34 @@ class DashboardAnalyticsService:
         return list(customer_data)
     
     @staticmethod
-    def get_customer_lifetime_value() -> List[Dict]:
+    def get_customer_lifetime_value(vendor: Vendor = None) -> List[Dict]:
         """Get top customers by lifetime value"""
         top_customers = User.objects.filter(
             role='customer'
-        ).annotate(
+        )
+        if vendor:
+            top_customers = top_customers.filter(
+                orders__in=_vendor_orders(vendor)
+            )
+        vendor_orders_qs = _vendor_orders(vendor)
+        top_customers = top_customers.annotate(
             total_spent=Coalesce(
-                Sum('orders__total', filter=Q(orders__status__in=['paid', 'processing', 'shipped', 'delivered'])),
+                Sum(
+                    'orders__total',
+                    filter=Q(
+                        orders__status__in=['paid', 'processing', 'shipped', 'delivered'],
+                        orders__in=vendor_orders_qs
+                    ),
+                ),
                 Decimal('0.00')
             ),
-            order_count=Count('orders', filter=Q(orders__status__in=['paid', 'processing', 'shipped', 'delivered']))
+            order_count=Count(
+                'orders',
+                filter=Q(
+                    orders__status__in=['paid', 'processing', 'shipped', 'delivered'],
+                    orders__in=vendor_orders_qs
+                ),
+            )
         ).filter(
             order_count__gt=0
         ).order_by('-total_spent')[:20]
@@ -311,14 +361,14 @@ class DashboardAnalyticsService:
         } for customer in top_customers]
     
     @staticmethod
-    def get_sales_by_region(start_date, end_date):
+    def get_sales_by_region(start_date, end_date, vendor: Vendor = None):
         """Get sales grouped by state/region from order addresses"""
         from django.db.models import Sum, Count, Q
         from datetime import timedelta
-        from app.models import Order
         
+        vendor_orders = _vendor_orders(vendor)
         # Query orders with addresses, group by state
-        sales_by_region = Order.objects.filter(
+        sales_by_region = vendor_orders.filter(
             placed_at__gte=start_date,
             placed_at__lte=end_date,
             address__isnull=False,
@@ -346,7 +396,7 @@ class DashboardAnalyticsService:
             current_revenue = float(region['total_revenue'])
             
             # Get previous period revenue for this state
-            previous_revenue = Order.objects.filter(
+            previous_revenue = vendor_orders.filter(
                 placed_at__gte=previous_start,
                 placed_at__lt=previous_end,
                 address__state=state_name,
@@ -375,11 +425,11 @@ class SalesReportService:
     
     @staticmethod
     def generate_sales_report(start_date: datetime, end_date: datetime, 
-                             group_by: str = 'day') -> Dict:
+                             group_by: str = 'day', vendor: Vendor = None) -> Dict:
         """Generate comprehensive sales report"""
         
         # Base query
-        orders = Order.objects.filter(
+        orders = _vendor_orders(vendor).filter(
             placed_at__range=[start_date, end_date],
             status__in=['paid', 'processing', 'shipped', 'delivered']
         )
@@ -434,7 +484,7 @@ class SalesReportService:
         )
         
         # Return/Cancellation stats
-        cancelled_orders = Order.objects.filter(
+        cancelled_orders = _vendor_orders(vendor).filter(
             placed_at__range=[start_date, end_date],
             status__in=['cancelled', 'refunded']
         ).aggregate(
@@ -470,13 +520,18 @@ class SalesReportService:
         }
     
     @staticmethod
-    def get_product_performance_report(start_date: datetime, end_date: datetime) -> List[Dict]:
+    def get_product_performance_report(start_date: datetime, end_date: datetime, vendor: Vendor = None) -> List[Dict]:
         """Get detailed product performance metrics"""
         
         products = OrderItem.objects.filter(
             order__placed_at__range=[start_date, end_date],
             order__status__in=['paid', 'processing', 'shipped', 'delivered']
-        ).values(
+        )
+        if vendor:
+            products = products.filter(
+                Q(variant__product__vendor=vendor) | Q(order__vendor=vendor)
+            )
+        products = products.values(
             'variant__product__id',
             'variant__product__name',
             'variant__product__slug',
@@ -491,7 +546,7 @@ class SalesReportService:
         return list(products)
     
     @staticmethod
-    def export_sales_report_csv(start_date: datetime, end_date: datetime) -> str:
+    def export_sales_report_csv(start_date: datetime, end_date: datetime, vendor: Vendor = None) -> str:
         """Generate CSV export of sales report"""
         import csv
         from io import StringIO
@@ -506,7 +561,7 @@ class SalesReportService:
         ])
         
         # Data
-        orders = Order.objects.filter(
+        orders = _vendor_orders(vendor).filter(
             placed_at__range=[start_date, end_date]
         ).select_related('user').prefetch_related('items', 'payments')
         
@@ -529,7 +584,7 @@ class SalesReportService:
         return output.getvalue()
     
     @staticmethod
-    def export_sales_report_excel(start_date: datetime, end_date: datetime):
+    def export_sales_report_excel(start_date: datetime, end_date: datetime, vendor: Vendor = None):
         """Generate Excel export of sales report"""
           
         # Create workbook
@@ -542,7 +597,7 @@ class SalesReportService:
         ws.append(headers)
         
         # Data
-        orders = Order.objects.filter(
+        orders = _vendor_orders(vendor).filter(
             placed_at__range=[start_date, end_date]
         ).select_related('user').prefetch_related('items', 'payments')
         
@@ -673,35 +728,46 @@ class CustomerManagementService:
     """Service for customer management"""
     
     @staticmethod
-    def get_customer_detailed_info(user_id: int) -> Dict:
+    def get_customer_detailed_info(user_id: int, vendor: Vendor = None) -> Dict:
         """Get comprehensive customer information"""
         user = User.objects.get(id=user_id)
+        vendor_orders = _vendor_orders(vendor) if vendor else None
         
         # Order statistics
-        order_stats = user.orders.filter(
+        orders_qs = user.orders.filter(
             status__in=['paid', 'processing', 'shipped', 'delivered']
-        ).aggregate(
+        )
+        if vendor and vendor_orders is not None:
+            orders_qs = orders_qs.filter(id__in=vendor_orders.values_list("id", flat=True))
+
+        order_stats = orders_qs.aggregate(
             total_orders=Count('id'),
             total_spent=Coalesce(Sum('total'), Decimal('0.00')),
             avg_order_value=Coalesce(Avg('total'), Decimal('0.00'))
         )
         
         # Recent orders
-        recent_orders = user.orders.order_by('-placed_at')[:5]
+        recent_orders = orders_qs.order_by('-placed_at')[:5]
         
         # Cart info
         active_cart = user.carts.filter(is_active=True).first()
         cart_items = []
         cart_total = Decimal('0.00')
         if active_cart:
-            cart_items = active_cart.items.select_related('variant__product').all()
-            cart_total = active_cart.total()
+            cart_items_qs = active_cart.items.select_related('variant__product').all()
+            if vendor:
+                cart_items_qs = cart_items_qs.filter(variant__product__vendor=vendor)
+            cart_items = list(cart_items_qs)
+            cart_total = sum(item.variant.price * item.quantity for item in cart_items)
         
         # Wishlist
         wishlist = user.wishlists.first()
         wishlist_items = []
         if wishlist:
-            wishlist_items = wishlist.items.select_related('variant__product').all()
+            wishlist_items_qs = wishlist.items.select_related('variant__product').all()
+            if vendor:
+                wishlist_items_qs = wishlist_items_qs.filter(variant__product__vendor=vendor)
+            wishlist_items = list(wishlist_items_qs)
         
         return {
             'user': user,
@@ -740,11 +806,11 @@ class InventoryManagementService:
     """Service for inventory operations"""
     
     @staticmethod
-    def get_low_stock_products(threshold: int = None) -> List[Dict]:
+    def get_low_stock_products(threshold: int = None, vendor: Vendor = None) -> List[Dict]:
         """Get products with low stock"""
         available_expr = ExpressionWrapper(F('quantity') - F('reserved'), output_field=IntegerField())
 
-        query = Inventory.objects.select_related('variant__product').annotate(available=available_expr)
+        query = _vendor_inventory(vendor).annotate(available=available_expr)
         
         if threshold is not None:
             query = query.filter(available__gt=0, available__lte=threshold)
@@ -764,7 +830,7 @@ class InventoryManagementService:
         return list(low_stock)
     
     @staticmethod
-    def bulk_update_inventory(updates: List[Dict]) -> int:
+    def bulk_update_inventory(updates: List[Dict], vendor: Vendor = None) -> int:
         """
         Bulk update inventory
         updates: [{'inventory_id': 1, 'quantity': 100, 'threshold': 10}, ...]
@@ -772,7 +838,7 @@ class InventoryManagementService:
         count = 0
         for update in updates:
             try:
-                inventory = Inventory.objects.get(id=update['inventory_id'])
+                inventory = _vendor_inventory(vendor).get(id=update['inventory_id'])
                 if 'quantity' in update:
                     inventory.quantity = update['quantity']
                 if 'threshold' in update:
@@ -785,9 +851,9 @@ class InventoryManagementService:
         return count
     
     @staticmethod
-    def get_inventory_valuation() -> Dict:
+    def get_inventory_valuation(vendor: Vendor = None) -> Dict:
         """Calculate total inventory valuation"""
-        valuation = Inventory.objects.select_related('variant').aggregate(
+        valuation = _vendor_inventory(vendor).select_related('variant').aggregate(
             total_units=Coalesce(Sum('quantity'), 0),
             total_value=Coalesce(
                 Sum(F('quantity') * F('variant__price')),

@@ -82,4 +82,8 @@ urlpatterns = [
 
     # Theme Management (merged theme + design pattern)
     path('theme/settings/', views.theme_settings, name='theme_settings'),
+
+    # Vendor settings
+    path('settings/', views.VendorSettingsUpdateView.as_view(), name='vendor_settings'),
+    path('vendors/<int:vendor_id>/settings/', views.VendorSettingsUpdateView.as_view(), name='vendor_settings_admin'),
 ]

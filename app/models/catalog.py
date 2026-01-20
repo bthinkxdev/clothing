@@ -18,6 +18,14 @@ class Category(models.Model):
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     sort_order = models.PositiveSmallIntegerField(default=0)
+    vendor = models.ForeignKey(
+        Vendor,
+        on_delete=models.CASCADE,
+        related_name="categories",
+        null=True,
+        blank=True,
+        help_text="Owning vendor; null indicates a global category managed by admins",
+    )
 
     class Meta:
         verbose_name_plural = "Categories"
@@ -141,6 +149,14 @@ class Inventory(models.Model):
     quantity = models.IntegerField(default=0)
     low_stock_threshold = models.PositiveIntegerField(default=5)
     reserved = models.IntegerField(default=0, help_text="Reserved by unpaid carts / orders in process")
+    vendor = models.ForeignKey(
+        Vendor,
+        on_delete=models.CASCADE,
+        related_name="inventory_items",
+        null=True,
+        blank=True,
+        help_text="Owning vendor (redundant safety to prevent cross-vendor leakage)",
+    )
 
     def __str__(self):
         return f"{self.variant.sku} - {self.quantity} in stock"
@@ -185,4 +201,10 @@ class Inventory(models.Model):
             else:
                 raise ValueError("Insufficient stock")
         self.refresh_from_db()
+
+    def save(self, *args, **kwargs):
+        # Backfill vendor from variant -> product as an extra safety net
+        if not self.vendor and self.variant and self.variant.product.vendor_id:
+            self.vendor = self.variant.product.vendor
+        super().save(*args, **kwargs)
 

@@ -3,7 +3,7 @@ from typing import Any, Dict
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 
@@ -18,23 +18,28 @@ class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     
     def test_func(self) -> bool:
         """Test if user has admin permissions"""
-        return PermissionHelper.check_admin_permission(self.request.user)
+        return PermissionHelper.check_dashboard_permission(self.request.user)
     
     def handle_no_permission(self):
         """Handle users without permission"""
-        messages.error(self.request, 'You do not have permission to access this page.')
-        return redirect('home')
+        if self.request.user.is_authenticated:
+            messages.error(self.request, 'You do not have permission to access this page.')
+            return render(self.request, "403.html", status=403)
+        messages.error(self.request, 'Please log in to continue.')
+        return redirect(self.login_url)
 
 
 class BaseAdminView(AdminRequiredMixin, View):
     """Base view for all admin views"""
     
+    vendor_field: str = "vendor"
+
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         """Add common context to all admin views"""
         context = super().get_context_data(**kwargs) if hasattr(super(), 'get_context_data') else {}
         
         # Add pending actions count
-        context['pending_actions'] = NotificationHelper.get_pending_actions()
+        context['pending_actions'] = NotificationHelper.get_pending_actions(self.request.user)
         
         # Add current user info
         context['admin_user'] = self.request.user
@@ -43,6 +48,18 @@ class BaseAdminView(AdminRequiredMixin, View):
         context['breadcrumbs'] = self.get_breadcrumbs()
         
         return context
+
+    def get_vendor(self):
+        """Return vendor profile for current user (None for admins)."""
+        return PermissionHelper.get_vendor(self.request.user)
+
+    def apply_vendor_scope(self, queryset):
+        """Apply vendor scoping using configured vendor_field."""
+        return PermissionHelper.scope_queryset_for_user(
+            queryset,
+            self.request.user,
+            getattr(self, "vendor_field", "vendor"),
+        )
     
     def get_breadcrumbs(self) -> list:
         """Get breadcrumbs for navigation (override in child classes)"""
@@ -72,6 +89,11 @@ class BaseAdminListView(BaseAdminView, ListView):
         context['search_query'] = self.request.GET.get('search', '')
         
         return context
+
+    def get_queryset(self):
+        """Apply vendor scoping by default if a vendor field exists."""
+        queryset = super().get_queryset()
+        return self.apply_vendor_scope(queryset)
     
     def get_filter_options(self) -> Dict:
         """Get filter options for the list (override in child classes)"""
@@ -82,6 +104,10 @@ class BaseAdminDetailView(BaseAdminView, DetailView):
     """Base detail view for admin"""
     
     context_object_name = 'item'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return self.apply_vendor_scope(queryset)
 
 
 class BaseAdminCreateView(BaseAdminView, CreateView):

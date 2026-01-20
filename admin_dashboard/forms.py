@@ -1,9 +1,11 @@
 # admin_dashboard/forms.py
 from django import forms
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import authenticate, get_user_model
 from django.forms import inlineformset_factory
 from app.models import (
     Order, Product, ProductVariant, ProductImage,
-    Inventory, Coupon, Category, User, SiteTheme, DesignPattern
+    Inventory, Coupon, Category, User, SiteTheme, DesignPattern, VendorStatus, VendorSettings
 )
 
 
@@ -158,6 +160,137 @@ ProductImageFormSet = inlineformset_factory(
     extra=3,
     can_delete=True
 )
+
+
+class AdminAuthenticationForm(AuthenticationForm):
+    """
+    Custom authentication form that accepts username or email
+    and restricts login to admins/staff/vendors (with approved vendor status).
+    """
+
+    def clean(self):
+        username = self.cleaned_data.get("username")
+        password = self.cleaned_data.get("password")
+
+        if username and password:
+            user_model = get_user_model()
+            auth_user = None
+
+            # Try email lookup first if it looks like an email
+            if "@" in username:
+                user_obj = user_model.objects.filter(email__iexact=username).first()
+                if user_obj:
+                    auth_user = authenticate(self.request, username=user_obj.get_username(), password=password)
+
+            # Fallback to standard username auth
+            if auth_user is None:
+                auth_user = authenticate(self.request, username=username, password=password)
+
+            if auth_user is None:
+                raise forms.ValidationError(
+                    self.error_messages["invalid_login"],
+                    code="invalid_login",
+                    params={"username": self.username_field.verbose_name},
+                )
+
+            self.confirm_login_allowed(auth_user)
+            self.user_cache = auth_user
+
+        return self.cleaned_data
+
+    def confirm_login_allowed(self, user):
+        # Superusers and staff are always allowed here
+        if user.is_superuser or user.is_staff or getattr(user, "role", None) in ["admin", "staff"]:
+            return
+
+        # Vendors must have an approved vendor_profile
+        if getattr(user, "role", None) == "vendor":
+            vendor = getattr(user, "vendor_profile", None)
+            if vendor and vendor.status == VendorStatus.APPROVED:
+                return
+            raise forms.ValidationError("Vendor account is not approved.", code="inactive")
+
+        # Block other roles
+        raise forms.ValidationError("You do not have access to the admin dashboard.", code="inactive")
+
+
+class VendorSettingsForm(forms.ModelForm):
+    """Form to edit vendor settings."""
+
+    class Meta:
+        model = VendorSettings
+        fields = [
+            # Business / store
+            "display_name",
+            "logo",
+            "support_email",
+            "support_phone",
+            "address_line1",
+            "address_line2",
+            "city",
+            "state",
+            "postal_code",
+            "country",
+            # Tax / billing
+            "gst_number",
+            "tax_id",
+            "invoice_prefix",
+            "default_currency",
+            "tax_inclusive_prices",
+            "charge_tax_on_shipping",
+            # Order & stock prefs
+            "default_processing_time_days",
+            "allow_backorders",
+            "auto_cancel_unpaid_minutes",
+            "auto_restock_on_cancel",
+            "low_stock_threshold",
+            # Notifications
+            "notify_new_order_email",
+            "notify_new_order_sms",
+            "notify_low_stock_email",
+            "notify_payout_email",
+            # Account toggle
+            "is_enabled",
+        ]
+        widgets = {
+            # Store details
+            "display_name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Your Store Name"}),
+            "logo": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "support_email": forms.EmailInput(attrs={"class": "form-control", "placeholder": "support@yourstore.com"}),
+            "support_phone": forms.TextInput(attrs={"class": "form-control", "placeholder": "+1 234 567 8900"}),
+            "address_line1": forms.TextInput(attrs={"class": "form-control", "placeholder": "Street address"}),
+            "address_line2": forms.TextInput(attrs={"class": "form-control", "placeholder": "Apartment, suite, etc. (optional)"}),
+            "city": forms.TextInput(attrs={"class": "form-control", "placeholder": "City"}),
+            "state": forms.TextInput(attrs={"class": "form-control", "placeholder": "State/Province"}),
+            "postal_code": forms.TextInput(attrs={"class": "form-control", "placeholder": "ZIP/Postal code"}),
+            "country": forms.TextInput(attrs={"class": "form-control", "placeholder": "Country"}),
+            # Tax & billing
+            "gst_number": forms.TextInput(attrs={"class": "form-control", "placeholder": "GST Number"}),
+            "tax_id": forms.TextInput(attrs={"class": "form-control", "placeholder": "Tax ID"}),
+            "invoice_prefix": forms.TextInput(attrs={"class": "form-control", "maxlength": 10, "placeholder": "INV-"}),
+            "default_currency": forms.TextInput(attrs={"class": "form-control", "maxlength": 10, "placeholder": "INR"}),
+            "tax_inclusive_prices": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "charge_tax_on_shipping": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            # Order & stock
+            "default_processing_time_days": forms.NumberInput(attrs={"class": "form-control", "min": 0, "placeholder": "Days"}),
+            "auto_cancel_unpaid_minutes": forms.NumberInput(attrs={"class": "form-control", "min": 0, "placeholder": "Minutes"}),
+            "low_stock_threshold": forms.NumberInput(attrs={"class": "form-control", "min": 0, "placeholder": "Units"}),
+            "allow_backorders": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "auto_restock_on_cancel": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            # Notifications
+            "notify_new_order_email": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "notify_new_order_sms": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "notify_low_stock_email": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "notify_payout_email": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            # Account
+            "is_enabled": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+    def clean_invoice_prefix(self):
+        prefix = self.cleaned_data.get("invoice_prefix", "").strip().upper()
+        if len(prefix) > 10:
+            raise forms.ValidationError("Invoice prefix must be 10 characters or fewer.")
+        return prefix or "INV"
 
 
 class InventoryForm(forms.ModelForm):

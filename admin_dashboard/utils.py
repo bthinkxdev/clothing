@@ -296,17 +296,43 @@ class PermissionHelper:
     """Helper for permission checks"""
     
     @staticmethod
+    def get_vendor(user):
+        """Return the vendor profile for the user if present."""
+        return getattr(user, "vendor_profile", None)
+
+    @staticmethod
+    def is_vendor(user) -> bool:
+        """True when an authenticated vendor user with a linked Vendor profile."""
+        return bool(
+            user
+            and user.is_authenticated
+            and getattr(user, "role", None) == "vendor"
+            and PermissionHelper.get_vendor(user)
+        )
+
+    @staticmethod
+    def is_admin(user) -> bool:
+        """True when user is platform staff/admin/superuser."""
+        return bool(
+            user
+            and user.is_authenticated
+            and (user.is_superuser or user.is_staff or getattr(user, "role", None) in ["admin", "staff"])
+        )
+
+    @staticmethod
+    def check_dashboard_permission(user) -> bool:
+        """Allow dashboard access to admins and approved vendors."""
+        return PermissionHelper.is_admin(user) or PermissionHelper.is_vendor(user)
+
+    @staticmethod
     def check_admin_permission(user) -> bool:
-        """Check if user has admin permissions"""
-        if not user.is_authenticated:
-            return False
-        
-        return user.is_staff or user.role in ['admin', 'staff']
+        """Retained for backward compatibility where admin-only is required."""
+        return PermissionHelper.is_admin(user)
     
     @staticmethod
     def check_staff_permission(user, permission: str) -> bool:
         """Check specific staff permission"""
-        if not PermissionHelper.check_admin_permission(user):
+        if not PermissionHelper.is_admin(user):
             return False
         
         # You can implement granular permissions here
@@ -327,18 +353,53 @@ class PermissionHelper:
         
         return staff_permissions.get(permission, False)
 
+    @staticmethod
+    def scope_queryset_for_user(queryset: QuerySet, user, vendor_field: str = "vendor") -> QuerySet:
+        """
+        Restrict queryset to the current vendor when applicable.
+        Admins/superusers receive the unfiltered queryset.
+        If the vendor field is missing, an empty queryset is returned to avoid leaks.
+        """
+        from django.core.exceptions import FieldError
+
+        if PermissionHelper.is_admin(user):
+            return queryset
+
+        if not PermissionHelper.is_vendor(user):
+            return queryset.none()
+
+        vendor = PermissionHelper.get_vendor(user)
+        if not vendor or not vendor_field:
+            return queryset.none()
+
+        try:
+            return queryset.filter(**{vendor_field: vendor})
+        except FieldError:
+            # Fail closed to avoid IDOR leaks
+            return queryset.none()
+
 
 class NotificationHelper:
     """Helper for admin notifications"""
     
     @staticmethod
-    def get_pending_actions() -> Dict:
+    def get_pending_actions(user=None) -> Dict:
         """Get counts of items needing attention"""
         from app.models import Order, Review, Inventory
         
-        pending_orders = Order.objects.filter(status='pending').count()
-        pending_reviews = Review.objects.filter(approved=False).count()
-        low_stock = Inventory.objects.filter(quantity__lte=F('low_stock_threshold')).count()
+        orders_qs = PermissionHelper.scope_queryset_for_user(Order.objects.all(), user, vendor_field="vendor") if user else Order.objects.all()
+        reviews_qs = Review.objects.all()
+        if user and PermissionHelper.is_vendor(user):
+            vendor = PermissionHelper.get_vendor(user)
+            reviews_qs = reviews_qs.filter(product__vendor=vendor)
+
+        inventory_qs = Inventory.objects.all()
+        if user:
+            inventory_qs = PermissionHelper.scope_queryset_for_user(inventory_qs, user, vendor_field="vendor")
+
+        pending_orders = orders_qs.filter(status='pending').count()
+        pending_reviews = reviews_qs.filter(approved=False).count()
+        low_stock = inventory_qs.filter(quantity__lte=F('low_stock_threshold')).count()
         
         return {
             'pending_orders': pending_orders,
