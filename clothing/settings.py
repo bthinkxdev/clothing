@@ -71,6 +71,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # 'chatbot.advanced_features.RateLimitMiddleware',
     'admin_dashboard.middleware.AdminDashboardAccessMiddleware',
+    'app.middleware.NoCacheMiddleware',
+    # 'app.middleware.BlockedUserMiddleware',
 ]
 
 ROOT_URLCONF = 'clothing.urls'

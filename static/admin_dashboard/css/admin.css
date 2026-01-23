@@ -1244,3 +1244,15 @@
         grid-template-columns: 1fr;
     }
 }
+
+.notification-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.notification-link:hover .notification-item {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+    transition: all 0.2s ease;
+}

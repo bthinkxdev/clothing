@@ -34,9 +34,7 @@ class CustomerListView(BaseAdminListView):
         )
         if PermissionHelper.is_vendor(self.request.user):
             vendor = PermissionHelper.get_vendor(self.request.user)
-            queryset = queryset.filter(
-                orders__in=vendor.vendor_orders.all()
-            ).distinct()
+            queryset = queryset.filter(primary_vendor=vendor)
         
         # Search
         search = self.request.GET.get('search', '')
@@ -79,7 +77,7 @@ class CustomerListView(BaseAdminListView):
         queryset = User.objects.filter(role='customer')
         if PermissionHelper.is_vendor(self.request.user):
             vendor = PermissionHelper.get_vendor(self.request.user)
-            queryset = queryset.filter(orders__in=vendor.vendor_orders.all()).distinct()
+            queryset = queryset.filter(primary_vendor=vendor)
         context['total_customers'] = queryset.count()
         context['active_customers'] = queryset.filter(is_active=True, is_blocked=False).count()
         context['blocked_customers'] = queryset.filter(is_blocked=True).count()
@@ -123,7 +121,7 @@ class CustomerDetailView(BaseAdminDetailView):
         queryset = User.objects.filter(role='customer')
         if PermissionHelper.is_vendor(self.request.user):
             vendor = PermissionHelper.get_vendor(self.request.user)
-            queryset = queryset.filter(orders__in=vendor.vendor_orders.all()).distinct()
+            queryset = queryset.filter(primary_vendor=vendor)
         return queryset
     
     def get_context_data(self, **kwargs):
@@ -162,7 +160,7 @@ class CustomerOrdersView(BaseAdminListView):
         if PermissionHelper.is_vendor(self.request.user):
             vendor = PermissionHelper.get_vendor(self.request.user)
             queryset = queryset.filter(
-                Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+                Q(items__variant__product__vendor=vendor)
             ).distinct()
         return queryset
     

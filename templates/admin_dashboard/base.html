@@ -152,13 +152,21 @@
                     
                    
                     
-                    <div class="user-profile">
+                    <button class="user-profile" id="userProfileBtn" style="background: none; border: none; padding: 0; cursor: pointer;">
                         <img src="{% static 'admin_dashboard/img/avatar.jpg' %}" alt="{{ admin_user.username }}" onerror="this.src='https://ui-avatars.com/api/?name={{ admin_user.username }}&background=667eea&color=fff'">
                         <div class="user-info">
                             <span class="user-name">{{ admin_user.get_full_name|default:admin_user.username }}</span>
                             <span class="user-role">{{ admin_user.get_role_display }}</span>
                         </div>
                         <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div id="userDropdown" class="dropdown-content" style="display: none; position: absolute; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000;">
+                        <form method="POST" action="{% url 'admin_dashboard:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" style="width: 100%; padding: 10px 15px; border: none; background: none; text-align: left; cursor: pointer;">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </form>
                     </div>
                 </div>
             </header>
@@ -207,42 +215,48 @@
         
         <div class="notification-list">
             {% if pending_actions.pending_orders > 0 %}
-            <div class="notification-item unread">
-                <div class="notification-icon bg-blue">
-                    <i class="fas fa-shopping-cart"></i>
+            <a href="{% url 'admin_dashboard:order_list' %}?status=pending" class="notification-link">
+                <div class="notification-item unread">
+                    <div class="notification-icon bg-blue">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>New Orders</h4>
+                        <p>You have {{ pending_actions.pending_orders }} pending order(s)</p>
+                        <span class="notification-time">Just now</span>
+                    </div>
                 </div>
-                <div class="notification-content">
-                    <h4>New Orders</h4>
-                    <p>You have {{ pending_actions.pending_orders }} pending order(s)</p>
-                    <span class="notification-time">Just now</span>
-                </div>
-            </div>
+            </a>
             {% endif %}
             
             {% if pending_actions.low_stock > 0 %}
-            <div class="notification-item unread">
-                <div class="notification-icon bg-orange">
-                    <i class="fas fa-exclamation-triangle"></i>
+            <a href="{% url 'admin_dashboard:low_stock_report' %}" class="notification-link">
+                <div class="notification-item unread">
+                    <div class="notification-icon bg-orange">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>Low Stock Alert</h4>
+                        <p>{{ pending_actions.low_stock }} product(s) running low</p>
+                        <span class="notification-time">2 minutes ago</span>
+                    </div>
                 </div>
-                <div class="notification-content">
-                    <h4>Low Stock Alert</h4>
-                    <p>{{ pending_actions.low_stock }} product(s) running low</p>
-                    <span class="notification-time">2 minutes ago</span>
-                </div>
-            </div>
+            </a>
             {% endif %}
             
             {% if pending_actions.pending_reviews > 0 %}
-            <div class="notification-item">
-                <div class="notification-icon bg-purple">
-                    <i class="fas fa-star"></i>
+            <a href="{% url 'admin_dashboard:review_list' %}?status=pending" class="notification-link">
+                <div class="notification-item">
+                    <div class="notification-icon bg-purple">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>Pending Reviews</h4>
+                        <p>{{ pending_actions.pending_reviews }} review(s) awaiting approval</p>
+                        <span class="notification-time">1 hour ago</span>
+                    </div>
                 </div>
-                <div class="notification-content">
-                    <h4>Pending Reviews</h4>
-                    <p>{{ pending_actions.pending_reviews }} review(s) awaiting approval</p>
-                    <span class="notification-time">1 hour ago</span>
-                </div>
-            </div>
+            </a>
             {% endif %}
         </div>
     </div>

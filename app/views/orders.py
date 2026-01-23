@@ -26,7 +26,7 @@ class OrderSuccessView(LoginRequiredMixin, CommonContextMixin, DetailView):
         context["order_items"] = self.object.items.select_related("variant__product").all()
         context["payment"] = self.object.payments.filter(status="success").first()
 
-        send_order_confirmation_email(self.object)
+        # send_order_confirmation_email(self.object)
 
         return context
 

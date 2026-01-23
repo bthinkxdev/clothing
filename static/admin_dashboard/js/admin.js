@@ -168,3 +168,21 @@ window.adminDashboard = {
     apiRequest,
     showNotification
 };
+
+// User Profile Dropdown
+const userProfileBtn = document.getElementById('userProfileBtn');
+const userDropdown = document.getElementById('userDropdown');
+
+if (userProfileBtn && userDropdown) {
+    userProfileBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        userDropdown.style.display = userDropdown.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!userProfileBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+            userDropdown.style.display = 'none';
+        }
+    });
+}

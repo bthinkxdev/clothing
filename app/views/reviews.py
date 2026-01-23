@@ -7,7 +7,9 @@ from django.views.generic import CreateView, ListView
 from ..forms import ReviewForm
 from ..models import Product, Review, OrderItem
 
-
+from django.utils.decorators import method_decorator
+from ..decorators import block_check_required
+@method_decorator(block_check_required, name='dispatch')
 class ReviewCreateView(LoginRequiredMixin, CreateView):
     model = Review
     form_class = ReviewForm

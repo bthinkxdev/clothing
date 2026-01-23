@@ -14,6 +14,9 @@ from ..forms import ProfileForm, AddressForm
 from ..models import User, Address, LoyaltyPoint, Order, Wishlist
 from .base import CommonContextMixin
 
+from django.utils.decorators import method_decorator
+from ..decorators import block_check_required
+
 
 class AccountDashboardView(LoginRequiredMixin, CommonContextMixin, TemplateView):
     template_name = "account/dashboard.html"
@@ -37,7 +40,7 @@ class AccountDashboardView(LoginRequiredMixin, CommonContextMixin, TemplateView)
 
         return context
 
-
+@method_decorator(block_check_required, name='dispatch')
 class ProfileEditView(LoginRequiredMixin, CommonContextMixin, UpdateView):
     model = User
     form_class = ProfileForm
@@ -72,7 +75,7 @@ class AddressListView(LoginRequiredMixin, CommonContextMixin, ListView):
         ]
         return context
 
-
+@method_decorator(block_check_required, name='dispatch')
 class AddressCreateView(LoginRequiredMixin, CommonContextMixin, CreateView):
     model = Address
     form_class = AddressForm
@@ -112,7 +115,7 @@ class AddressUpdateView(LoginRequiredMixin, CommonContextMixin, UpdateView):
         ]
         return context
 
-
+@method_decorator(block_check_required, name='dispatch')
 class AddressDeleteView(LoginRequiredMixin, CommonContextMixin, DeleteView):
     model = Address
     success_url = reverse_lazy("address_list")

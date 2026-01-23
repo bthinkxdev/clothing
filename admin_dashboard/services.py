@@ -781,10 +781,24 @@ class CustomerManagementService:
     
     @staticmethod
     def toggle_customer_block(user_id: int) -> Tuple[bool, str]:
-        """Block or unblock customer"""
+        """Block or unblock customer and invalidate their sessions"""
+        from django.contrib.sessions.models import Session
+        from django.utils import timezone
+        
         user = User.objects.get(id=user_id, role='customer')
         user.is_blocked = not user.is_blocked
         user.save()
+        
+        # ✅ INVALIDATE ALL ACTIVE SESSIONS FOR THIS USER
+        if user.is_blocked:
+            # Get all active sessions
+            active_sessions = Session.objects.filter(expire_date__gte=timezone.now())
+            
+            for session in active_sessions:
+                session_data = session.get_decoded()
+                # Check if this session belongs to the blocked user
+                if session_data.get('_auth_user_id') == str(user.id):
+                    session.delete()
         
         status = "blocked" if user.is_blocked else "unblocked"
         return user.is_blocked, f"Customer {status} successfully"

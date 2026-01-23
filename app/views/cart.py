@@ -12,6 +12,9 @@ from ..models import Cart, CartItem, Coupon, ProductVariant
 from ..utils import calculate_shipping, calculate_tax
 from .base import CommonContextMixin
 
+from django.utils.decorators import method_decorator
+from ..decorators import block_check_required
+
 
 class CartView(CommonContextMixin, TemplateView):
     template_name = "cart/cart.html"
@@ -56,7 +59,7 @@ class CartView(CommonContextMixin, TemplateView):
 
         return context
 
-
+@method_decorator(block_check_required, name='dispatch')
 class CartAddView(LoginRequiredMixin, View):
     def post(self, request):
         variant_id = request.POST.get("variant_id")
@@ -87,7 +90,7 @@ class CartAddView(LoginRequiredMixin, View):
         messages.success(request, "Item added to cart!")
         return redirect("cart")
 
-
+@method_decorator(block_check_required, name='dispatch')
 class CartUpdateView(LoginRequiredMixin, View):
     def post(self, request, item_id):
         cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
@@ -108,7 +111,7 @@ class CartUpdateView(LoginRequiredMixin, View):
 
         return redirect("cart")
 
-
+@method_decorator(block_check_required, name='dispatch')
 class CartRemoveView(LoginRequiredMixin, View):
     def post(self, request, item_id):
         cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
@@ -116,7 +119,7 @@ class CartRemoveView(LoginRequiredMixin, View):
         messages.success(request, "Item removed from cart.")
         return redirect("cart")
 
-
+@method_decorator(block_check_required, name='dispatch')
 class CartClearView(LoginRequiredMixin, View):
     def post(self, request):
         cart = get_object_or_404(Cart, user=request.user, is_active=True)

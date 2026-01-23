@@ -25,7 +25,9 @@ from ..utils import (
 )
 from .base import CommonContextMixin
 
-
+from django.utils.decorators import method_decorator
+from ..decorators import block_check_required
+@method_decorator(block_check_required, name='dispatch')
 class CheckoutAddressView(LoginRequiredMixin, CommonContextMixin, FormView):
     template_name = "checkout/address.html"
     form_class = AddressForm
@@ -59,14 +61,14 @@ class CheckoutAddressView(LoginRequiredMixin, CommonContextMixin, FormView):
         messages.success(self.request, "Address added successfully.")
         return super().form_valid(form)
 
-
+@method_decorator(block_check_required, name='dispatch')
 class CheckoutAddressSelectView(LoginRequiredMixin, View):
     def post(self, request, address_id):
         address = get_object_or_404(Address, id=address_id, user=request.user)
         request.session["checkout_address_id"] = address.id
         return redirect("checkout_shipping")
 
-
+@method_decorator(block_check_required, name='dispatch')
 class CheckoutShippingView(LoginRequiredMixin, CommonContextMixin, TemplateView):
     template_name = "checkout/shipping.html"
 
@@ -121,7 +123,7 @@ class CheckoutShippingView(LoginRequiredMixin, CommonContextMixin, TemplateView)
         request.session["checkout_shipping_id"] = shipping_id
         return redirect("checkout_payment")
 
-
+@method_decorator(block_check_required, name='dispatch')
 class CheckoutPaymentView(LoginRequiredMixin, CommonContextMixin, TemplateView):
     template_name = "checkout/payment.html"
 
@@ -207,7 +209,7 @@ class CheckoutPaymentView(LoginRequiredMixin, CommonContextMixin, TemplateView):
 
         return methods
 
-
+@method_decorator(block_check_required, name='dispatch')
 class ApplyCouponView(LoginRequiredMixin, View):
     def post(self, request):
         coupon_code = request.POST.get("coupon_code")

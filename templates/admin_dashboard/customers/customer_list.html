@@ -89,7 +89,7 @@
                         <td>{{ customer.email }}</td>
                         <td>{{ customer.phone|default:"-" }}</td>
                         <td>{{ customer.total_orders|default:0 }}</td>
-                        <td>₹{{ customer.total_spent|default:"0.00" }}</td>
+                        <td>₹{{ customer.total_spent|floatformat:2|default:"0.00" }}</td>
                         <td>
                             {% if customer.is_blocked %}
                                 <span class="badge badge-danger">Blocked</span>

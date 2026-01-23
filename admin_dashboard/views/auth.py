@@ -3,6 +3,8 @@ from django.contrib.auth import logout
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
 
 from ..utils import PermissionHelper
 from ..forms import AdminAuthenticationForm
@@ -39,8 +41,16 @@ class AdminLoginView(LoginView):
         return reverse_lazy("admin_dashboard:home")
 
 
+@method_decorator(never_cache, name='dispatch')
 class AdminLogoutView(LogoutView):
     """Logout and redirect to login"""
 
     next_page = reverse_lazy("admin_dashboard:login")
-
+    
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        # Add aggressive no-cache headers
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0, private'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response

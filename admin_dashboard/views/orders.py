@@ -39,7 +39,7 @@ class OrderListView(BaseAdminListView):
         if PermissionHelper.is_vendor(self.request.user):
             vendor = PermissionHelper.get_vendor(self.request.user)
             queryset = queryset.filter(
-                Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+                Q(items__variant__product__vendor=vendor)
             ).distinct()
         
         # Apply filters
@@ -115,7 +115,7 @@ class OrderDetailView(BaseAdminDetailView):
         if PermissionHelper.is_vendor(self.request.user):
             vendor = PermissionHelper.get_vendor(self.request.user)
             queryset = queryset.filter(
-                Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+                Q(items__variant__product__vendor=vendor)
             ).distinct()
         return queryset
     
@@ -164,7 +164,7 @@ class OrderUpdateView(BaseAdminUpdateView):
         if PermissionHelper.is_vendor(self.request.user):
             vendor = PermissionHelper.get_vendor(self.request.user)
             queryset = queryset.filter(
-                Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+                Q(items__variant__product__vendor=vendor)
             ).distinct()
         return queryset
     
@@ -198,7 +198,7 @@ class OrderCancelView(BaseAdminAPIView):
             if PermissionHelper.is_vendor(request.user):
                 vendor = PermissionHelper.get_vendor(request.user)
                 queryset = queryset.filter(
-                    Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+                    Q(items__variant__product__vendor=vendor)
                 ).distinct()
             order = queryset.get(pk=pk)
             
@@ -236,7 +236,7 @@ class OrderInvoiceView(BaseAdminDetailView):
         if PermissionHelper.is_vendor(self.request.user):
             vendor = PermissionHelper.get_vendor(self.request.user)
             queryset = queryset.filter(
-                Q(vendor=vendor) | Q(items__variant__product__vendor=vendor)
+                Q(items__variant__product__vendor=vendor)
             ).distinct()
         return queryset
     vendor_field = None

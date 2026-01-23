@@ -17,9 +17,28 @@ class User(AbstractUser):
     ROLE_CHOICES = (("customer", "Customer"), ("staff", "Staff"), ("admin", "Admin"), ("vendor", "Vendor"))
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="customer")
     wallet_balance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    
+    # 
+    primary_vendor = models.ForeignKey(
+        'app.Vendor',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='customers',
+        help_text='Primary vendor this customer registered under'
+    )
+    registration_source = models.CharField(
+        max_length=50,
+        blank=True,
+        choices=[
+            ('web', 'Website'),
+            ('mobile', 'Mobile App'),
+            ('admin', 'Admin Created'),
+        ],
+        default='web'
+    )
 
     REQUIRED_FIELDS = ["email"]
 
     def __str__(self):
         return f"{self.username} ({self.email})"
-

@@ -82,8 +82,9 @@
             </div>
             <div class="metric-value">{{ stats.avg_response_hours|floatformat:1 }}h</div>
             <div class="metric-footer">
-                <span class="metric-change positive">
-                    <i class="fas fa-arrow-up"></i> Better
+                <span class="metric-change {% if stats.avg_response_change <= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="fas fa-arrow-{% if stats.avg_response_change <= 0 %}down{% else %}up{% endif %}"></i>
+                    {% if stats.avg_response_change <= 0 %}Better{% else %}Worse{% endif %}
                 </span>
                 <span class="metric-period">vs last period</span>
             </div>

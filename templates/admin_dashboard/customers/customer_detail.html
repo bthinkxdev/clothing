@@ -46,14 +46,14 @@
             <div class="stat-icon bg-green"><i class="fas fa-indian-rupee-sign"></i></div>
             <div class="stat-info">
                 <span class="stat-label">Total Spent</span>
-                <h3>₹{{ order_stats.total_spent|default:"0.00" }}</h3>
+                <h3>₹{{ order_stats.total_spent|floatformat:2|default:"0.00" }}</h3>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon bg-purple"><i class="fas fa-chart-line"></i></div>
             <div class="stat-info">
                 <span class="stat-label">Avg. Order Value</span>
-                <h3>₹{{ order_stats.avg_order_value|default:"0.00" }}</h3>
+                <h3>₹{{ order_stats.avg_order_value|floatformat:2|default:"0.00" }}</h3>
             </div>
         </div>
         <div class="stat-card">
